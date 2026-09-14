@@ -2,7 +2,7 @@
 /**
  * git worktree helper for make-me-happy.
  *
- *   node worktrees.mjs add --root . --count 3 --prefix mmh --out docs/impl/...
+ *   node worktrees.mjs add --root . --count 3 --prefix mmh --into feature/foo --out docs/impl/...
  *   node worktrees.mjs merge --root . --index 1 --test-cmd "npm test" --out ...
  *   node worktrees.mjs verify-clean --root . --prefix mmh
  *   node worktrees.mjs remove --root . --prefix mmh
@@ -48,14 +48,42 @@ function clampCount(n) {
   return Math.max(1, Math.min(8, Math.trunc(x)));
 }
 
-function ignoreWorktrees(repo) {
+export function isProtectedBranch(name) {
+  return /^(main|master|trunk)$/i.test(String(name || '').trim());
+}
+
+export function ignoreWorktrees(repo) {
   const gi = path.join(repo, '.gitignore');
   const line = '.worktrees/';
   let cur = '';
   if (fs.existsSync(gi)) cur = fs.readFileSync(gi, 'utf8');
-  if (cur.split(/\r?\n/).some((l) => l.trim() === line)) return;
+  if (cur.split(/\r?\n/).some((l) => l.trim() === line)) {
+    return { path: gi, appended: false };
+  }
   const next = cur.endsWith('\n') || cur === '' ? `${cur}${line}\n` : `${cur}\n${line}\n`;
   fs.writeFileSync(gi, next);
+  return { path: gi, appended: true };
+}
+
+function ensureIntoBranch(repo, requested) {
+  const current = gitOk(['rev-parse', '--abbrev-ref', 'HEAD']);
+  let into = requested || '';
+  if (!into) {
+    into = isProtectedBranch(current)
+      ? `feature/mmh-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`
+      : current;
+  }
+  if (isProtectedBranch(into)) {
+    throw new Error(
+      `refusing merge target '${into}' (protected: main/master/trunk). Pass --into feature/<name>`,
+    );
+  }
+  if (current !== into) {
+    const exists = git(['rev-parse', '--verify', into]);
+    if (exists.status === 0) gitOk(['checkout', into]);
+    else gitOk(['checkout', '-b', into]);
+  }
+  return gitOk(['rev-parse', '--abbrev-ref', 'HEAD']);
 }
 
 function writeJson(file, data) {
@@ -84,6 +112,21 @@ export function slicePaths(repo, prefix, count) {
   return slices;
 }
 
+function runTestCmd(testCmd, cwd, label) {
+  if (!testCmd) return { skipped: true };
+  const t = spawnSync(testCmd, {
+    cwd, encoding: 'utf8', shell: true, timeout: 30 * 60 * 1000,
+  });
+  if (t.status !== 0) {
+    if (t.stdout) console.error(t.stdout);
+    if (t.stderr) console.error(t.stderr);
+    throw new Error(
+      `${label} (exit ${t.status}). Never stack work on a red baseline.`,
+    );
+  }
+  return { skipped: false, ok: true };
+}
+
 function cmdAdd() {
   const repo = ensureGit();
   if (!repo) {
@@ -91,19 +134,34 @@ function cmdAdd() {
     process.exit(2);
   }
   const count = clampCount(arg('count', '3'));
-  const base = gitOk(['rev-parse', '--abbrev-ref', 'HEAD']);
+  const into = ensureIntoBranch(repo, arg('into', '') || arg('branch', ''));
+  const testCmd = arg('test-cmd', '');
+  const baseline = runTestCmd(testCmd, repo, `red baseline on '${into}'`);
   const head = gitOk(['rev-parse', 'HEAD']);
   fs.mkdirSync(path.join(repo, '.worktrees'), { recursive: true });
-  ignoreWorktrees(repo);
+  const gitignore = ignoreWorktrees(repo);
+  if (gitignore.appended) {
+    console.error(`NOTE: appended .worktrees/ to ${gitignore.path} (versioned file — include in the PR)`);
+  }
   const slices = [];
   for (const s of slicePaths(repo, prefix, count)) {
     if (fs.existsSync(s.dir)) {
       throw new Error(`worktree already exists: ${s.dir}`);
     }
     gitOk(['worktree', 'add', '-b', s.branch, s.dir, head]);
-    slices.push({ ...s, base, head, merged: false });
+    slices.push({ ...s, base: into, head, merged: false });
   }
-  const state = { prefix, count, base, head, slices };
+  const state = {
+    prefix,
+    count,
+    into,
+    base: into,
+    head,
+    gitignore_appended: gitignore.appended,
+    gitignore_path: gitignore.path,
+    baseline_green: baseline.skipped ? null : true,
+    slices,
+  };
   if (outDir) writeJson(path.join(outDir, 'worktrees.json'), state);
   console.log(JSON.stringify(state, null, 2));
 }
@@ -120,30 +178,35 @@ function cmdMerge() {
   if (!slice || !fs.existsSync(slice.dir)) {
     throw new Error(`slice ${index} worktree missing`);
   }
-  if (testCmd) {
-    const t = spawnSync(testCmd, {
-      cwd: slice.dir, encoding: 'utf8', shell: true, timeout: 30 * 60 * 1000,
-    });
-    if (t.status !== 0) {
-      console.error(t.stdout || '');
-      console.error(t.stderr || '');
-      throw new Error(`tests failed in worktree ${index} (exit ${t.status})`);
-    }
+  runTestCmd(testCmd, slice.dir, `tests failed in worktree ${index}`);
+  const into = arg('into', '')
+    || state.into
+    || (!isProtectedBranch(state.base) && state.base)
+    || '';
+  if (!into) {
+    throw new Error('no merge target: pass --into feature/<name> or run add first');
+  }
+  if (isProtectedBranch(into)) {
+    throw new Error(
+      `refusing to merge into '${into}' (protected). Checkout/pass --into a feature branch`,
+    );
   }
   const current = gitOk(['rev-parse', '--abbrev-ref', 'HEAD']);
+  if (current !== into) gitOk(['checkout', into]);
   gitOk(['merge', '--no-ff', '--no-edit', slice.branch]);
   gitOk(['worktree', 'remove', '--force', slice.dir]);
   git(['branch', '-d', slice.branch]);
   slice.merged = true;
   slice.removed = true;
-  slice.merged_into = current;
+  slice.merged_into = into;
   if (outDir) {
     const next = readWorktreesState();
     const row = (next.slices || []).find((s) => s.index === index);
-    if (row) Object.assign(row, { merged: true, removed: true, merged_into: current });
+    if (row) Object.assign(row, { merged: true, removed: true, merged_into: into });
+    next.into = into;
     writeJson(path.join(outDir, 'worktrees.json'), next);
   }
-  console.log(`merged ${slice.branch} into ${current} and removed worktree`);
+  console.log(`merged ${slice.branch} into ${into} and removed worktree`);
 }
 
 export function leftoverWorktrees(repo, prefixName) {

@@ -80,17 +80,17 @@ Fix de finding = red→green + `sync-progress --done`.
 | | |
 |---|---|
 | **Quando** | Spec pronto; greenfield, feature ou refactor |
-| **Comando** | `/make-me-happy` · `/mmh` · `--worktree N` · `--loop full\|task` · `--spec PATH` · `--fresh` |
+| **Comando** | `/make-me-happy` · `/mmh` · `--worktree N` · `--into feature/<name>` · `--loop full\|task` · `--spec PATH` · `--fresh` |
 | **Pack** | `docs/impl/make-me-happy/<data>-<branch>/` |
 
 O que a run faz:
 
 1. Resume se a sessão anterior crashou (pack aberto ou worktree `mmh/slice-*`).
 2. Planner → `TASKS.json` (qtd de testes por task).
-3. Git worktrees (default **3**, `--worktree N`), red→green em cada task, **merge e limpa**.
+3. Git worktrees (default **3**, `--worktree N`) numa **feature branch** (`--into`; recusa merge em `main`; recusa baseline vermelha).
 4. Testes de imutabilidade (contrato que não pode andar).
-5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**.
-6. HTML interativo + **score 10** (5 gates × 2). Abaixo de 10 não fecha.
+5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**. Score 10 fecha o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
+6. HTML interativo. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR.
 
 `--fresh` abandona slices abertas e começa do zero.
 
@@ -99,7 +99,7 @@ O que a run faz:
 ## Como se relacionam
 
 ```
-SDD validado  →  /mmh  (implementa, score 10)
+SDD validado  →  /mmh  (implementa; score 10 = pack, não done do repo)
 código na branch  →  /ultra-deep-audit --delta  (caça regressão)
 rota pública / cota  →  /abuse-audit
 release  →  /ultra-deep-audit --full

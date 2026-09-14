@@ -31,8 +31,11 @@ Não é auditoria. Não começa sem spec (a menos que o usuário diga que não h
 | `--loop task` | pergunta se continua **após cada** task |
 | `--kind greenfield\|feature\|refactor` | senão o Planner detecta |
 | `--fresh` | ignora pack/worktrees abertos e começa uma run nova |
+| `--into feature/<name>` | branch-base das slices e alvo do merge. **Nunca** `main`/`master`/`trunk` |
 
 `--mode` não existe nesta skill. `/mmh` = `/make-me-happy`. Worktree **não** é opcional: sempre tenta git worktree; se o repo não for git, implementa no working tree (`N=1`) e diz isso no REPORT.
+
+Se o working tree estiver em branch protegida (`main`/`master`/`trunk`) e `--into` não veio, `add` cria `feature/mmh-YYYYMMDD` e faz checkout nela **antes** de abrir slices. Merge recusa alvo protegido.
 
 ## Dispatch
 
@@ -87,6 +90,19 @@ tests_added += N   (N = testes novos/alterados desta task)
 
 Sem teste vermelho-antes, a task **não** é `DONE`.
 
+## Baseline verde (inegociável)
+
+**Nunca empilhar trabalho sobre baseline vermelha.**
+
+A suite **já existente** em `into` (antes de escrever o RED da task) tem de estar verde.
+
+| | Baseline | RED da task |
+|---|----------|-------------|
+| O que é | testes que **já estavam** no repo | o teste **novo** que prova a task |
+| Se falha | **parar**. Não abrir slice, não implementar feature | esperado; aí o GREEN |
+
+Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, não “consertar junto” com a feature. Primeiro a baseline; depois o pack. Resume: se a `into` ficou vermelha no meio, pare do mesmo jeito.
+
 ## Score 10 (inegociável para fechar)
 
 `scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10**:
@@ -100,6 +116,8 @@ Sem teste vermelho-antes, a task **não** é `DONE`.
 | worktrees | todas as slices mergeadas e `worktrees.mjs verify-clean` ok |
 
 Score < 10 → corrigir e re-rodar o eixo que falhou. Não negociar 9.
+
+**Score 10 fecha o pack da skill, não o “done” do projeto.** Os 3 eixos (Standards / Spec / Correctness) **não** substituem gates que o repo documentar em `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` (ex.: trio code-reviewer + test-analyzer + security-review, sweep docs/i18n). Depois do HTML: listar esses gates e rodá-los, ou deixá-los OPEN no relatório. Não abrir PR só com score 10 se o repo exige o outro conjunto.
 
 ---
 
@@ -133,14 +151,21 @@ Mostre o `TASKS.md` ao usuário. Se loop=`task` ou a pergunta 2 foi “não”, 
 ### 2. Worktrees
 
 ```bash
-node "$SKILL_ROOT/scripts/worktrees.mjs" add --root . --count "$N" --prefix mmh --out "$OUT"
+# --into: branch do PR. Se HEAD é main/master/trunk e --into omitido, o script cria feature/mmh-YYYYMMDD.
+node "$SKILL_ROOT/scripts/worktrees.mjs" add --root . --count "$N" --prefix mmh --into "$INTO" --test-cmd "$TEST_CMD" --out "$OUT"
 ```
 
-O script cria `.worktrees/mmh-<i>` + branches `mmh/slice-<i>`, anexa `.worktrees/` ao `.gitignore` se faltar, grava `$OUT/worktrees.json`. Se o dir da slice **já existe** (crash), não rode `add` de novo — retome no implementer.
+`$INTO` = `--into` do usuário, ou nome derivado do spec (`feature/<slug>`), **nunca** a default branch. Diga o nome da branch ao usuário antes de `add`.
 
-Se `git worktree` falhar: `N=1`, implementar no working tree, registrar `worktree: false` no meta. Não inventar worktree.
+`--test-cmd` na `into` **antes** de criar slices. Vermelho → o script recusa (`Never stack work on a red baseline`) e **não** abre worktree. Sem `test_cmd` conhecido, rode o que o repo usa e só então `add`.
 
-**Merge não é opcional.** Nenhuma slice fica aberta no closeout.
+O script cria `.worktrees/mmh-<i>` + branches `mmh/slice-<i>`, grava `$OUT/worktrees.json` (`into` = alvo do merge). Se o dir da slice **já existe** (crash), não rode `add` de novo — retome no implementer.
+
+Se anexar `.worktrees/` ao `.gitignore` (arquivo versionado), o script imprime `NOTE: appended .worktrees/ … include in the PR` e `gitignore_appended: true` no JSON. **Mostre isso ao usuário.** É alteração legítima do PR — não commitar escondido e não reverter.
+
+Se `git worktree` falhar: `N=1`, implementar na feature branch (ainda assim **não** em main), registrar `worktree: false` no meta. Não inventar worktree.
+
+**Merge não é opcional.** Nenhuma slice fica aberta no closeout. Merge é **sempre** em `worktrees.json.into`, não em `HEAD` se `HEAD` for protegida.
 
 ### 3. Implementar
 
@@ -160,7 +185,7 @@ Após cada slice verde (ou no fim, se `full`):
 node "$SKILL_ROOT/scripts/worktrees.mjs" merge --root . --index i --test-cmd "$TEST_CMD" --out "$OUT"
 ```
 
-Merge **só** se o test-cmd na worktree saiu 0. Conflito → pare e reporte; não `--ours`.
+O script faz checkout de `into` e recusa `main`/`master`/`trunk`. Merge **só** se o test-cmd na worktree saiu 0. Conflito → pare e reporte; não `--ours`.
 
 ### 4. Imutabilidade
 
@@ -203,7 +228,7 @@ node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 open "$OUT/report.html" 2>/dev/null || xdg-open "$OUT/report.html" 2>/dev/null || true
 ```
 
-HTML: SDD, o que foi implementado, fluxo (mermaid), impacto, payloads de teste, resultados, score. Mostrar path absoluto.
+HTML: SDD, o que foi implementado, fluxo (mermaid), impacto, payloads de teste, resultados, score. Mostrar path absoluto. No closeout, citar: branch `into`, se `.gitignore` ganhou `.worktrees/`, e que score 10 ≠ done do repo.
 
 ### 7. Limpar worktrees
 
@@ -212,6 +237,16 @@ node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root . --prefix mmh
 ```
 
 Falhou → `remove --prefix mmh` e conferir de novo. Closeout com worktree órfã = score < 10.
+
+### 8. Gates do projeto (depois do pack)
+
+Leia `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md`. Extraia o que o repo exige **além** dos 3 eixos desta skill (reviewers nomeados, `/security-review`, sweep `docs/` + i18n, “nunca commitar em main”, …).
+
+- Rode o que o host conseguir (skills/plugins citados).
+- O que não rodar → lista **OPEN** no REPORT/HTML, não silêncio.
+- PR sai da branch `into`, nunca de `main`.
+
+Este passo **não** entra no score 10.
 
 ---
 
@@ -233,5 +268,8 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Abrir um segundo pack enquanto há worktree `mmh/slice-*` ou pack `in_progress` (use `--fresh`)
 - Worktree de enfeite (criar e não mergear / não apagar)
 - Score 10 no feeling
+- Tratar score 10 como “done” do repo / substituto do trio de review do `CLAUDE.md`
+- Mergear slices em `main`/`master`/`trunk`
+- Empilhar feature/slice sobre suite já vermelha (“conserta junto”)
 - Impor stack ou framework
 - Review de um eixo só rotulado como consenso 3/3
