@@ -48,7 +48,8 @@ Status values: `OPEN` | `IN_PROGRESS` | `DONE`. You only emit `OPEN`.
 
 - Every task must be implementable with a **red test first**. If you cannot name the test, the task is too vague — split or ask.
 - Refactor tasks must include an immutability/characterization task that locks current behaviour **before** the cut.
-- Do not invent requirements the spec does not have (Speculative Generality).
+- Implement **exactly** the spec. Do not invent requirements (Speculative Generality).
+- If the spec leaves more than one valid way (lib, schema, API, flow) and you would have to choose: **stop and list the question**. Do not pick “the reasonable default”.
 - Out of scope from the spec stays out.
 
 If the spec is missing: write `TASKS.json` as `{ "kind": "unknown", "spec": null, "tasks": [] }` and stop. The Oracle asked the user already.

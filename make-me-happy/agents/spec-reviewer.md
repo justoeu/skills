@@ -41,6 +41,6 @@ or
 VERDICT: REJECT
 ```
 
-`REJECT` if (a) a spec requirement is missing/partial, or (c) an implementation is wrong vs the quoted spec. Scope creep (b) is REJECT when it changes a contract; otherwise note it and APPROVE.
+`REJECT` if (a) a spec requirement is missing/partial, (b) the diff does something the spec did not ask for, or (c) an implementation is wrong vs the quoted spec. Extra behaviour is out of spec even when “harmless”.
 
 Write `$OUT/reviews/spec.md`.

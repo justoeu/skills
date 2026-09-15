@@ -77,6 +77,15 @@ Obrigatório se flags omitidas **e** não está retomando:
 
 Se o host tem pergunta estruturada, use. Senão, pergunte em texto e espere.
 
+## Só o SDD (inegociável)
+
+Implementar **exatamente** o que o SDD/spec pediu. Nada além, nada “melhor” no lugar.
+
+- Não inferir tomada de decisão. Se o spec admite **mais de um** caminho (lib, schema, API, nome, fluxo, persistência) e há dúvida — **pergunte e espere**. Não escolha “a mais razoável” em silêncio.
+- Buraco, conflito ou ambiguidade no spec → pergunta. Não preencher o buraco.
+- Planner com dúvida: pode escrever `TASKS.json`, **não** despacha implementer até a resposta.
+- Implementer com dúvida no meio da slice: **para**, pergunta; não commita a escolha.
+
 ## Red → green (inegociável)
 
 Cada task:
@@ -189,7 +198,7 @@ Para cada worktree `i` em paralelo (subagente `agents/implementer.md`, `cwd` = d
 
 **Loop `task`:** após cada task, pergunte se continua. Não = merge do que já está verde, score, HTML parcial, pare.
 
-**Loop `full`:** só interrompa se RED não existir, merge conflitar, ou testes da slice falharem.
+**Loop `full`:** só interrompa se RED não existir, merge conflitar, testes da slice falharem, **ou** surgir escolha que o SDD não fecha (pergunte; não decida).
 
 Após cada slice verde (ou no fim, se `full`):
 
@@ -285,4 +294,6 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Empilhar feature/slice sobre suite já vermelha (“conserta junto”)
 - Fechar pack com cobertura < 95% ou sem `coverage.json`
 - Impor stack ou framework
+- Inferir decisão de implementação quando o SDD deixa mais de um caminho
+- Entregar além do que o SDD pediu
 - Review de um eixo só rotulado como consenso 3/3
