@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Quality score: five gates × 2 points. Close only at 10.
+ * Quality score: five gates × 2 points. Close only at 10 **and** coverage ≥ floor.
  *
  *   node score.mjs --dir docs/impl/make-me-happy/<run>
  */
@@ -18,10 +18,30 @@ function loadJson(file, fallback) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+export const COVERAGE_FLOOR = 95;
+
 function verdictOf(md) {
   if (!md) return null;
   const m = md.match(/VERDICT:\s*(APPROVE|REJECT|SKIP)/i);
   return m ? m[1].toUpperCase() : null;
+}
+
+function readCoverage(dir) {
+  const doc = loadJson(path.join(dir, 'coverage.json'), null);
+  const pct = doc && Number(doc.pct);
+  const measured = Number.isFinite(pct);
+  const ok = measured && pct >= COVERAGE_FLOOR;
+  return {
+    pct: measured ? pct : null,
+    floor: COVERAGE_FLOOR,
+    tool: doc?.tool || null,
+    ok,
+    detail: !doc
+      ? 'coverage.json missing'
+      : ok
+        ? `${pct}% >= ${COVERAGE_FLOOR}%`
+        : `${measured ? pct : '?'}% < ${COVERAGE_FLOOR}% floor`,
+  };
 }
 
 export function scorePack(dir) {
@@ -79,11 +99,13 @@ export function scorePack(dir) {
     detail: wt.skipped ? 'worktrees skipped (not a git repo / N=1)' : `${slices.filter((s) => s.merged).length}/${slices.length} merged+removed`,
   });
 
+  const coverage = readCoverage(dir);
   const points = gates.reduce((n, g) => n + (g.ok ? 2 : 0), 0);
   return {
     score: points,
     max: 10,
-    closable: points === 10,
+    coverage,
+    closable: points === 10 && coverage.ok,
     gates,
   };
 }

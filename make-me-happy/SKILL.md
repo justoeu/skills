@@ -90,6 +90,18 @@ tests_added += N   (N = testes novos/alterados desta task)
 
 Sem teste vermelho-antes, a task **não** é `DONE`.
 
+## Cobertura ≥ 95% (inegociável)
+
+Piso **95%**, não menos. Medida da ferramenta do repo (JaCoCo, c8/istanbul, go cover, coverage.py, …) sobre o código de produto tocado — **não** “95% das tasks têm teste”.
+
+Grave `$OUT/coverage.json`:
+
+```json
+{ "pct": 96.2, "tool": "c8", "report": "coverage/index.html" }
+```
+
+`pct` ausente ou `< 95` → pack **não** fecha, mesmo com os 5 gates em 10. Falta medir = não cumpriu.
+
 ## Baseline verde (inegociável)
 
 **Nunca empilhar trabalho sobre baseline vermelha.**
@@ -105,7 +117,7 @@ Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, n
 
 ## Score 10 (inegociável para fechar)
 
-`scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10**:
+`scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10 e cobertura ≥ 95%**:
 
 | Gate | +2 se |
 |------|--------|
@@ -115,7 +127,7 @@ Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, n
 | review | 3 eixos `APPROVE` (Spec pode ser `SKIP` se o usuário disse que não há spec — conta como gate pago) |
 | worktrees | todas as slices mergeadas e `worktrees.mjs verify-clean` ok |
 
-Score < 10 → corrigir e re-rodar o eixo que falhou. Não negociar 9.
+Score < 10 **ou** cobertura < 95% → corrigir e re-rodar. Não negociar 9 nem 94%.
 
 **Score 10 fecha o pack da skill, não o “done” do projeto.** Os 3 eixos (Standards / Spec / Correctness) **não** substituem gates que o repo documentar em `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` (ex.: trio code-reviewer + test-analyzer + security-review, sweep docs/i18n). Depois do HTML: listar esses gates e rodá-los, ou deixá-los OPEN no relatório. Não abrir PR só com score 10 se o repo exige o outro conjunto.
 
@@ -134,7 +146,7 @@ N=${WORKTREE_N:-3}
 # clamp 1..8
 ```
 
-`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `status` (`in_progress` | `closed`). Atualize `status` ao avançar de passo; `closed` só com score 10 + worktrees limpos.
+`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `status` (`in_progress` | `closed`). Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ 95% + worktrees limpos.
 
 **Spec.** Se `--spec` veio, use. Senão procure arquivo sob `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/` cujo nome case a branch ou o feature. Nada encontrado → **pergunte**. Usuário diz que não há → Spec sub-agent `SKIP` (`no spec available`); Planner ainda precisa de um objetivo em uma frase — peça.
 
@@ -271,5 +283,6 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Tratar score 10 como “done” do repo / substituto do trio de review do `CLAUDE.md`
 - Mergear slices em `main`/`master`/`trunk`
 - Empilhar feature/slice sobre suite já vermelha (“conserta junto”)
+- Fechar pack com cobertura < 95% ou sem `coverage.json`
 - Impor stack ou framework
 - Review de um eixo só rotulado como consenso 3/3

@@ -24,7 +24,7 @@ Fonte canônica: este repo. Hosts consomem por **symlink**.
 3. Cria **3** worktrees (ou `--worktree N`) numa **feature branch** (`--into`; se HEAD é `main`/`master`/`trunk`, cria `feature/mmh-YYYYMMDD`). Merge recusa a default branch. Recusa `add` se a suite em `into` já está vermelha (não empilha trabalho sobre baseline vermelha).
 4. Red → green em cada task + testes de imutabilidade.
 5. Review **Standards** (Fowler + repo) ‖ **Spec** ‖ **Correctness**. Consenso 3/3; REJECT → corrige.
-6. `score.mjs` (5 gates × 2). Fecha o **pack** só com **10** — não é o done do repo (trio/docs/i18n do `CLAUDE.md` continuam).
+6. `score.mjs` (5 gates × 2). Fecha o **pack** só com **10 e cobertura ≥ 95%** — não é o done do repo (trio/docs/i18n do `CLAUDE.md` continuam).
 7. `report.html`. Se `add` anexou `.worktrees/` no `.gitignore`, isso é alteração visível do PR (`NOTE:` + `gitignore_appended`).
 
 ## Pack

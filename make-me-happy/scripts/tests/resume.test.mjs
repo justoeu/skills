@@ -34,6 +34,9 @@ test('inferNextStep walks the pipeline', () => {
   assert.equal(inferNextStep(dir, []), 'review');
 
   write(dir, 'reviews/correctness.md', 'VERDICT: APPROVE');
+  assert.equal(inferNextStep(dir, []), 'score');
+
+  write(dir, 'coverage.json', { pct: 96, tool: 'c8' });
   assert.equal(inferNextStep(dir, []), 'closed');
 });
 

@@ -89,7 +89,7 @@ O que a run faz:
 2. Planner → `TASKS.json` (qtd de testes por task).
 3. Git worktrees (default **3**, `--worktree N`) numa **feature branch** (`--into`; recusa merge em `main`; recusa baseline vermelha).
 4. Testes de imutabilidade (contrato que não pode andar).
-5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**. Score 10 fecha o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
+5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**. Score 10 **e cobertura ≥ 95%** fecham o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
 6. HTML interativo. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR.
 
 `--fresh` abandona slices abertas e começa do zero.

@@ -50,7 +50,9 @@ const correctness = load(path.join(dir, 'reviews', 'correctness.md'));
 const app = meta.app || path.basename(process.cwd());
 const branch = meta.branch || '';
 const kind = meta.kind || tasks.kind || '';
-const scoreCls = score.score === 10 ? 'ok' : 'bad';
+const cov = score.coverage || {};
+const scoreCls = score.closable ? 'ok' : 'bad';
+const covCls = cov.ok ? 'ok' : 'bad';
 
 const taskRows = (tasks.tasks || []).map((t) => `<tr>
   <td><code>${esc(t.id)}</code></td>
@@ -119,6 +121,7 @@ const html = `<!DOCTYPE html>
   <span class="pill">Branch <code>${esc(branch)}</code></span>
   <span class="pill">${esc(kind)}</span>
   <span class="pill ${scoreCls}">Score <strong>${esc(score.score)}</strong> / 10</span>
+  <span class="pill ${covCls}">Coverage <strong>${esc(cov.pct ?? 'n/a')}</strong>% (piso ${esc(cov.floor ?? 95)})</span>
 </header>
 <nav>
   ${['sdd','impl','fluxo','payloads','testes','review','score'].map((id, i) =>
@@ -153,6 +156,7 @@ const html = `<!DOCTYPE html>
       <h2>Resultado dos testes</h2>
       <p>cmd: <code>${esc(tests.cmd || meta.test_cmd || '')}</code> — ${tests.ok === false ? 'FAIL' : tests.ok === true ? 'PASS' : 'n/a'}</p>
       <p>imutabilidade: ${immut.green ? 'green' : 'não green'} — ${(immut.suite || []).map(esc).join(', ')}</p>
+      <p>cobertura: ${esc(cov.pct ?? 'n/a')}% via ${esc(cov.tool || '—')} — piso ${esc(cov.floor ?? 95)}% ${cov.ok ? 'ok' : 'abaixo do piso'}</p>
       <pre>${esc(tests.log || '')}</pre>
     </div>
   </section>
@@ -164,6 +168,7 @@ const html = `<!DOCTYPE html>
   <section class="panel" id="score">
     <div class="card">
       <h2>Score ${esc(score.score)} / 10 ${score.closable ? '— pode fechar' : '— não fecha'}</h2>
+      <p class="muted">${esc(cov.detail || '')}</p>
       <table>
         <thead><tr><th>gate</th><th></th><th>detalhe</th></tr></thead>
         <tbody>${gateRows}</tbody>

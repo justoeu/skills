@@ -27,6 +27,7 @@ function pack(overrides = {}) {
   fs.writeFileSync(path.join(reviews, 'standards.md'), 'ok\nVERDICT: APPROVE\n');
   fs.writeFileSync(path.join(reviews, 'spec.md'), 'ok\nVERDICT: APPROVE\n');
   fs.writeFileSync(path.join(reviews, 'correctness.md'), 'ok\nVERDICT: APPROVE\n');
+  fs.writeFileSync(path.join(dir, 'coverage.json'), JSON.stringify({ pct: 96.2, tool: 'c8' }));
   for (const [file, body] of Object.entries(overrides)) {
     const dest = path.join(dir, file);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -61,6 +62,19 @@ test('DONE without tests fails red-green', () => {
     },
   }));
   assert.equal(r.gates.find((g) => g.id === 'red-green').ok, false);
+});
+
+test('coverage below 95 blocks close even at score 10', () => {
+  const r = scorePack(pack({ 'coverage.json': { pct: 94.9, tool: 'c8' } }));
+  assert.equal(r.score, 10);
+  assert.equal(r.coverage.ok, false);
+  assert.equal(r.closable, false);
+});
+
+test('missing coverage.json blocks close', () => {
+  const r = scorePack(pack({ 'coverage.json': null }));
+  assert.equal(r.closable, false);
+  assert.equal(r.coverage.ok, false);
 });
 
 test('unmerged slice fails worktrees gate', () => {

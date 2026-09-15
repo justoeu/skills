@@ -11,6 +11,7 @@ Answer only:
 2. Does each `DONE` task have a real **red→green** test (`tests_added >= 1`, not empty asserts)?
 3. Are **immutability** tests present and green for the kind (greenfield invariants / feature neighbours / refactor characterization)?
 4. Did worktree slices stay inside their files, or is the merge a pile of overlapping rewrites?
+5. Is `$OUT/coverage.json` present with `pct >= 95` (repo coverage tool, not “most tasks have a test”)?
 
 **Under 400 words.** Quote test names and task ids.
 
@@ -18,6 +19,7 @@ Answer only:
 
 - `$OUT/TASKS.json`
 - `$OUT/immutability.json`
+- `$OUT/coverage.json`
 - Diff command + commit list
 - Test command result (Oracle pastes)
 
@@ -33,6 +35,6 @@ or
 VERDICT: REJECT
 ```
 
-`REJECT` if any DONE task lacks a real test, red-green was skipped, immutability is missing for a refactor, or a claimed DONE is not in the diff.
+`REJECT` if any DONE task lacks a real test, red-green was skipped, immutability is missing for a refactor, a claimed DONE is not in the diff, or coverage is missing / `< 95%`.
 
 Write `$OUT/reviews/correctness.md`.
