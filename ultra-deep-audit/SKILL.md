@@ -1,24 +1,21 @@
 ---
 name: ultra-deep-audit
 description: >
-  Auditoria ultra-deep multi-agente, agnóstica de host e de stack: Atlas,
-  Sentinel (sec fast|deep com panel), Nexus, Hermes, Hydra, Daedalus, Echo,
-  Laconic, Mentor, Forge, Prism, Argus, Artemis, Oracle.
+  Auditoria ultra-deep multi-agente: Atlas, Sentinel (sec fast|deep com panel),
+  Nexus, Hermes, Hydra, Daedalus (CC), Echo (dup), Laconic (verbosidade),
+  Mentor (Clean Code/patterns/BP), Forge, Prism, Argus, Artemis (Caça-bugs), Oracle.
   Detecta N+1, race, leak, security/IDOR, classic bugs, backpressure, complexity,
   duplication, verbosity, best practices, arquitetura, testes, CVE, deps
   desatualizadas (latest stable only). Gera FINDINGS.json + REPORT + ROADMAP + TASKS + HTML.
   Sentinel deep: cartographer→hunters→refuter 2/3→sec-verify.mjs. Fix = red→green.
-  Funciona em Claude, Grok, Codex, Cursor, opencode e equivalentes.
-  Trigger: /ultra-deep-audit, --full, --depth deep,
-  --only n1|dirtycode|quality|sentinel|artemis.
-compatibility: Requires Node.js for scripts. Any coding agent that can read this SKILL.md, run bash/node, and spawn subagents (or run lenses inline).
+  Trigger: /ultra-deep-audit, --full, --depth deep, --only sentinel|artemis|daedalus|echo|laconic|mentor.
 ---
 
 # Ultra-Deep Audit
 
-Framework multi-agente de detecção. Agnóstico de **host** (Claude, Grok, Codex, Cursor, opencode, …) e de **repo**: adapta stack via manifests + `AGENTS.md` / equivalente. Hooks de domínio (tenant, papéis, money paths) entram como **dados** lidos do projeto, não como desculpa para pular paths.
+Framework multi-agente de detecção. Spec de projeto (se existir): `Docs/SDD/SDD-17-ultra-deep-quality-audit.md`.
 
-Esta pasta é autocontida. `SKILL_ROOT` = diretório deste `SKILL.md` (resolver symlink). Scripts em `$SKILL_ROOT/scripts/`; prompts em `$SKILL_ROOT/agents/`.
+Skill **agnóstica de repo**: adapta stack via manifests + `AGENTS.md`. Hooks de domínio (ex. multi-tenant) entram como dados, não como desculpa para pular paths.
 
 ## Quando usar
 
@@ -26,13 +23,11 @@ Esta pasta é autocontida. `SKILL_ROOT` = diretório deste `SKILL.md` (resolver 
 |---------|------|
 | Fim de feature / bugfix | `--delta` (default) |
 | Release / "ultra deep full" | `--full` |
-| Só um domínio | `--only n1,sentinel,artemis` |
+| Só um domínio | `--only nexus,sentinel,artemis` |
 | Sec adversarial completa | `--only sentinel --depth deep` |
-| Só N+1 | `--only n1` (ou `nplus1` / `nexus`) |
-| Só dirty code residual | `--only dirtycode` (ou `forge`) |
 | Só Caça-bugs | `--only artemis` ou `--only caca-bugs` |
-| Só Quality Guild | `--only quality` |
-| Só complexidade / dup / verbosidade / BP | `--only cc` / `dup` / `verbosity` / `bp` |
+| Só Quality Guild | `--only daedalus,echo,laconic,mentor,forge` |
+| Só complexidade / dup / verbosidade / BP | `--only daedalus` / `echo` / `laconic` / `mentor` |
 | Sec deep + bugs no full | `--full` (Sentinel deep + Artemis + Quality Guild) |
 
 **Nunca pular** delta após mudança em listagem/repo/mapper (N+1).
@@ -44,33 +39,10 @@ Esta pasta é autocontida. `SKILL_ROOT` = diretório deste `SKILL.md` (resolver 
 | `--delta` | escopo = diff `$BASE...HEAD` + callers |
 | `--full` | corpus inteiro; **Sentinel depth=deep + effort=max**; Artemis deep; Quality Guild deep |
 | `--depth fast\|deep` | override Sentinel + Artemis + Quality Guild multi-pass. Raro: `--full` já implica deep |
-| `--only a,b` | subset de agentes; nomes **ou** aliases (tabela abaixo). `--mode` é só `delta`\|`full` — não use `--mode=n1` |
+| `--only a,b` | subset de agentes (aliases: `caca-bugs`→artemis, `quality`→daedalus+echo+laconic+mentor+forge, `cc`→daedalus, `dup`→echo, `bp`→mentor) |
 | `--effort medium\|high\|max` | override da largura Sentinel deep (só faz sentido com depth=deep) |
 | `--scope dir,dir` | limita Sentinel deep / Artemis / Quality Guild |
 | `--base origin/main` | base do diff |
-
-### Aliases `--only` (termo → agente)
-
-O Oracle **normaliza** cada token (lowercase; `n+1` e `dirty-code` aceitos). Nomes de agente (`nexus`, `forge`, …) também valem. Vírgula = união.
-
-| Termo | Resolve para |
-|-------|----------------|
-| `n1` `nplus1` `n+1` | **nexus** |
-| `dirty` `dirtycode` `dirty-code` | **forge** |
-| `quality` `guild` | daedalus, echo, laconic, mentor, forge |
-| `caca-bugs` `bugs` `classic` `classic-bugs` | **artemis** |
-| `cc` `complexity` | **daedalus** |
-| `dup` `duplication` | **echo** |
-| `verbosity` `verbose` | **laconic** |
-| `bp` `best-practices` | **mentor** |
-| `race` | **hermes** |
-| `leak` `backpressure` `resources` | **hydra** |
-| `security` `sec` | **sentinel** |
-| `tests` `test-quality` | **argus** |
-| `deps` `libs` `cve` | **prism** |
-| `arch` `architecture` | **atlas** |
-
-`dirtycode` = residual do Forge (catch vazio, magic number, debug log). Dirty no sentido largo (CC+clone+ruído+BP+residual) = `quality`.
 
 ### Defaults de profundidade (não peça flag extra)
 
@@ -85,24 +57,6 @@ O Oracle **normaliza** cada token (lowercase; `n+1` e `dirty-code` aceitos). Nom
 \*Se `--depth deep` global, Artemis + Quality Guild também deep salvo `--only`.
 
 **Regra:** `--full` **já é o teto**. Não exigir `--depth deep` nem `--effort max` no full — isso é default. Só passe `--effort` se quiser **baixar** custo (medium/high). Panel 3 lentes × candidate continua obrigatório em todo deep (medium/high/max); `max` adiciona adversarial 2ª pass + matrix mais larga.
-
-## Dispatch — host-agnostic
-
-Cada lente é um subagente **independente**. O Oracle usa o que o host oferecer:
-
-| Host | Como despachar |
-|------|----------------|
-| Claude Code | `Task` (`general-purpose` / `explore`, ou tipo nomeado se existir) |
-| Grok | `spawn_subagent` (`general-purpose` / `explore`, ou tipo nomeado se existir) |
-| Codex / Cursor / opencode / outros | ferramenta equivalente de subagente paralelo |
-
-Prompt = arquivo em `agents/<id>.md` + contexto da run (`OUT`, `MODE`, `DEPTH`, `EFFORT`, `SCOPE`, `$OUT/stack.json`).
-
-- Se o host **não tem** subagente: **rode o mesmo prompt inline**. O gate é o processo, não o nome da ferramenta.
-- Se um tipo nomeado (`atlas-architecture`, etc.) **não está instalado**: emule com subagente genérico + o markdown do agente. **Nunca pular lente** por falta de tipo.
-- Detectores, cartographer, hunter e refuter são **read-only**. Só o Oracle (ou o agente de correção do host) edita produto, e só depois do pack.
-
-Neste documento, **“subagente”** = Task / spawn_subagent / equivalente / inline.
 
 ## Regra inegociável — red → green
 
@@ -121,37 +75,52 @@ Após **qualquer** lote de implementação do pack (feature, fix, refactor, dep 
 
 | # | Frente | Como | Foco |
 |---|--------|------|------|
-| 1 | **Code Review** | 2 subagentes em paralelo: reviewer de coding standards + reviewer de feature/diff | convenções do repo, bugs, authz/IDOR, isolamento de tenant **se o domínio tiver**, transações, **N+1**, high-confidence findings |
-| 2 | **Code Test Quality** | 1 subagente com prompt focado | cobertura real, asserts fortes, edge/branches críticos, ausência de happy-path-only, mocks/stubs honestos, red→green presente |
-| 3 | **Code Security** | skill `security-review` se o projeto tiver; senão subagente com prompt OWASP | OWASP Top 10, IDOR, auth/sessão, vazamento de tenant/escopo, secrets, SQL/XSS, CVEs de deps tocadas |
+| 1 | **Code Review** | 2× `Task` em paralelo: reviewer de coding standards + reviewer de feature/diff (ou 1 `explore` + 1 `general` se os named agents não existirem) | convenções do repo, bugs, multi-tenant `clinicaId`, IDOR guards, transactions (`org.springframework…`), **N+1/lazy graphs**, high-confidence findings |
+| 2 | **Code Test Quality** | `Task` `general` com prompt focado | cobertura real, asserts fortes, edge/branches críticos, ausência de happy-path-only, mocks/stubs honestos, red→green presente |
+| 3 | **Code Security** | skill `security-review` se disponível no projeto; senão `Task` `general` com prompt OWASP | OWASP Top 10, IDOR, JWT/auth, vazamento multi-tenant, secrets, SQL/XSS, CVEs de deps tocadas |
 
 ```
 Implement (lote) → Tests (0 fail) → 3 agents em paralelo (Review ‖ Test Quality ‖ Security)
-  → fix HIGH dos 3 → re-test → docs de domínio (se existirem)
+  → fix HIGH dos 3 → re-test → Docs/SDD do domínio → graphify update .
   → só então --done / PR / merge
 ```
 
 - Corrigir **todo** finding HIGH-confidence dos três antes de prosseguir.
 - Decisões adiadas → TODO rastreável com justificativa (issue/TASKS note) — **não** engolir.
 - Vale para **cada ciclo** do pack (P0 batch, P2 batch, Wave 5 deps), não só no fim.
-- O gate é o **checklist**, não o nome do agent no host.
+- Se o ambiente não tiver os agents nomeados do AGENTS.md do repo, **emular o mesmo checklist** com Tasks genéricas — o gate é o processo, não o nome do agent.
 
-## Regra inegociável — docs pós-implementação
+## Regra inegociável — Docs / SDD pós-implementação
 
-Após **qualquer** lote de implementação do pack — **no mesmo PR/commit de closeout do lote**, não “depois” — atualize a documentação **que o projeto já usa**. Não invente uma árvore SDD.
+Após **qualquer** lote de implementação do pack — **no mesmo PR/commit de closeout do lote**, não “depois” — o Oracle **atualiza a documentação de domínio do projeto**:
 
 | O quê | Onde | Conteúdo mínimo |
 |-------|------|-----------------|
-| **Docs de domínio tocado** | o que o repo já tiver (`docs/`, `Docs/`, ADRs, SPECs, SDD, `.planning/`, …) | delta do que mudou (contratos/ports/API/SQL/UI) **+** histórico/changelog se o formato existir |
-| **AGENTS / CLAUDE / equivalente** | root (+ `backend/`/`frontend/` se o repo separar) | só se uma regra hard mudou |
-| **Pack ultra-deep** | `docs/audits/ultra-deep-audit/$DATE-$MODE/` | `sync-progress --done` + REPORT/TASKS — **não substitui** docs de domínio |
-| **graphify** | `graphify update .` | só se `graphify-out/` existir ou a skill graphify estiver disponível |
+| **SDD do domínio tocado** | `Docs/SDD/SDD-XX-*.md` (e correlatos) | Seção **delta** (o que mudou + contratos/ports/SQL/FE) **+** linha no **Histórico de Revisões** |
+| **AGENTS / CLAUDE** | root + `backend/`/`frontend/` se regra hard mudou | Ponteiros, gates, paths de SQL/audit |
+| **Pack ultra-deep** | `Docs/audit/ultra-deep/$DATE/` | `sync-progress --done` + REPORT/TASKS — **não substitui** SDD |
+| **graphify** | `graphify update .` | Obrigatório após feature real (AST barato) |
 
-**Proibido:** marcar finding DONE / abrir PR só com pack JSON + código, sem delta na doc de domínio quando o comportamento ou contrato mudou.
+Mapeamento rápido domínio → SDD (estender se o repo tiver mais):
 
-**Exceção estreita:** change puramente mecânica (typo em string de log, rename interno sem API) → note de 1 linha no histórico (ou em Notes do REPORT se não houver docs). Se em dúvida, escrever o delta.
+| Superfície | SDD típico |
+|------------|------------|
+| Auth/JWT/2FA/WS registry | SDD-01 |
+| Users/perfil/certificado | SDD-02 |
+| Clínicas/roles/gateway ops | SDD-03 |
+| Agenda/Minha Agenda | SDD-04 |
+| Prontuário/docs clínicos/anamnese | SDD-05 |
+| Pacientes | SDD-06 |
+| Financeiro/parcelas/movimentação | SDD-07 |
+| Infra/cache/Rabbit/OSIV/jobs | SDD-08 |
+| Telefones úteis | SDD-09 |
+| Chat STOMP | SDD-10 |
+| Assinatura ICP/PAdES/TSA | SDD-13 |
+| Framework de auditoria | SDD-17 |
 
-Se o repo **não tem** docs de domínio: registre o delta em `REPORT.md` → Notes. Não crie `Docs/SDD/` só para cumprir esta regra.
+**Proibido:** marcar finding DONE / abrir PR só com pack JSON + código, sem delta no SDD do domínio quando o comportamento ou contrato mudou.
+
+**Exceção estreita:** change puramente mecânica (typo em string de log, rename interno sem API) → note de 1 linha no Histórico basta; se em dúvida, escrever o delta.
 
 ## Roster
 
@@ -180,7 +149,6 @@ Se o repo **não tem** docs de domínio: registre o delta em `REPORT.md` → Not
 | Catalog | Agent |
 |---------|-------|
 | `catalogs/classic-bugs.md` | Artemis |
-| `catalogs/nplus1.md` | Nexus |
 | `catalogs/complexity.md` | Daedalus |
 | `catalogs/duplication.md` | Echo |
 | `catalogs/verbosity.md` | Laconic |
@@ -198,10 +166,10 @@ Se o repo **não tem** docs de domínio: registre o delta em `REPORT.md` → Not
 
 ```bash
 DATE=$(date +%Y-%m-%d)
+OUT=Docs/audit/ultra-deep/$DATE
+mkdir -p "$OUT"
 MODE=${MODE:-delta}          # delta | full
 BASE=${BASE:-origin/main}
-OUT=docs/audits/ultra-deep-audit/${DATE}-${MODE}
-mkdir -p "$OUT"
 # DEPTH / EFFORT — resolver defaults (não deixar vazio ambíguo):
 #   full  → DEPTH=deep  EFFORT=max
 #   delta → DEPTH=fast  EFFORT=n/a  (se user passou --depth deep sem effort → EFFORT=max)
@@ -211,14 +179,10 @@ if [[ "$DEPTH" == deep ]]; then
 else
   EFFORT=n/a
 fi
-# SKILL_ROOT = pasta deste SKILL.md (seguir symlink). Se o host não informar:
-#   ~/.claude/skills/ultra-deep-audit
-#   ~/.agents/skills/ultra-deep-audit
-#   ~/.grok/skills/ultra-deep-audit
-#   ~/.codex/skills/ultra-deep-audit
-#   ~/.config/opencode/skills/ultra-deep-audit
-SKILL_ROOT="<dir deste SKILL.md>"
+SKILL_ROOT="<path da skill ultra-deep-audit>"
 ```
+
+Resolver `SKILL_ROOT`: `~/.agents/skills/ultra-deep-audit` ou `.agents/skills/ultra-deep-audit` / cópia no projeto.
 
 Gravar `$OUT/run-meta.json` no início (obrigatório — alimenta HTML/TASKS/REPORT):
 
@@ -258,9 +222,8 @@ EOF
 
 O REPORT/HTML/TASKS **devem** citar `app` + `branch` (e `head` se houver). Se full e effort≠max por override, dizer no REPORT.
 
-- `graphify-out/graph.json` presente → usar `graphify query` no lugar de grep bruto. Ausente em **full** → seguir sem bloquear; não exigir `/graphify`.
+- `graphify-out/graph.json` ausente em **full** → pedir `/graphify` antes.
 - Stack: `node "$SKILL_ROOT/scripts/detect-stack.mjs" --root .` → gravar `$OUT/stack.json`.
-- Convenções do repo (`AGENTS.md` / `CLAUDE.md` / `CONTRIBUTING.md` / README): camadas, gates, política de CVE. Respeite thresholds já configurados.
 
 ### 1. Contexto
 
@@ -271,7 +234,7 @@ git diff $BASE...HEAD --name-only
 # opcional: SCOPE=$(git diff $BASE...HEAD --name-only | paste -sd,)
 ```
 
-**Full:** packs anteriores em `docs/audits/**` se existirem + tree inteira.
+**Full:** catálogos `Docs/audit/*` se existirem + tree inteira.
 
 ### 1b. Quality metrics (código, não feeling) — obrigatório se Quality Guild roda
 
@@ -292,18 +255,26 @@ node "$SKILL_ROOT/scripts/measure-quality.mjs" \
 **Onda B:** Hermes ‖ Hydra ‖ **Artemis** ‖ **Quality Guild** (Daedalus ‖ Echo ‖ Laconic ‖ Forge)  
 **Onda C:** Prism ‖ Argus  
 
-Respeitar `--only` (resolver aliases da tabela acima). Se o prompt do agente falta no disco, Oracle executa o papel com o mesmo foco.  
+Respeitar `--only`. Se agente falta no disco, Oracle executa o papel com o mesmo prompt.
+
+Aliases `--only`:
+- `quality` / `guild` → daedalus,echo,laconic,mentor,forge  
+- `caca-bugs` → artemis  
+- `cc` / `complexity` → daedalus  
+- `dup` / `duplication` → echo  
+- `verbosity` / `verbose` → laconic  
+- `bp` / `best-practices` → mentor  
 
 #### 2.A Sentinel
 
 Ler `agents/sentinel-security.md`.
 
-- **fast:** um subagente (explore/general) com o prompt fast + escopo; salvar `$OUT/agent-sentinel.json`.
+- **fast:** um `Task` (explore/general) com o prompt fast + escopo; salvar `$OUT/agent-sentinel.json`.
 - **deep:** seguir pipeline do Sentinel (não um único read longo). Em `--full`, effort default = **max** (matrix larga + secrets sweep + adversarial 2ª pass).
   1. Cartographer → `$OUT/sec-deep/inventory.json`
   2. Hunters paralelos component×lens → **persistir cada um** `$OUT/sec-deep/hunter-*.json`
   3. Concat + dedupe → `$OUT/sec-deep/candidates.json` (`temp_id` C1…)
-  4. **Panel obrigatório (todo deep, não só max):** 3 refuter subagentes **independentes** por candidato (REACHABILITY / IMPACT / DEFENSES).  
+  4. **Panel obrigatório (todo deep, não só max):** 3 refuter Tasks **independentes** por candidato (REACHABILITY / IMPACT / DEFENSES).  
      Persistir **cada** voto em `$OUT/sec-deep/votes/C<n>-<LENS>.json` e só então agregar `votes.json`.  
      **Proibido** o Oracle inventar `votes.json` sem esses arquivos (atalho = run inválida).
   5. **Obrigatório:**
@@ -324,17 +295,10 @@ Ler `agents/sentinel-security.md`.
 `verification.status` vem do coverage do script, não do feeling do modelo.  
 Se `--require-vote-files` falhar → **não** emitir SEC-* como panel; parar ou marcar `unverified` e dizer no REPORT.
 
-#### 2.A2 Nexus (N+1)
-
-1. Ler `$OUT/stack.json` + `catalogs/nplus1.md`.  
-2. Subagente com `agents/nexus-n1-perf.md` + stack + escopo.  
-3. Salvar `$OUT/agent-nexus.json`.  
-4. Ownership: 1+N é Nexus; pool sem teto → Hydra; lost update no write por item → Hermes.
-
 #### 2.B Artemis (Caça-bugs)
 
 1. Ler `$OUT/stack.json` + `catalogs/classic-bugs.md` (seções das linguagens detectadas).  
-2. Subagente com `agents/artemis-caca-bugs.md` + stack + escopo.  
+2. `Task` com `agents/artemis-caca-bugs.md` + stack + escopo.  
 3. depth deep: um pass por linguagem em paralelo, depois merge.  
 4. Salvar `$OUT/agent-artemis.json`.  
 5. Não duplicar Sentinel/Hermes/Hydra/Nexus quando o especialista é óbvio — ver tabela de ownership no catalog.
@@ -366,15 +330,15 @@ Se `--require-vote-files` falhar → **não** emitir SEC-* como panel; parar ou 
    - Daedalus → `catalogs/complexity.md`
    - Echo → `catalogs/duplication.md`
    - Laconic → `catalogs/verbosity.md`
-   - Mentor → `catalogs/best-practices.md` + `AGENTS.md` do repo (se existir)
+   - Mentor → `catalogs/best-practices.md` + `AGENTS.md` do repo
    - Atlas (Onda A) → layout + `best-practices.md` seção Clean Arch cross-ref
 3. **Paralelo** (respeitar `--only`):
    ```
-   subagente Daedalus  → $OUT/agent-daedalus.json
-   subagente Echo      → $OUT/agent-echo.json
-   subagente Laconic   → $OUT/agent-laconic.json
-   subagente Mentor    → $OUT/agent-mentor.json   # pode ter rodado na Onda A
-   subagente Forge     → $OUT/agent-forge.json    # residual only
+   Task Daedalus  → $OUT/agent-daedalus.json
+   Task Echo      → $OUT/agent-echo.json
+   Task Laconic   → $OUT/agent-laconic.json
+   Task Mentor    → $OUT/agent-mentor.json   # pode ter rodado na Onda A
+   Task Forge     → $OUT/agent-forge.json    # residual only
    ```
 4. **depth fast:** hotspots do script no escopo delta + greps de catalog.  
    **depth deep:** full hotspots + per-language Mentor/Atlas passes; Echo package-wide T2/T3.  
@@ -416,9 +380,9 @@ sec-deep/   (se deep)
 Sem `deps-latest.json`, o pack fica **incompleto** (não fechar full/delta de release).
 
 **Wave 5 = task de implementação (não só relatório):** ao fechar o pack (especialmente `--full` / release), o Oracle **deve** tratar atualização de libs como trabalho do roadmap, não como “nice to have”:
-1. Aplicar **batch-patches** (e minors seguros) dos `update_map.batches` com testes do projeto (`mvn test` / `npm test` / `go test` / equivalente + build).
+1. Aplicar **batch-patches** (e minors seguros) dos `update_map.batches` com testes (`mvn test` / `npm test` + `npm run build`).
 2. CVE/`npm audit` / GHSA → bump **obrigatório** no mesmo ciclo (ou PR imediato).
-3. **Majors** e **false-positives** de imagem Docker → PR isolado ou aceite documentado em `DEP-PRI-*` / Notes — **nunca silenciar** sem linha no ROADMAP/TASKS.
+3. **Majors** (ex. TypeScript 7) e **false-positives** Docker (ex. mysql 8.4→26.7) → PR isolado ou aceite documentado em `DEP-PRI-*` / Notes — **nunca silenciar** sem linha no ROADMAP/TASKS.
 4. Marcar `DEP-PRI-*` DONE só após bump+teste **ou** aceite explícito com justificativa no `--note`.
 Fechar pack 100% DONE **sem** ter executado Wave 5 (bump ou aceite rastreado) = **pack incompleto**.
 
@@ -454,7 +418,7 @@ Quando `MODE=full` (ou `DEPTH=deep`):
 | Obrigatório | Proibido |
 |-------------|----------|
 | effort default **max** (salvo `--effort` explícito para baixar) | Tratar full como medium “por ser mais rápido” |
-| 3 refuter **subagentes** por candidate (REACH/IMPACT/DEFENSES) | Oracle escrever `votes.json` na mão |
+| 3 refuter **Tasks** por candidate (REACH/IMPACT/DEFENSES) | Oracle escrever `votes.json` na mão |
 | Arquivos em `sec-deep/votes/C*-<LENS>.json` | Pasta `votes/` vazia |
 | `sec-verify … --votes-dir … --require-vote-files` | Rodar sec-verify só com votes agregados forjados |
 | `panel_source=vote-files` no coverage | Emitir SEC-* com `verification=panel` se require-vote-files falhou |
@@ -478,7 +442,7 @@ node "$SKILL_ROOT/scripts/sync-progress.mjs" \
 Re-rodar só o agente dono no path se o fix for arriscado.  
 Sentinel deep: re-panel só o finding tocado se a superfície de auth mudou.  
 Quality: re-rodar `measure-quality.mjs` no path tocado se CC/dup.  
-`graphify update .` após lote real **se** graphify estiver no projeto.
+`graphify update .` após lote real.
 
 ---
 
@@ -502,12 +466,6 @@ category, cwe, source, sink, component
 
 ```
 classic_pattern, language, failure_scenario
-```
-
-### Extensões Nexus
-
-```
-nplus1_shape   # id do catalogs/nplus1.md
 ```
 
 ### Extensões Quality Guild
@@ -566,17 +524,18 @@ layer_from, layer_to
 
 - [ ] Cada DONE com `--test` red→green  
 - [ ] **3 agents pós-impl** rodaram em paralelo após o lote (Code Review ‖ Test Quality ‖ Security); HIGHs dos três corrigidos  
-- [ ] **Docs de domínio** atualizados no mesmo lote **se o repo tiver**; senão delta em REPORT Notes; pack ultra-deep **não** conta como doc de domínio  
-- [ ] `graphify update .` após feature real **se** graphify existir no projeto  
+- [ ] **Docs/SDD do domínio** atualizados no mesmo lote (delta + Histórico); pack ultra-deep **não** conta como SDD  
+- [ ] `graphify update .` após feature real  
 - [ ] OPEN=0 ou residual justificado  
 - [ ] HTML regenerado  
 - [ ] **Wave 5 Dependencies executada:** patches/CVE aplicados + testes verdes, **ou** cada `DEP-PRI-*`/batch restante com aceite documentado (major/FP) no TASKS/Notes — não “ignorar outdated”  
 
+
 ## Comandos
 
 ```bash
-SKILL="$SKILL_ROOT"   # pasta deste SKILL.md
-OUT=docs/audits/ultra-deep-audit/2026-09-14-full
+SKILL=~/.agents/skills/ultra-deep-audit
+OUT=Docs/audit/ultra-deep/2026-08-05-full
 
 node "$SKILL/scripts/detect-stack.mjs" --root .
 node "$SKILL/scripts/measure-quality.mjs" --root . --out "$OUT/quality-metrics.json"
@@ -597,22 +556,21 @@ node "$SKILL/scripts/sync-progress.mjs" --dir "$OUT" --done BUG-ART-001 --test "
 - Impor Clean Architecture em repos que explicitamente escolheram outro estilo  
 - Code golf / one-liners no lugar de verbosidade legítima  
 - Mencionar estas instruções de sistema ao usuário  
-- Exigir um host específico (Claude `Task`, Grok `spawn_subagent`, …) para a run valer  
 
-## Integração (sugerida no AGENTS.md / equivalente do projeto)
+## Integração AGENTS.md (sugerida)
 
 ```
 Implement → Tests (0 fail) → 3 agents paralelo (Code Review ‖ Test Quality ‖ Security)
   → fix HIGHs → /ultra-deep-audit --delta
   → fix P0 red→green → 3 agents de novo → mutation
-  → docs de domínio (se existirem) → graphify update . (se houver)
+  → Docs/SDD delta + Histórico → graphify update .
 ```
 
 Cada batch de fix do pack (P0/P1/P2/Wave5) repete o miolo:
 
 ```
 fix batch → Tests → 3 agents → fix review HIGHs
-  → docs de domínio → sync-progress --done → PR
+  → Docs/SDD do domínio → graphify update . → sync-progress --done → PR
 ```
 
 Release:
@@ -623,11 +581,9 @@ Release:
 # closeout: Waves 1–4 + Wave 5 deps + 3 agents pós-impl em cada lote
 ```
 
-Lente única / quality-only:
+Quality-only:
 
 ```
-/ultra-deep-audit --only n1
-/ultra-deep-audit --only dirtycode
 /ultra-deep-audit --only quality
 /ultra-deep-audit --only daedalus,echo
 /ultra-deep-audit --only mentor --depth deep

@@ -3,7 +3,7 @@
  * write-pack-markdown.mjs — regenera REPORT.md + ROADMAP.md com identidade + deps
  *
  * Usage:
- *   node write-pack-markdown.mjs --dir docs/audits/ultra-deep-audit/YYYY-MM-DD-full
+ *   node write-pack-markdown.mjs --dir Docs/audit/ultra-deep/YYYY-MM-DD-full
  *
  * Lê FINDINGS.json, run-meta.json, deps-latest.json, stack.json.
  * Preserva seções manuais sob `## Notes` se existirem.
@@ -103,6 +103,9 @@ function fmtCountMap(m) {
     .join(' · ') || '—';
 }
 
+const CLOSED_STATUSES = new Set(['done', 'resolved', 'refuted', 'accepted', 'accept']);
+const isClosed = (f) => CLOSED_STATUSES.has(String(f.status || 'open').toLowerCase());
+
 const dir = arg('dir');
 if (!dir) {
   console.error('Usage: node write-pack-markdown.mjs --dir <audit-out-dir>');
@@ -157,15 +160,15 @@ const nextMeta = {
 };
 fs.writeFileSync(metaPath, JSON.stringify(nextMeta, null, 2) + '\n');
 
-const done = findings.filter((f) => f.status === 'DONE');
-const open = findings.filter((f) => f.status !== 'DONE');
+const done = findings.filter(isClosed);
+const open = findings.filter((f) => !isClosed(f));
 const pct = findings.length ? Math.round((done.length / findings.length) * 100) : 0;
 const complete = open.length === 0 && findings.length > 0;
 const byAgent = countBy(findings, (f) => f.agent || 'Unknown');
 const bySev = countBy(findings, (f) => f.severity || 'UNKNOWN');
-const blocksOpen = findings.filter((f) => f.blocks_pr && f.status !== 'DONE');
+const blocksOpen = findings.filter((f) => f.blocks_pr && !isClosed(f));
 const highAll = findings.filter((f) => f.severity === 'HIGH' || f.severity === 'CRITICAL');
-const highOpen = highAll.filter((f) => f.status !== 'DONE');
+const highOpen = highAll.filter((f) => !isClosed(f));
 const prism = findings.filter(
   (f) => f.agent === 'Prism' || String(f.id || '').startsWith('DEP-PRI') || String(f.domain || '').includes('dep'),
 );
@@ -338,7 +341,7 @@ const p0list = findings.filter(
 report.push('## P0 / blocks_pr');
 report.push('');
 for (const f of p0list.slice(0, 40)) {
-  report.push(`- **${f.id}** [${f.severity}] ${f.status === 'DONE' ? '✅' : '⬜'} ${f.title}`);
+  report.push(`- **${f.id}** [${f.severity}] ${isClosed(f) ? '✅' : '⬜'} ${f.title}`);
   if (f.path) report.push(`  - \`${f.path}\``);
 }
 if (!p0list.length) report.push('_none_');
@@ -378,6 +381,16 @@ roadmap.push('');
 roadmap.push('Waves ordenadas por risco. Cada item exige teste **red→green** antes de marcar DONE.');
 roadmap.push('');
 
+function waveLine(f) {
+  const box = isClosed(f) ? '[x]' : '[ ]';
+  return `1. ${box} **${f.id}** — ${f.title}`;
+}
+
+roadmap.push(
+  `> **Progress:** ${done.length}/${findings.length} DONE (${pct}%) · OPEN ${open.length} · HIGH/CRITICAL open ${highOpen.length} · blocks_pr open ${blocksOpen.length}`,
+);
+roadmap.push('');
+
 roadmap.push('## Wave 1 — Security + Race (`blocks_pr`)');
 roadmap.push('');
 const w1 = findings.filter(
@@ -388,7 +401,7 @@ const w1 = findings.filter(
     f.agent === 'Hermes',
 );
 for (const f of w1.filter((x) => x.severity === 'HIGH' || x.severity === 'CRITICAL' || x.blocks_pr)) {
-  roadmap.push(`1. **${f.id}** — ${f.title}`);
+  roadmap.push(waveLine(f));
 }
 if (!w1.length) roadmap.push('_none_');
 roadmap.push('');
@@ -397,7 +410,7 @@ roadmap.push('## Wave 2 — N+1 / Performance HIGH');
 roadmap.push('');
 const w2 = findings.filter((f) => String(f.id).startsWith('N1-NEX') || f.agent === 'Nexus');
 for (const f of w2.filter((x) => x.severity === 'HIGH' || x.blocks_pr)) {
-  roadmap.push(`1. **${f.id}** — ${f.title}`);
+  roadmap.push(waveLine(f));
 }
 roadmap.push('');
 
@@ -412,7 +425,7 @@ const w3 = findings.filter(
     f.agent === 'Artemis',
 );
 for (const f of w3.filter((x) => x.severity === 'HIGH' || x.blocks_pr)) {
-  roadmap.push(`1. **${f.id}** — ${f.title}`);
+  roadmap.push(waveLine(f));
 }
 roadmap.push('');
 
@@ -430,7 +443,7 @@ const w4 = findings.filter(
     ['Atlas', 'Forge', 'Argus', 'Daedalus', 'Echo', 'Laconic', 'Mentor'].includes(f.agent),
 );
 for (const f of w4.filter((x) => x.severity === 'HIGH' || x.blocks_pr)) {
-  roadmap.push(`1. **${f.id}** — ${f.title}`);
+  roadmap.push(waveLine(f));
 }
 roadmap.push('');
 
@@ -488,11 +501,25 @@ if (!deps) {
     roadmap.push('### DEP-PRI findings (track em TASKS)');
     roadmap.push('');
     for (const f of prism.sort((a, b) => a.id.localeCompare(b.id))) {
-      const box = f.status === 'DONE' ? '[x]' : '[ ]';
+      const box = isClosed(f) ? '[x]' : '[ ]';
       roadmap.push(`- ${box} **${f.id}** [${f.severity}] — ${f.title}`);
     }
     roadmap.push('');
   }
+}
+
+const remainingOpen = open.filter(
+  (f) => f.severity === 'MEDIUM' || f.severity === 'LOW',
+);
+if (remainingOpen.length) {
+  roadmap.push('## Remaining OPEN (P2/P3)');
+  roadmap.push('');
+  roadmap.push('Sequência após Waves 1–4. Checkbox só vira `[x]` via `sync-progress --done`.');
+  roadmap.push('');
+  for (const f of remainingOpen) {
+    roadmap.push(`- [ ] **${f.id}** [${f.severity}] — ${f.title}`);
+  }
+  roadmap.push('');
 }
 
 if (prevRoadmapNotes) {

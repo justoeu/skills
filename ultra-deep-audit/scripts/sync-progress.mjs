@@ -5,7 +5,7 @@
  * Uso (Oracle / cada iteração de implementação):
  *
  *   # Após auditoria (gera TASKS.md + HTML)
- *   node sync-progress.mjs --dir docs/audits/ultra-deep-audit/YYYY-MM-DD-full
+ *   node sync-progress.mjs --dir Docs/audit/ultra-deep/YYYY-MM-DD-full
  *
  *   # Marcar IDs como DONE após fix red→green
  *   node sync-progress.mjs --dir ... --done SEC-SEN-001,N1-NEX-002 \
@@ -139,7 +139,7 @@ function mark(ids, status) {
   for (const f of findings) {
     if (!set.has(f.id)) continue;
     f.status = status;
-    if (status === 'DONE') {
+    if (status === 'resolved') {
       f.blocks_pr = false;
       f.resolved_in = note || f.resolved_in || now;
       if (testNote) f.resolved_test = testNote;
@@ -154,20 +154,23 @@ function mark(ids, status) {
   return n;
 }
 
+const CLOSED_STATUSES = new Set(['done', 'resolved', 'refuted', 'accepted', 'accept']);
+const isClosed = (f) => CLOSED_STATUSES.has(String(f.status || 'open').toLowerCase());
+
 const doneArg = arg('done', '');
 const openArg = arg('open', '');
 if (doneArg) {
-  const n = mark(doneArg.split(','), 'DONE');
+  const n = mark(doneArg.split(','), 'resolved');
   console.log(`Marked DONE: ${n} id(s)`);
 }
 if (openArg) {
-  const n = mark(openArg.split(','), 'OPEN');
+  const n = mark(openArg.split(','), 'open');
   console.log(`Marked OPEN: ${n} id(s)`);
 }
 
 // ensure status field
 for (const f of findings) {
-  if (!f.status) f.status = 'OPEN';
+  if (!f.status) f.status = 'open';
 }
 
 const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
@@ -180,8 +183,8 @@ const prioOf = (f) => {
 
 findings.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9) || a.id.localeCompare(b.id));
 
-const done = findings.filter((f) => f.status === 'DONE');
-const open = findings.filter((f) => f.status !== 'DONE');
+const done = findings.filter(isClosed);
+const open = findings.filter((f) => !isClosed(f));
 const pct = findings.length ? Math.round((done.length / findings.length) * 100) : 0;
 const complete = open.length === 0 && findings.length > 0;
 
@@ -274,7 +277,7 @@ lines.push('');
 
 for (const p of ['P0', 'P1', 'P2', 'P3']) {
   const items = byPrio[p];
-  const d = items.filter((f) => f.status === 'DONE').length;
+  const d = items.filter(isClosed).length;
   lines.push(`### ${p} (${d}/${items.length} done)`);
   lines.push('');
   if (!items.length) {
@@ -283,7 +286,7 @@ for (const p of ['P0', 'P1', 'P2', 'P3']) {
     continue;
   }
   for (const f of items) {
-    const box = f.status === 'DONE' ? '[x]' : '[ ]';
+    const box = isClosed(f) ? '[x]' : '[ ]';
     const test = f.test_red_green?.name ? ` · test: \`${f.test_red_green.name}\`` : '';
     const res = f.resolved_in ? ` · _${f.resolved_in}_` : '';
     lines.push(`- ${box} **${f.id}** (${f.agent}/${f.severity}) — ${f.title}`);
@@ -307,7 +310,7 @@ lines.push('');
 lines.push('```bash');
 lines.push('# 1) Implement fix + red→green test');
 lines.push('# 2) Mark done:');
-lines.push(`node "$SKILL_ROOT/scripts/sync-progress.mjs" \\`);
+lines.push(`node .claude/skills/ultra-deep-audit/scripts/sync-progress.mjs \\`);
 lines.push(`  --dir ${dir} \\`);
 lines.push(`  --done ID1,ID2 \\`);
 lines.push(`  --note "PR #N / commit sha" \\`);

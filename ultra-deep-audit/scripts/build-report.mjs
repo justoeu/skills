@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build-report.mjs — gera HTML interativo a partir de FINDINGS.json
+ * build-report.mjs — gera HTML interativo a partir de FINDINGS.json (SDD-17)
  *
  * Usage:
  *   node build-report.mjs --findings path/to/FINDINGS.json --out path/to/report.html \
@@ -39,6 +39,11 @@ const raw = fs.readFileSync(findingsPath, 'utf8');
 let findings = JSON.parse(raw);
 if (!Array.isArray(findings)) {
   findings = findings.findings ?? [];
+}
+for (const finding of findings) {
+  if (finding.line != null && (!Number.isSafeInteger(finding.line) || finding.line < 0)) {
+    throw new TypeError('Finding line must be a non-negative safe integer when provided');
+  }
 }
 
 function loadJson(p) {
@@ -204,6 +209,19 @@ function roadmapBucket(f) {
   return 'P3';
 }
 
+function implementationStatus(f) {
+  const raw = String(f.status || 'open').toLowerCase();
+  if (raw === 'done' || raw === 'resolved') return 'RESOLVED';
+  if (raw === 'refuted') return 'REFUTED';
+  if (raw === 'accepted' || raw === 'accept') return 'ACCEPTED';
+  if (f.in_progress) return 'IN_PROGRESS';
+  return 'OPEN';
+}
+
+function isClosedImplementationStatus(status) {
+  return status === 'RESOLVED' || status === 'REFUTED' || status === 'ACCEPTED';
+}
+
 const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, total: findings.length, blocks: 0, done: 0, open: 0 };
 const byAgent = {};
 for (const f of findings) {
@@ -211,8 +229,9 @@ for (const f of findings) {
   if (f.blocks_pr) counts.blocks++;
   byAgent[f.agent] = (byAgent[f.agent] || 0) + 1;
   f._prio = roadmapBucket(f);
-  f.status = f.status || 'OPEN';
-  if (f.status === 'DONE') counts.done++;
+  f.status = f.status || 'open';
+  f._implementation_status = implementationStatus(f);
+  if (isClosedImplementationStatus(f._implementation_status)) counts.done++;
   else counts.open++;
 }
 
@@ -396,7 +415,7 @@ const html = `<!DOCTYPE html>
   </div>
   <div class="meta">
     Generated: ${generatedAt} ·
-    Skill <code>ultra-deep-audit</code> ·
+    SDD-17 · Skill <code>ultra-deep-audit</code> ·
     Agents: Atlas · Sentinel · Nexus · Hermes · Hydra · Daedalus · Echo · Laconic · Mentor · Forge · Prism · Argus · Artemis · Oracle
   </div>
 </header>
@@ -441,7 +460,10 @@ const html = `<!DOCTYPE html>
         <select id="status">
           <option value="">Todos / All</option>
           <option value="OPEN">OPEN</option>
-          <option value="DONE">DONE</option>
+          <option value="IN_PROGRESS">IN PROGRESS</option>
+          <option value="RESOLVED">RESOLVED</option>
+          <option value="REFUTED">REFUTED</option>
+          <option value="ACCEPTED">ACCEPTED</option>
         </select>
       </div>
       <div>
@@ -495,6 +517,7 @@ const DEPS = ${depsJson};
 const STACK = ${stackJson};
 const AGENTS = ${JSON.stringify(agents)};
 const SEV_COLOR = ${JSON.stringify(sevColor)};
+const STATUS_COLOR = { OPEN:'#ca8a04', IN_PROGRESS:'#0284c7', RESOLVED:'#16a34a', REFUTED:'#64748b', ACCEPTED:'#7c3aed' };
 
 const state = { agent: '', sev: '', prio: '', conf: '', status: '', blocks: '', q: '' };
 
@@ -506,11 +529,17 @@ function renderCards() {
     c[f.severity] = (c[f.severity]||0)+1;
     if (f.blocks_pr) c.blocks++;
   }
-  const done = FINDINGS.filter(f => f.status === 'DONE').length;
-  const open = FINDINGS.length - done;
+  const resolved = FINDINGS.filter(f => f._implementation_status === 'RESOLVED').length;
+  const inProgress = FINDINGS.filter(f => f._implementation_status === 'IN_PROGRESS').length;
+  const refuted = FINDINGS.filter(f => f._implementation_status === 'REFUTED').length;
+  const accepted = FINDINGS.filter(f => f._implementation_status === 'ACCEPTED').length;
+  const open = FINDINGS.filter(f => f._implementation_status === 'OPEN').length;
   $('cards').innerHTML = [
     ['Total', FINDINGS.length, '#38bdf8'],
-    ['DONE', done, '#22c55e'],
+    ['Resolved', resolved, '#22c55e'],
+    ['In progress', inProgress, '#0284c7'],
+    ['Refuted', refuted, '#64748b'],
+    ['Accepted', accepted, '#7c3aed'],
     ['OPEN', open, '#f59e0b'],
     ['Critical', c.CRITICAL, SEV_COLOR.CRITICAL],
     ['High', c.HIGH, SEV_COLOR.HIGH],
@@ -551,7 +580,7 @@ function filtered() {
     if (state.sev && f.severity !== state.sev) return false;
     if (state.prio && f._prio !== state.prio) return false;
     if (state.conf && f.confidence !== state.conf) return false;
-    if (state.status && (f.status || 'OPEN') !== state.status) return false;
+    if (state.status && f._implementation_status !== state.status) return false;
     if (state.blocks === '1' && !f.blocks_pr) return false;
     if (q) {
       const hay = [f.id, f.title, f.path, f.evidence, f.fix, f.impact, f.domain, f.agent,
@@ -577,17 +606,17 @@ function renderFindings() {
 <article class="finding" id="f-\${esc(f.id)}" data-id="\${esc(f.id)}">
   <div class="top">
     <span class="badge" style="background:\${SEV_COLOR[f.severity]||'#64748b'}">\${esc(f.severity)}</span>
-    <span class="badge" style="background:\${(f.status||'OPEN')==='DONE'?'#16a34a':'#ca8a04'}">\${esc(f.status||'OPEN')}</span>
+    <span class="badge" style="background:\${STATUS_COLOR[f._implementation_status]||'#ca8a04'}">\${esc(f._implementation_status)}</span>
     <span class="badge prio">\${esc(f._prio)}</span>
     <span class="badge" style="background:\${a.color}">\${a.emoji} \${esc(f.agent)}</span>
     \${f.blocks_pr ? '<span class="badge" style="background:#f43f5e">BLOCKS PR</span>' : ''}
     <span class="badge prio">\${esc(f.confidence||'?')} conf</span>
-    \${f.verification === 'panel' ? '<span class="badge" style="background:#b91c1c">PANEL '+(f.panel?f.panel.true+'/'+f.panel.voters:'')+'</span>' : ''}
+    \${f.verification === 'panel' ? '<span class="badge" style="background:#b91c1c">PANEL '+(f.panel?esc(f.panel.true)+'/'+esc(f.panel.voters):'')+'</span>' : ''}
     \${f.classic_pattern ? '<span class="badge" style="background:#c2410c">'+esc(f.classic_pattern)+'</span>' : ''}
     \${f.category ? '<span class="badge prio">'+esc(f.category)+'</span>' : ''}
     <h3>\${esc(f.id)} — \${esc(f.title)}</h3>
   </div>
-  <div class="path">\${esc(f.path||'')}\${f.line ? ':'+f.line : ''}</div>
+  <div class="path">\${esc(f.path||'')}\${f.line != null ? ':'+esc(f.line) : ''}</div>
   <div class="evidence">\${esc(f.evidence||f.description||'')}</div>
   \${f.exploit_scenario ? '<div class="box" style="margin-top:.5rem"><h4>Exploit scenario</h4>'+esc(f.exploit_scenario)+'</div>' : ''}
   \${f.failure_scenario ? '<div class="box" style="margin-top:.5rem"><h4>Failure scenario</h4>'+esc(f.failure_scenario)+'</div>' : ''}
@@ -680,7 +709,7 @@ function renderFlow() {
   → Sentinel deep?: cartographer → hunters → panel → sec-verify.mjs
   → merge-findings + sync-progress → HTML/TASKS (aba Libs/Updates)
   → Fix P0 com red→green
-  → docs de domínio (se existirem)</pre>
+  → Docs + graphify update .</pre>
     </div>
     <div class="grid2" style="margin-top:1rem">
       <div class="box">
@@ -738,7 +767,7 @@ function renderDeps() {
     const total = info.total ?? info.checked ?? 0;
     const out = info.outdated ?? 0;
     const ok = info.up_to_date ?? Math.max(0, total - out);
-    return \`<div class="card"><div class="n" style="color:\${out ? '#f59e0b' : '#22c55e'}">\${out}/\${total}</div><div class="l">\${esc(eco)} outdated</div><div class="muted" style="margin-top:.25rem">\${ok} ok</div></div>\`;
+    return \`<div class="card"><div class="n" style="color:\${out ? '#f59e0b' : '#22c55e'}">\${esc(out)}/\${esc(total)}</div><div class="l">\${esc(eco)} outdated</div><div class="muted" style="margin-top:.25rem">\${esc(ok)} ok</div></div>\`;
   }).join('');
 
   const tableRows = suggestions.map(s => \`
@@ -772,12 +801,12 @@ function renderDeps() {
     <h3 style="margin:.5rem 0 .25rem;font-size:1rem">Stack detectada / Detected stack</h3>
     <div class="chip-row">\${chips.length ? chips.join('') : '<span class="muted">nenhuma</span>'}</div>
     <div class="cards" style="margin-bottom:1rem">
-      <div class="card"><div class="n" style="color:#38bdf8">\${sum.checked ?? allPkgs.length}</div><div class="l">Checked</div></div>
-      <div class="card"><div class="n" style="color:#f59e0b">\${sum.outdated ?? suggestions.length}</div><div class="l">Outdated</div></div>
-      <div class="card"><div class="n" style="color:#22c55e">\${sum.up_to_date ?? upToDate.length}</div><div class="l">Up to date</div></div>
-      <div class="card"><div class="n" style="color:#fbbf24">\${(sum.by_bump && sum.by_bump.major) || 0}</div><div class="l">Major</div></div>
-      <div class="card"><div class="n" style="color:#38bdf8">\${(sum.by_bump && sum.by_bump.minor) || 0}</div><div class="l">Minor</div></div>
-      <div class="card"><div class="n" style="color:#94a3b8">\${(sum.by_bump && sum.by_bump.patch) || 0}</div><div class="l">Patch</div></div>
+      <div class="card"><div class="n" style="color:#38bdf8">\${esc(sum.checked ?? allPkgs.length)}</div><div class="l">Checked</div></div>
+      <div class="card"><div class="n" style="color:#f59e0b">\${esc(sum.outdated ?? suggestions.length)}</div><div class="l">Outdated</div></div>
+      <div class="card"><div class="n" style="color:#22c55e">\${esc(sum.up_to_date ?? upToDate.length)}</div><div class="l">Up to date</div></div>
+      <div class="card"><div class="n" style="color:#fbbf24">\${esc((sum.by_bump && sum.by_bump.major) || 0)}</div><div class="l">Major</div></div>
+      <div class="card"><div class="n" style="color:#38bdf8">\${esc((sum.by_bump && sum.by_bump.minor) || 0)}</div><div class="l">Minor</div></div>
+      <div class="card"><div class="n" style="color:#94a3b8">\${esc((sum.by_bump && sum.by_bump.patch) || 0)}</div><div class="l">Patch</div></div>
     </div>
     <h3 style="margin:.5rem 0 .5rem;font-size:1rem">Por ecossistema / By ecosystem</h3>
     <div class="cards">\${ecoCards || '<div class="muted">—</div>'}</div>

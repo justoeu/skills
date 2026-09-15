@@ -4,11 +4,11 @@
  * TOOL-PRI-108: check-deps-latest.mjs only ever looked at <dependency><version>, so a
  * CVE pin expressed as a Spring Boot BOM property override — <rabbit-amqp-client.version>,
  * <netty.version>, <jackson-bom.version> — was absent from the inventory with no signal.
- * Those are exactly the artifacts where security debt accumulates in BOM-managed apps.
+ * Those are exactly the artifacts where this project's security debt accumulates.
  *
  * No network: only the pure pom parsers are exercised.
  *
- *   node --test scripts/tests/check-deps-latest.test.mjs
+ *   node --test .claude/skills/ultra-deep-audit/scripts/tests/
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,6 +19,8 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+// tests/ -> scripts/ -> ultra-deep-audit/ -> skills/ -> .claude/ -> repo root
+const REPO_ROOT = path.resolve(HERE, '..', '..', '..', '..', '..');
 
 const {
   parseMavenCoordsFromPom,
@@ -26,6 +28,7 @@ const {
   toFindings,
   MAVEN_BOM_PROPERTY_COORDS,
   checkNpm,
+  selectNpmVersionForPolicy,
   selectDockerLatestForPolicy,
   isReleaseManagedComposeImage,
 } = await import(path.join(HERE, '..', 'check-deps-latest.mjs'));
@@ -126,11 +129,33 @@ test('an unresolvable ${property} in a <plugin> is skipped, not compared as a li
   assert.equal(hib.skipped, true, '${hibernate.version} resolves in the parent BOM, not here');
 });
 
-test('fixture BOM-property pins that map to coordinates are inventoried, not skipped', () => {
-  const pins = parseMavenPropertyPins(FIXTURE_POM, 'pom.xml');
-  const mapped = pins.filter((p) => !p.skipped).map((p) => p.property).sort();
-  assert.deepEqual(mapped, ['netty.version', 'rabbit-amqp-client.version']);
-  assert.ok(pins.find((p) => p.property === 'rabbit-amqp-client.version')?.rationale);
+// ── Gate over the real pom: a new CVE pin must not slip in unmapped/undocumented ──
+
+test('every BOM-property pin in backend/pom.xml is mapped and justified', () => {
+  const pomPath = path.join(REPO_ROOT, 'backend', 'pom.xml');
+  const pins = parseMavenPropertyPins(fs.readFileSync(pomPath, 'utf8'), 'backend/pom.xml');
+
+  const unmapped = pins.filter((p) => p.skipped).map((p) => p.property);
+  assert.deepEqual(
+    unmapped,
+    [],
+    `these <properties> version pins have no Maven coordinate, so nothing checks them: ${unmapped.join(', ')}. ` +
+      'Add them to MAVEN_BOM_PROPERTY_COORDS in check-deps-latest.mjs, or declare an explicit <dependency>.',
+  );
+
+  const undocumented = pins.filter((p) => !p.rationale).map((p) => p.property);
+  assert.deepEqual(
+    undocumented,
+    [],
+    `these version pins carry no XML comment explaining why they exist: ${undocumented.join(', ')}`,
+  );
+
+  for (const prop of ['rabbit-amqp-client.version', 'jackson-bom.version', 'netty.version']) {
+    assert.ok(
+      pins.some((p) => p.property === prop),
+      `${prop} is a CVE pin with no <dependency> element — it must be inventoried`,
+    );
+  }
 });
 
 test('the coordinate table only holds group:artifact pairs', () => {
@@ -255,9 +280,11 @@ test('expired Docker release policy fails closed instead of hiding future upgrad
 test('CLI exits nonzero when the release policy is expired', (t) => {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'prism-policy-error-'));
   t.after(() => fs.rmSync(fixture, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(fixture, 'dependency-policy.json'), JSON.stringify({
+  const policyDir = path.join(fixture, '.claude', 'skills', 'ultra-deep-audit');
+  fs.mkdirSync(policyDir, { recursive: true });
+  fs.writeFileSync(path.join(policyDir, 'dependency-policy.json'), JSON.stringify({
     release_managed_images: [{
-      image: 'acme/mysql-runtime',
+      image: 'appgp/mysql-runtime',
       dockerfile: 'infra/mysql-runtime/Dockerfile',
       source_image: 'mysql',
     }],
@@ -274,7 +301,7 @@ test('CLI exits nonzero when the release policy is expired', (t) => {
   fs.writeFileSync(path.join(fixture, 'docker-compose.yml'), [
     'services:',
     '  mysql:',
-    '    image: acme/mysql-runtime:8.4.11-r1',
+    '    image: appgp/mysql-runtime:8.4.11-r1',
     '',
   ].join('\n'));
   const out = path.join(fixture, 'deps.json');
@@ -291,16 +318,16 @@ test('CLI exits nonzero when the release policy is expired', (t) => {
 
 test('APP_VERSION compose images are release-managed first-party artifacts', () => {
   assert.equal(
-    isReleaseManagedComposeImage('${DOCKERHUB_USERNAME:-org}/my-app:${APP_VERSION:-1.0.0}'),
+    isReleaseManagedComposeImage('${DOCKERHUB_USERNAME:-justoeu}/app-gp-backend:${APP_VERSION:-0.93.71}'),
     true,
   );
   assert.equal(isReleaseManagedComposeImage('mysql:8.4.11@sha256:' + 'a'.repeat(64)), false);
   assert.equal(isReleaseManagedComposeImage('vendor/app:1.2.3'), false);
 });
 
-test('hardened runtime images are ordinary unless listed in dependency-policy', () => {
-  assert.equal(isReleaseManagedComposeImage('acme/mysql-runtime:8.4.11-r1'), false);
-  assert.equal(isReleaseManagedComposeImage('acme/redis-runtime:8.10.1-r1'), false);
+test('checked-in hardened runtime builds are release-managed first-party artifacts', () => {
+  assert.equal(isReleaseManagedComposeImage('appgp/mysql-runtime:8.4.11-r1'), true);
+  assert.equal(isReleaseManagedComposeImage('appgp/redis-runtime:8.10.1-r1'), true);
 });
 
 test('npm aliases check the actual registry package and preserve the alias in upgrade commands', async () => {
@@ -376,6 +403,74 @@ test('npm freshness respects the repository min-release-age before opening an up
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
+});
+
+test('npm maturity selects only stable releases at or before the exact cutoff', () => {
+  const now = Date.parse('2026-09-14T12:00:00.000Z');
+  const selected = selectNpmVersionForPolicy({
+    'dist-tags': { latest: '1.2.0' },
+    versions: {
+      '1.0.0': {},
+      '1.1.0': {},
+      '1.2.0': {},
+      '2.0.0-beta.1': {},
+      '1.3.0': {},
+    },
+    time: {
+      '1.0.0': '2026-09-01T12:00:00.000Z',
+      '1.1.0': '2026-09-07T12:00:00.000Z',
+      '1.2.0': '2026-09-08T12:00:00.000Z',
+      '2.0.0-beta.1': '2026-08-01T12:00:00.000Z',
+    },
+  }, 7, now);
+
+  assert.deepEqual(selected, {
+    version: '1.1.0',
+    registry_latest: '1.2.0',
+    registry_latest_published_at: '2026-09-08T12:00:00.000Z',
+    min_release_age_days: 7,
+    deferred_until: '2026-09-15T12:00:00.000Z',
+  });
+});
+
+test('npm maturity never selects a stable release above the latest dist-tag', () => {
+  const now = Date.parse('2026-09-14T12:00:00.000Z');
+  const selected = selectNpmVersionForPolicy({
+    'dist-tags': { latest: '1.2.0', next: '1.3.0' },
+    versions: {
+      '1.0.0': {},
+      '1.1.0': {},
+      '1.2.0': {},
+      '1.3.0': {},
+    },
+    time: {
+      '1.0.0': '2026-09-01T12:00:00.000Z',
+      '1.1.0': '2026-09-07T12:00:00.000Z',
+      '1.2.0': '2026-09-13T12:00:00.000Z',
+      '1.3.0': '2026-08-01T12:00:00.000Z',
+    },
+  }, 7, now);
+
+  assert.deepEqual(selected, {
+    version: '1.1.0',
+    registry_latest: '1.2.0',
+    registry_latest_published_at: '2026-09-13T12:00:00.000Z',
+    min_release_age_days: 7,
+    deferred_until: '2026-09-20T12:00:00.000Z',
+  });
+});
+
+test('npm maturity excludes stable versions without publication timestamps', () => {
+  const selected = selectNpmVersionForPolicy({
+    'dist-tags': { latest: '1.2.0' },
+    versions: { '1.0.0': {}, '1.2.0': {} },
+    time: { '1.0.0': '2026-08-01T00:00:00.000Z' },
+  }, 7, Date.parse('2026-09-14T12:00:00.000Z'));
+
+  assert.equal(selected.version, '1.0.0');
+  assert.equal(selected.registry_latest, '1.2.0');
+  assert.equal(selected.registry_latest_published_at, null);
+  assert.equal(selected.deferred_until, null);
 });
 
 test('the checked-in CLI includes its stack detector instead of silently returning an empty stack', () => {

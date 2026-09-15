@@ -30,8 +30,8 @@ const outPath = arg('out', '');
 const scopeArg = arg('scope', '');
 const topN = Number(arg('top', '40')) || 40;
 // TOOL-ORC-002: the cap used to be a hardcoded 8, which silently swallowed
-// deep package trees (e.g. backend/src/main/java/com/org/app/<layer>/<pkg>/ at
-// depth 9) — i.e. the whole Java side of a Spring repo — and reported nothing.
+// backend/src/main/java/com/appgp/backend/<layer>/<pkg>/ (depth 9) — i.e. the whole
+// Java side of a Spring repo — and reported nothing about it.
 const maxDepth = Math.max(1, Number(arg('max-depth', '32')) || 32);
 const strict = process.argv.includes('--strict');
 
@@ -224,6 +224,8 @@ function shingles(content, fileRel) {
     if (slice.every((l) => /^import |^using |^package |^from |^\{$|^\}$/.test(l) || !l))
       continue;
     const key = slice.join('\n');
+    // Semgrep 965108856: Non-security fingerprint for local duplicate-code grouping; not an authenticity check.
+    // nosemgrep: javascript.node-stdlib.cryptography.crypto-weak-algorithm.crypto-weak-algorithm
     const hash = crypto.createHash('sha1').update(key).digest('hex').slice(0, 16);
     out.push({ hash, path: fileRel, line: i + 1, preview: slice[0].slice(0, 80) });
   }

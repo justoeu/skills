@@ -35,22 +35,12 @@ const findingsPath = arg('findings', '');
 const includeIndirect = hasFlag('include-indirect');
 const includeDev = !hasFlag('no-dev');
 const concurrency = Math.max(1, Number(arg('concurrency', '8')) || 8);
-function findDependencyPolicyFile(scanRoot) {
-  const candidates = [
-    path.join(scanRoot, 'dependency-policy.json'),
-    path.join(scanRoot, 'docs', 'audits', 'ultra-deep-audit', 'dependency-policy.json'),
-    path.join(scanRoot, '.claude', 'skills', 'ultra-deep-audit', 'dependency-policy.json'),
-    path.join(scanRoot, '.agents', 'skills', 'ultra-deep-audit', 'dependency-policy.json'),
-    path.join(scanRoot, '.grok', 'skills', 'ultra-deep-audit', 'dependency-policy.json'),
-    path.join(__dirname, '..', 'dependency-policy.json'),
-  ];
-  return candidates.find((file) => fs.existsSync(file)) || null;
-}
-
-const DEPENDENCY_POLICY_FILE = findDependencyPolicyFile(root);
+const DEPENDENCY_POLICY_FILE = path.join(
+  root, '.claude', 'skills', 'ultra-deep-audit', 'dependency-policy.json',
+);
 
 function loadDependencyPolicy() {
-  if (!DEPENDENCY_POLICY_FILE) return { docker: {}, release_managed_images: [] };
+  if (!fs.existsSync(DEPENDENCY_POLICY_FILE)) return { docker: {}, release_managed_images: [] };
   const parsed = JSON.parse(fs.readFileSync(DEPENDENCY_POLICY_FILE, 'utf8'));
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(`${DEPENDENCY_POLICY_FILE} must contain a JSON object`);
@@ -415,6 +405,10 @@ async function latestNpmStable(name, minReleaseAgeDays = 0) {
     ? `https://registry.npmjs.org/${name.replace('/', '%2F')}`
     : `https://registry.npmjs.org/${encodeURIComponent(name)}`;
   const meta = await fetchJson(url);
+  return selectNpmVersionForPolicy(meta, minReleaseAgeDays);
+}
+
+function selectNpmVersionForPolicy(meta, minReleaseAgeDays = 0, nowMillis = Date.now()) {
   const tags = meta['dist-tags'] || {};
   const latestTag = tags.latest ? stripV(tags.latest) : null;
   const versions = Object.keys(meta.versions || {});
@@ -423,9 +417,10 @@ async function latestNpmStable(name, minReleaseAgeDays = 0) {
     : maxStable(versions);
   if (!registryLatest || minReleaseAgeDays <= 0) return registryLatest;
 
-  const cutoff = Date.now() - minReleaseAgeDays * 24 * 60 * 60 * 1000;
+  const cutoff = nowMillis - minReleaseAgeDays * 24 * 60 * 60 * 1000;
   const eligibleVersions = versions.filter((version) => {
     if (isPrerelease(version)) return false;
+    if (cmpSemver(version, registryLatest) > 0) return false;
     const publishedAt = Date.parse(meta.time?.[version] || '');
     return Number.isFinite(publishedAt) && publishedAt <= cutoff;
   });
@@ -2452,6 +2447,7 @@ export {
   toFindings,
   MAVEN_BOM_PROPERTY_COORDS,
   checkNpm,
+  selectNpmVersionForPolicy,
   selectDockerLatestForPolicy,
   isReleaseManagedComposeImage,
 };

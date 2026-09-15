@@ -1,0 +1,22 @@
+{
+  "release_managed_images": [
+    {
+      "image": "appgp/mysql-runtime",
+      "dockerfile": "infra/mysql-runtime/Dockerfile",
+      "source_image": "mysql"
+    },
+    {
+      "image": "appgp/redis-runtime",
+      "dockerfile": "infra/redis-runtime/Dockerfile",
+      "source_image": "redis"
+    }
+  ],
+  "docker": {
+    "docker.io/library/mysql": {
+      "track": "lts",
+      "series": "8.4",
+      "review_after": "2029-04-30",
+      "rationale": "Prontyx remains on the supported MySQL 8.4 LTS line. Cross-track Innovation releases require a separately validated database migration."
+    }
+  }
+}
