@@ -1,0 +1,66 @@
+# Instância SonarQube local para análise de Swift/Objective-C.
+#
+# Roda sob demanda, não como serviço permanente. Sem `restart: unless-stopped`
+# de propósito: uma instância de análise local não deve ressuscitar a cada boot
+# da máquina consumindo RAM em silêncio.
+#
+# Variáveis (defina num arquivo de ambiente, nunca aqui):
+#   SONAR_LOCAL_DB_PASSWORD  obrigatória
+#   SONAR_LOCAL_PORT         opcional, default 9100
+name: sonar-swift-local
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_DB: sonar
+      POSTGRES_PASSWORD: ${SONAR_LOCAL_DB_PASSWORD:?defina SONAR_LOCAL_DB_PASSWORD no arquivo de ambiente}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U sonar -d sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+
+  sonarqube:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://postgres:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_LOCAL_DB_PASSWORD:?}
+      SONAR_WEB_JAVAOPTS: -Xms256m -Xmx512m
+      SONAR_CE_JAVAOPTS: -Xms256m -Xmx1g
+      SONAR_SEARCH_JAVAOPTS: -Xms512m -Xmx512m
+    ports:
+      # Só em loopback. Uma instância sem autenticação forçada não deve ficar
+      # alcançável pela rede local.
+      - "127.0.0.1:${SONAR_LOCAL_PORT:-9100}:9000"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    healthcheck:
+      test: [CMD-SHELL, 'curl -fsS http://localhost:9000/api/system/status | grep -q ''"status":"UP"''']
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 120s
+    mem_limit: 4g
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+
+volumes:
+  postgres_data:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:

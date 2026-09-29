@@ -121,7 +121,7 @@ const html = `<!DOCTYPE html>
   <span class="pill">Branch <code>${esc(branch)}</code></span>
   <span class="pill">${esc(kind)}</span>
   <span class="pill ${scoreCls}">Score <strong>${esc(score.score)}</strong> / 10</span>
-  <span class="pill ${covCls}">Coverage <strong>${esc(cov.pct ?? 'n/a')}</strong>% (piso ${esc(cov.floor ?? 95)})</span>
+  <span class="pill ${covCls}">Coverage <strong>${esc(cov.pct ?? 'n/a')}</strong>% (piso ${esc(cov.floor ?? 90)})</span>
 </header>
 <nav>
   ${['sdd','impl','fluxo','payloads','testes','review','score'].map((id, i) =>
@@ -156,7 +156,7 @@ const html = `<!DOCTYPE html>
       <h2>Resultado dos testes</h2>
       <p>cmd: <code>${esc(tests.cmd || meta.test_cmd || '')}</code> — ${tests.ok === false ? 'FAIL' : tests.ok === true ? 'PASS' : 'n/a'}</p>
       <p>imutabilidade: ${immut.green ? 'green' : 'não green'} — ${(immut.suite || []).map(esc).join(', ')}</p>
-      <p>cobertura: ${esc(cov.pct ?? 'n/a')}% via ${esc(cov.tool || '—')} — piso ${esc(cov.floor ?? 95)}% ${cov.ok ? 'ok' : 'abaixo do piso'}</p>
+      <p>cobertura: ${esc(cov.pct ?? 'n/a')}% via ${esc(cov.tool || '—')} — piso ${esc(cov.floor ?? 90)}% ${cov.ok ? 'ok' : 'abaixo do piso'}</p>
       <pre>${esc(tests.log || '')}</pre>
     </div>
   </section>

@@ -2,7 +2,7 @@
 /**
  * merge-findings.mjs — Oracle helper: merge agent-*.json → FINDINGS.json
  *
- *   node merge-findings.mjs --dir docs/audits/ultra-deep-audit/YYYY-MM-DD-full \
+ *   node merge-findings.mjs --dir Docs/audit/ultra-deep/YYYY-MM-DD-full \
  *     [--mode delta|full] [--base-ref origin/main]
  *
  * Reads agent-*.json (arrays or {findings:[]}) in dir.

@@ -1,82 +1,64 @@
 # Skill: ultra-deep-audit
 
-Framework de auditoria ultra-deep do Prontyx com **agentes nomeados** e relatório HTML.
+Bateria de detecção depois que o código já existe. 14 lentes em paralelo, apuração por script, pack HTML + TASKS. Não implementa feature e não substitui o `make-me-happy`.
 
-| Artefato | Path |
-|----------|------|
-| Spec | [`Docs/SDD/SDD-17-ultra-deep-quality-audit.md`](../../../Docs/SDD/SDD-17-ultra-deep-quality-audit.md) |
-| Skill | [`SKILL.md`](./SKILL.md) |
-| Agentes | [`agents/`](./agents/) |
-| HTML builder | [`scripts/build-report.mjs`](./scripts/build-report.mjs) |
-| Exemplo | [`Docs/audit/ultra-deep/2026-07-24/`](../../../Docs/audit/ultra-deep/2026-07-24/) |
+O workflow, as flags e o schema de finding estão no [`SKILL.md`](SKILL.md).
+
+| | |
+|---|---|
+| **Quando** | Fim de feature (`--delta`), release (`--full`), ou uma lente (`--only`) |
+| **Comando** | `/ultra-deep-audit` · `--full` · `--only n1\|quality\|sentinel\|…` |
+| **Pack** | `Docs/audit/ultra-deep/<data>/` (o `SKILL.md` é a fonte do path) |
 
 ## Agentes
 
-| Nome | Domínio |
-|------|---------|
-| **Atlas** | Clean Architecture |
-| **Sentinel** | Security / IDOR / multi-tenant |
-| **Nexus** | N+1 / performance |
-| **Hermes** | Race conditions / PBT |
-| **Hydra** | Memory leak / backpressure |
-| **Forge** | Dirty code / complexidade |
-| **Prism** | Libs / CVE / best practices |
-| **Argus** | Test quality / mutation |
-| **Oracle** | Orquestra, merge, roadmap, HTML |
+| Agente | Arquivo | Caça |
+|--------|---------|------|
+| Atlas | `agents/atlas-architecture.md` | seta ilegal entre camadas |
+| Sentinel | `agents/sentinel-security.md` | exploit / IDOR / injection; deep = panel de 3 votos |
+| Nexus | `agents/nexus-n1-perf.md` | 1+N queries/requests |
+| Hermes | `agents/hermes-race.md` | lost update / CAS |
+| Hydra | `agents/hydra-resources.md` | crescimento sem teto, pool |
+| Daedalus | `agents/daedalus-complexity.md` | CC / nesting / god method |
+| Echo | `agents/echo-duplication.md` | clone T1–T4 |
+| Laconic | `agents/laconic-verbosity.md` | ruído, pass-through |
+| Mentor | `agents/mentor-best-practices.md` | Clean Code / patterns inefetivos |
+| Forge | `agents/forge-quality.md` | residual (catch vazio, magic number, debug log) |
+| Prism | `agents/prism-deps-bp.md` | CVE + latest stable |
+| Argus | `agents/argus-tests.md` | teste que não protege |
+| Artemis | `agents/artemis-caca-bugs.md` | bug clássico por linguagem |
+| Oracle | `SKILL.md` | merge, HTML, TASKS |
+
+Sentinel deep usa `agents/security/` (cartographer, hunter, refuter). `--only quality` = Daedalus + Echo + Laconic + Mentor + Forge.
 
 ## Uso
 
 ```
-/ultra-deep-audit          # delta (pós-feature)
-/ultra-deep-audit --full   # corpus completo
+/ultra-deep-audit                 # delta
+/ultra-deep-audit --full          # corpus; Sentinel deep + effort max
+/ultra-deep-audit --only quality
 ```
 
-### Entrega do pack (após auditoria)
+Depois da run:
 
 ```bash
-OUT=Docs/audit/ultra-deep/YYYY-MM-DD-full
-node .claude/skills/ultra-deep-audit/scripts/sync-progress.mjs --dir "$OUT"
-# gera: TASKS.md + report.html (+ atualiza FINDINGS status)
-open "$OUT/report.html"
-open "$OUT/TASKS.md"
+node "$SKILL_ROOT/scripts/sync-progress.mjs" --dir "$OUT"
+# FINDINGS.json + REPORT.md + ROADMAP.md + TASKS.md + report.html
 ```
 
-| Artefato | Função |
-|----------|--------|
-| `report.html` | UI interativa (filtros DONE/OPEN) |
-| `TASKS.md` | Checklist P0–P3 + % + iteration log |
-| `FINDINGS.json` | Fonte de verdade (`status`) |
-| `REPORT.md` / `ROADMAP.md` | Executivo / planejamento |
+Fix de finding = teste que falha antes + `sync-progress --done ID --test "Class#method"`.
 
-### Cada iteração de implementação
+## Scripts com teste próprio
 
-```bash
-# 1) fix + teste red→green
-# 2) marcar DONE e regenerar HTML/TASKS
-node .claude/skills/ultra-deep-audit/scripts/sync-progress.mjs \
-  --dir "$OUT" \
-  --done ID1,ID2 \
-  --note "PR #N" \
-  --test "Class#method"
-```
+`node --test scripts/tests/*.test.mjs`
 
-Quando **OPEN=0**, o HTML passa a **✅ COMPLETE (100%)**.
+Dois apuradores já mediram menos do que diziam, em silêncio:
 
-## Os scripts também são instrumentos — e têm teste próprio
-
-`node --test .claude/skills/ultra-deep-audit/scripts/tests/*.test.mjs` (roda dentro de
-`scripts/ci-local.sh`). Existe porque dois scripts de apuração mediam menos do que diziam,
-em silêncio:
-
-| Achado | Sintoma | Guarda hoje |
-|--------|---------|-------------|
-| **TOOL-ORC-002** | `measure-quality.mjs` cortava a travessia em `depth > 8`. O Java vive em `backend/src/main/java/com/appgp/backend/<camada>/<pacote>/` — nível 9. Media 1191 de 3628 arquivos e reportava zero erro; Daedalus/Echo/Laconic operavam só sobre o frontend. | `--max-depth` (default 32) + ledger `traversal` no JSON com tudo que não foi visitado, `ERROR: … INCOMPLETE` no stderr e `--strict` para sair ≠ 0. |
-| **TOOL-PRI-108** | `check-deps-latest.mjs` só lia `<dependency><version>`. Pins de CVE que existem apenas como override de property do BOM (`rabbit-amqp-client.version`, `netty.version`, `jackson-bom.version`) ficavam fora do inventário — e o Trivy FS também não os vê. | `parseMavenPropertyPins` + `MAVEN_BOM_PROPERTY_COORDS`; pin sem coordenada vira linha `skipped` com motivo, nunca sumiço. O teste do `backend/pom.xml` real falha se aparecer pin novo sem coordenada **ou sem comentário dizendo por que existe**. |
-
-Ao mexer nesses scripts, mexa **aqui** — `~/.agents/skills/ultra-deep-audit/scripts/` é
-uma cópia instalada e precisa ser re-espelhada à mão.
+| Achado | Sintoma | Guarda |
+|--------|---------|--------|
+| **TOOL-ORC-002** | `measure-quality.mjs` cortava a travessia em `depth > 8` e reportava zero erro sobre um corpus incompleto | `--max-depth` (default 32) + ledger `traversal`; `ERROR: … INCOMPLETE` no stderr |
+| **TOOL-PRI-108** | `check-deps-latest.mjs` ignorava pin de CVE que só existe como property de BOM | `parseMavenPropertyPins` + `MAVEN_BOM_PROPERTY_COORDS`; pin sem coordenada vira linha `skipped` |
 
 ## Regra de ouro
 
-**Cada correção = teste que falha antes e passa depois (red → green).**  
-**Cada DONE = `sync-progress --done` no mesmo ciclo.**
+Cada correção = teste que falha antes e passa depois. Cada DONE = `sync-progress --done` no mesmo ciclo.

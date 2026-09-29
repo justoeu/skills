@@ -18,7 +18,20 @@ function loadJson(file, fallback) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-export const COVERAGE_FLOOR = 95;
+export const COVERAGE_FLOOR_MIN = 90;
+export const COVERAGE_FLOOR = COVERAGE_FLOOR_MIN;
+
+export function parseCoverageFloor(raw) {
+  if (raw == null || raw === '') return COVERAGE_FLOOR_MIN;
+  const n = Number(String(raw).replace(/%/g, '').trim());
+  if (!Number.isFinite(n)) return COVERAGE_FLOOR_MIN;
+  return n;
+}
+
+/** Default 90. `--cobertura` / run-meta / coverage.json may raise, never lower. */
+export function effectiveCoverageFloor(requested) {
+  return Math.max(COVERAGE_FLOOR_MIN, parseCoverageFloor(requested));
+}
 
 function verdictOf(md) {
   if (!md) return null;
@@ -28,19 +41,25 @@ function verdictOf(md) {
 
 function readCoverage(dir) {
   const doc = loadJson(path.join(dir, 'coverage.json'), null);
+  const meta = loadJson(path.join(dir, 'run-meta.json'), {});
+  const cli = arg('floor', '') || arg('cobertura', '');
+  const requested = cli || doc?.floor || meta?.coverage_floor || COVERAGE_FLOOR_MIN;
+  const floor = effectiveCoverageFloor(requested);
   const pct = doc && Number(doc.pct);
   const measured = Number.isFinite(pct);
-  const ok = measured && pct >= COVERAGE_FLOOR;
+  const ok = measured && pct >= floor;
   return {
     pct: measured ? pct : null,
-    floor: COVERAGE_FLOOR,
+    floor,
+    floor_min: COVERAGE_FLOOR_MIN,
+    requested: parseCoverageFloor(requested),
     tool: doc?.tool || null,
     ok,
     detail: !doc
       ? 'coverage.json missing'
       : ok
-        ? `${pct}% >= ${COVERAGE_FLOOR}%`
-        : `${measured ? pct : '?'}% < ${COVERAGE_FLOOR}% floor`,
+        ? `${pct}% >= ${floor}%`
+        : `${measured ? pct : '?'}% < ${floor}% floor`,
   };
 }
 

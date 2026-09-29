@@ -20,7 +20,7 @@ Quote the spec line for each finding. **Under 400 words.**
 - Diff command + commit list
 - Path or fetched contents of the spec
 
-If Oracle says the spec is missing: do **not** invent one. Write `$OUT/reviews/spec.md` containing only:
+If Oracle says the spec is missing **after Etapa Zero was refused by the user**: do **not** invent one. Write `$OUT/reviews/spec.md` containing only:
 
 ```
 no spec available

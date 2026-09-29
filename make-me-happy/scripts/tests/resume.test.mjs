@@ -13,6 +13,9 @@ function write(dir, rel, body) {
 
 test('inferNextStep walks the pipeline', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-resume-'));
+  assert.equal(inferNextStep(dir, []), 'explore');
+
+  write(dir, 'run-meta.json', { spec: 'docs/s.md', spec_status: 'confirmed' });
   assert.equal(inferNextStep(dir, []), 'planner');
 
   write(dir, 'TASKS.json', { tasks: [{ id: 'T-001', status: 'OPEN', tests_added: 0 }] });
@@ -38,6 +41,12 @@ test('inferNextStep walks the pipeline', () => {
 
   write(dir, 'coverage.json', { pct: 96, tool: 'c8' });
   assert.equal(inferNextStep(dir, []), 'closed');
+});
+
+test('draft spec stays on explore', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-resume-'));
+  write(dir, 'run-meta.json', { spec: 'docs/s.md', spec_status: 'draft' });
+  assert.equal(inferNextStep(dir, []), 'explore');
 });
 
 test('leftover worktrees keep the run on implement even if tasks look done', () => {

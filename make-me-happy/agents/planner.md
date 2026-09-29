@@ -52,4 +52,4 @@ Status values: `OPEN` | `IN_PROGRESS` | `DONE`. You only emit `OPEN`.
 - If the spec leaves more than one valid way (lib, schema, API, flow) and you would have to choose: **stop and list the question**. Do not pick “the reasonable default”.
 - Out of scope from the spec stays out.
 
-If the spec is missing: write `TASKS.json` as `{ "kind": "unknown", "spec": null, "tasks": [] }` and stop. The Oracle asked the user already.
+If the spec is missing: **do not invent tasks**. Tell Oracle to run Etapa Zero (`agents/explorer.md`). Empty `TASKS.json` is not a substitute for a spec.

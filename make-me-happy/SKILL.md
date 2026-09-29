@@ -1,13 +1,14 @@
 ---
 name: make-me-happy
 description: >
-  Implementa um SDD/spec validado: TASKS rastreáveis, red→green em cada
+  Implementa feature, refactor ou greenfield. Se não houver SDD, Etapa Zero
+  explora com perguntas e escreve o spec. Com spec: TASKS rastreáveis, red→green em cada
   tarefa, testes de imutabilidade, git worktrees (default 3, --worktree N),
   review em 3 eixos (Standards/Fowler, Spec, Correctness) com consenso 3/3,
   loop full ou por task, HTML interativo com fluxo, payloads e score 10.
   Greenfield, feature ou refactor. Agnóstica de host e de stack.
   Trigger: /make-me-happy, /mmh, mmh, implementar SDD, red to green,
-  worktree, --loop full|task, --worktree, make me happy.
+  worktree, --loop full|task, --worktree, --cobertura, make me happy.
 compatibility: Requires git and Node.js for scripts. Any coding agent that can read this SKILL.md, run bash/node, and spawn subagents (or run slices inline).
 metadata:
   aliases: mmh
@@ -15,11 +16,11 @@ metadata:
 
 # Make Me Happy
 
-Orquestra implementação **depois** que um SDD/spec está completo e validado. Agnóstica de host (Claude, Grok, Codex, Cursor, opencode) e de stack.
+Orquestra implementação de feature, refactor ou greenfield. Agnóstica de host (Claude, Grok, Codex, Cursor, opencode) e de stack.
 
 `SKILL_ROOT` = diretório deste `SKILL.md` (seguir symlink). Alias de invocação: **`/mmh`**.
 
-Não é auditoria. Não começa sem spec (a menos que o usuário diga que não há — aí o eixo Spec é `SKIP` e o restante segue).
+Não é auditoria. **Não exige SDD na entrada.** Sem spec (feature nova ou refactor): **Etapa Zero** — perguntas, escrever o SDD, confirmar, só então Planner. Com `--spec` ou arquivo encontrado: pula a Etapa Zero. Depois que o SDD existe (achado ou escrito aqui), a regra **Só o SDD** vale.
 
 ## Flags
 
@@ -32,6 +33,7 @@ Não é auditoria. Não começa sem spec (a menos que o usuário diga que não h
 | `--kind greenfield\|feature\|refactor` | senão o Planner detecta |
 | `--fresh` | ignora pack/worktrees abertos e começa uma run nova |
 | `--into feature/<name>` | branch-base das slices e alvo do merge. **Nunca** `main`/`master`/`trunk` |
+| `--cobertura N` | piso de cobertura. Default **90**. Só sobe (`--cobertura 95` ou `95%`). N < 90 → fica 90 |
 
 `--mode` não existe nesta skill. `/mmh` = `/make-me-happy`. Worktree **não** é opcional: sempre tenta git worktree; se o repo não for git, implementa no working tree (`N=1`) e diz isso no REPORT.
 
@@ -55,6 +57,7 @@ Se `resumable: true` e **não** veio `--fresh`:
 
 | `next_step` | ir para |
 |-------------|---------|
+| `explore` | §0z Etapa Zero |
 | `planner` | §1 |
 | `worktrees-add` | §2 |
 | `implement` | §3 |
@@ -99,17 +102,19 @@ tests_added += N   (N = testes novos/alterados desta task)
 
 Sem teste vermelho-antes, a task **não** é `DONE`.
 
-## Cobertura ≥ 95% (inegociável)
+## Cobertura ≥ 90% (inegociável; só sobe)
 
-Piso **95%**, não menos. Medida da ferramenta do repo (JaCoCo, c8/istanbul, go cover, coverage.py, …) sobre o código de produto tocado — **não** “95% das tasks têm teste”.
+Piso **90%**. `--cobertura N` (ou `N%`) **só aumenta** o piso; `N < 90` é ignorado (fica 90). Grave `coverage_floor` no `run-meta.json`.
+
+Medida da ferramenta do repo (JaCoCo, c8/istanbul, go cover, coverage.py, …) sobre o código de produto tocado — **não** “90% das tasks têm teste”.
 
 Grave `$OUT/coverage.json`:
 
 ```json
-{ "pct": 96.2, "tool": "c8", "report": "coverage/index.html" }
+{ "pct": 92.4, "tool": "c8", "report": "coverage/index.html", "floor": 90 }
 ```
 
-`pct` ausente ou `< 95` → pack **não** fecha, mesmo com os 5 gates em 10. Falta medir = não cumpriu.
+`pct` ausente ou `< piso` → pack **não** fecha, mesmo com os 5 gates em 10. Falta medir = não cumpriu.
 
 ## Baseline verde (inegociável)
 
@@ -126,7 +131,7 @@ Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, n
 
 ## Score 10 (inegociável para fechar)
 
-`scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10 e cobertura ≥ 95%**:
+`scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10 e cobertura ≥ piso** (90, ou `--cobertura` se maior):
 
 | Gate | +2 se |
 |------|--------|
@@ -136,7 +141,7 @@ Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, n
 | review | 3 eixos `APPROVE` (Spec pode ser `SKIP` se o usuário disse que não há spec — conta como gate pago) |
 | worktrees | todas as slices mergeadas e `worktrees.mjs verify-clean` ok |
 
-Score < 10 **ou** cobertura < 95% → corrigir e re-rodar. Não negociar 9 nem 94%.
+Score < 10 **ou** cobertura < piso → corrigir e re-rodar. Não negociar 9 nem 89%. `--cobertura 80` não baixa o piso.
 
 **Score 10 fecha o pack da skill, não o “done” do projeto.** Os 3 eixos (Standards / Spec / Correctness) **não** substituem gates que o repo documentar em `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` (ex.: trio code-reviewer + test-analyzer + security-review, sweep docs/i18n). Depois do HTML: listar esses gates e rodá-los, ou deixá-los OPEN no relatório. Não abrir PR só com score 10 se o repo exige o outro conjunto.
 
@@ -155,11 +160,21 @@ N=${WORKTREE_N:-3}
 # clamp 1..8
 ```
 
-`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `status` (`in_progress` | `closed`). Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ 95% + worktrees limpos.
+`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `coverage_floor`, `status` (`in_progress` | `closed`). Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ piso + worktrees limpos. `coverage_floor` = `max(90, --cobertura)`.
 
-**Spec.** Se `--spec` veio, use. Senão procure arquivo sob `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/` cujo nome case a branch ou o feature. Nada encontrado → **pergunte**. Usuário diz que não há → Spec sub-agent `SKIP` (`no spec available`); Planner ainda precisa de um objetivo em uma frase — peça.
+**Spec.** Se `--spec` veio, use. Senão procure arquivo sob `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/` cujo nome case a branch ou o feature. Achou → `run-meta.spec`, pule §0z. **Não achou → §0z. Não pule para o Planner e não marque Spec SKIP.**
 
 Stack: `package.json` / `go.mod` / `pom.xml` / `*.csproj` / `Cargo.toml` / `pyproject.toml` — grave o comando de teste do repo em `run-meta.json.test_cmd`.
+
+### 0z. Etapa Zero — explorar e escrever o SDD
+
+Quando **não** há spec. Feature nova e refactor entram aqui do mesmo jeito.
+
+Subagente `agents/explorer.md` (ou o Oracle no mesmo papel): perguntas em sequência, draft do SDD, confirmação do usuário, arquivo no repo.
+
+`run-meta.spec_status`: `draft` enquanto não confirmar; `confirmed` + `spec` = path depois. Resume com `draft` volta para cá.
+
+**Proibido:** começar tasks/worktrees/código com `spec_status=draft` ou sem `spec`. **Proibido:** Spec `SKIP` só porque “não tinha SDD no começo” — a Etapa Zero **cria** o SDD.
 
 ### 1. Planner
 
@@ -223,7 +238,7 @@ Spawn **ao mesmo tempo**:
 | Eixo | Prompt | Extra no prompt |
 |------|--------|-----------------|
 | **Standards** | `agents/standards-reviewer.md` | lista de arquivos de standard **+** `catalogs/fowler-smells.md` colado **inteiro** |
-| **Spec** | `agents/spec-reviewer.md` | path/conteúdo do spec; se o usuário disse que não há, não spawnar — gravar `no spec available` / `VERDICT: SKIP` |
+| **Spec** | `agents/spec-reviewer.md` | path/conteúdo do spec (o achado **ou** o escrito na Etapa Zero). `SKIP` só se o usuário recusou explicitamente gravar qualquer spec depois da Zero |
 | **Correctness** | `agents/correctness-reviewer.md` | `TASKS.json` + `immutability.json` + resultado do test-cmd |
 
 **Não** juntar nem rerankear achados. Apresentar ao usuário:
@@ -286,13 +301,15 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 ## Non-goals
 
 - Começar implementação sem as duas perguntas (salvo flags `--loop` + pedido explícito, **ou resume**)
+- Pular a Etapa Zero e marcar Spec `SKIP` só porque não havia SDD no repo
 - Abrir um segundo pack enquanto há worktree `mmh/slice-*` ou pack `in_progress` (use `--fresh`)
 - Worktree de enfeite (criar e não mergear / não apagar)
 - Score 10 no feeling
 - Tratar score 10 como “done” do repo / substituto do trio de review do `CLAUDE.md`
 - Mergear slices em `main`/`master`/`trunk`
 - Empilhar feature/slice sobre suite já vermelha (“conserta junto”)
-- Fechar pack com cobertura < 95% ou sem `coverage.json`
+- Fechar pack com cobertura abaixo do piso (90, ou `--cobertura` se maior) ou sem `coverage.json`
+- Baixar o piso de cobertura com `--cobertura` abaixo de 90
 - Impor stack ou framework
 - Inferir decisão de implementação quando o SDD deixa mais de um caminho
 - Entregar além do que o SDD pediu

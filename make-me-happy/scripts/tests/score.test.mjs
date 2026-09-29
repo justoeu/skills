@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { scorePack } from '../score.mjs';
+import { scorePack, effectiveCoverageFloor, parseCoverageFloor } from '../score.mjs';
 
 function pack(overrides = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-score-'));
@@ -64,11 +64,29 @@ test('DONE without tests fails red-green', () => {
   assert.equal(r.gates.find((g) => g.id === 'red-green').ok, false);
 });
 
-test('coverage below 95 blocks close even at score 10', () => {
-  const r = scorePack(pack({ 'coverage.json': { pct: 94.9, tool: 'c8' } }));
+test('coverage below 90 blocks close even at score 10', () => {
+  const r = scorePack(pack({ 'coverage.json': { pct: 89.9, tool: 'c8' } }));
   assert.equal(r.score, 10);
   assert.equal(r.coverage.ok, false);
   assert.equal(r.closable, false);
+});
+
+test('--cobertura raises the floor; cannot lower it', () => {
+  assert.equal(parseCoverageFloor('95%'), 95);
+  assert.equal(effectiveCoverageFloor(80), 90);
+  assert.equal(effectiveCoverageFloor('95%'), 95);
+  const raised = scorePack(pack({
+    'run-meta.json': { coverage_floor: 95 },
+    'coverage.json': { pct: 92, tool: 'c8' },
+  }));
+  assert.equal(raised.coverage.floor, 95);
+  assert.equal(raised.closable, false);
+  const clamped = scorePack(pack({
+    'run-meta.json': { coverage_floor: 80 },
+    'coverage.json': { pct: 90, tool: 'c8' },
+  }));
+  assert.equal(clamped.coverage.floor, 90);
+  assert.equal(clamped.closable, true);
 });
 
 test('missing coverage.json blocks close', () => {

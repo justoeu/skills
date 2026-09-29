@@ -36,6 +36,8 @@ function verdict(dir, name) {
 }
 
 export function inferNextStep(dir, leftover) {
+  const meta = loadJson(path.join(dir, 'run-meta.json'), {});
+  const specReady = Boolean(meta.spec) && meta.spec_status !== 'draft';
   const tasks = loadJson(path.join(dir, 'TASKS.json'), { tasks: [] }).tasks || [];
   const wt = loadJson(path.join(dir, 'worktrees.json'), { slices: [], skipped: false });
   const immut = loadJson(path.join(dir, 'immutability.json'), { green: false });
@@ -43,6 +45,7 @@ export function inferNextStep(dir, leftover) {
   const unmerged = (wt.slices || []).filter((s) => !s.merged);
   const liveWt = leftover.length > 0 || unmerged.length > 0;
 
+  if (!specReady && tasks.length === 0) return 'explore';
   if (tasks.length === 0) return 'planner';
   if (!wt.skipped && !(wt.slices || []).length && leftover.length === 0) return 'worktrees-add';
   if (openTasks.length || liveWt) return 'implement';

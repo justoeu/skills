@@ -27,7 +27,7 @@ If a task is a refactor, the RED is a characterization/immutability test that is
 3. Take assigned `OPEN` tasks in dependency order.
 4. Mark `IN_PROGRESS` in `$OUT/TASKS.json` (Oracle may own the pack; if you cannot write `$OUT`, print the patch for Oracle).
 5. Implement red→green. Exactly the spec — do not expand scope. If two implementations fit and the spec does not pick: **stop and ask**; do not choose.
-6. Run the repo's test command for the slice. Zero failures. Record coverage (`coverage.json` `pct`); below 95% the task is not done.
+6. Run the repo's test command for the slice. Zero failures. Record coverage (`coverage.json` `pct`); below the floor (90, or `run-meta.coverage_floor` if higher) the task is not done.
 7. Mark `DONE`, `tests_added`, `red_green`.
 8. Commit on the slice branch: one commit per task when possible.
 

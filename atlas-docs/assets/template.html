@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #ecebe7; font-family: "Space Grotesk", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1d2430; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  pre { margin: 0; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #cfcdc7; border-radius: 6px; }
+  a { color: #2b8a92; text-decoration: none; }
+  a:hover { color: #1b6a71; text-decoration: underline; }
+
+  /* ---------- shell ---------- */
+  .shell { display: grid; grid-template-columns: 246px minmax(0,1fr); min-height: 100vh; background: #ecebe7; }
+  .shell.nav-closed { grid-template-columns: 62px minmax(0,1fr); }
+  .side { background:#161f2e; color:#cfd6e2; padding:18px 12px 26px; display:flex; flex-direction:column; gap:20px; position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; }
+  .main { min-width:0; display:flex; flex-direction:column; }
+  .hd { background:#f6f5f2; border-bottom:1px solid #dcdad3; padding:16px 26px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; }
+  .hd .crumb { font-family:"JetBrains Mono",monospace; font-size:11px; color:#8a857d; }
+  .hd .title { font-size:19px; font-weight:600; letter-spacing:-0.015em; margin-top:3px; }
+  .hd-chips { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .chip { background:#fff; border:1px solid #dcdad3; border-radius:8px; padding:7px 11px; font-size:12px; color:#5d6470; display:flex; align-items:center; gap:7px; }
+  .chip.btn { cursor:pointer; color:#2b6a70; }
+  .chip.btn:hover { border-color:#2b8a92; }
+  .cols { display:grid; gap:18px; padding:18px 26px 40px; align-items:start; }
+  .cols.panel-on { grid-template-columns: minmax(0,1.8fr) minmax(300px,0.95fr); }
+  .cols.panel-off { grid-template-columns: minmax(0,1fr) 46px; }
+  .cols.panel-none { grid-template-columns: minmax(0,1fr); }
+  .col-main { min-width:0; display:flex; flex-direction:column; gap:18px; }
+  .col-insp { min-width:0; display:flex; flex-direction:column; gap:18px; position:sticky; top:92px; }
+
+  /* ---------- sidebar ---------- */
+  .s-top { display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  .s-logo { display:flex; gap:10px; align-items:center; min-width:0; }
+  .s-mark { width:32px; height:32px; flex:0 0 32px; border-radius:9px; background:#2b8a92; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:#07171a; }
+  .s-name { font-size:14px; font-weight:600; color:#fff; letter-spacing:-.01em; }
+  .s-ver { font-size:10.5px; color:#7c8798; font-family:"JetBrains Mono",monospace; }
+  .s-btn { width:24px; height:24px; flex:0 0 24px; border:1px solid #33405c; border-radius:7px; display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:11px; color:#8fd6da; cursor:pointer; background:none; padding:0; }
+  .s-btn:hover { border-color:#2b8a92; }
+  .s-btn.wide { width:38px; height:28px; flex-basis:38px; }
+  .s-label { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6b7689; padding-left:9px; margin-bottom:7px; }
+  .s-app { background:#22304a; border-radius:9px; padding:11px 12px; }
+  .s-app-hd { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .s-app-name { font-size:13.5px; font-weight:600; color:#fff; }
+  .s-app-score { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8fd6da; }
+  .s-app-meta { font-family:"JetBrains Mono",monospace; font-size:10px; color:#93a0b4; line-height:1.7; margin-top:6px; }
+  .nav-sec { display:flex; flex-direction:column; gap:2px; }
+  .nav-row { position:relative; padding:8px 10px; border-radius:8px; font-size:13px; color:#cfd6e2; cursor:pointer; display:flex; align-items:center; gap:10px; background:none; border:none; text-align:left; width:100%; font-family:inherit; }
+  .nav-row:hover { background:#1d2739; color:#fff; }
+  .nav-row .ic { font-family:"JetBrains Mono",monospace; font-size:13px; width:18px; text-align:center; color:#aeb9c9; flex:0 0 18px; }
+  .nav-row.sel .ic { color:#8fd6da; }
+  .nav-row .lb { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav-row .bar { position:absolute; left:0; top:5px; bottom:5px; width:2px; background:#2b8a92; border-radius:2px; }
+  .nav-flow { position:relative; padding:6px 11px 6px 26px; border-radius:8px; font-size:12px; color:#8792a5; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; background:none; border:none; text-align:left; width:100%; font-family:inherit; }
+  .nav-flow:hover { background:#1d2739; color:#fff; }
+  .nav-flow .lb { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav-flow .cov { font-family:"JetBrains Mono",monospace; font-size:9.5px; flex:0 0 auto; }
+  .nav-flow .bar { position:absolute; left:14px; top:7px; bottom:7px; width:2px; background:#2b8a92; border-radius:2px; }
+  .s-foot { margin-top:auto; border-top:1px solid #26314a; padding-top:16px; font-family:"JetBrains Mono",monospace; font-size:10px; line-height:1.7; color:#7c8798; }
+  .s-foot .hl { color:#8fd6da; }
+  .hide { display:none !important; }
+
+  /* ---------- cards & primitives ---------- */
+  .card { background:#fff; border:1px solid #dcdad3; border-radius:12px; padding:18px; }
+  .card.flush { padding:0; overflow:hidden; }
+  .card-hd { padding:15px 18px 0; }
+  .card-title { font-size:15px; font-weight:600; }
+  .card-sub { font-size:12px; color:#8a857d; margin-top:2px; }
+  .kv-label { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8a857d; text-transform:uppercase; letter-spacing:.1em; }
+  .kv-label.tight { margin-bottom:6px; }
+  .tag { font-family:"JetBrains Mono",monospace; font-size:10px; border-radius:5px; padding:2px 6px; border:1px solid; height:fit-content; white-space:nowrap; }
+  .tag.red   { color:#b4453a; border-color:#e6cdc9; background:#faf3f2; }
+  .tag.amber { color:#c08a2e; border-color:#ecdcc0; background:#fbf7ef; }
+  .tag.green { color:#3f7a4f; border-color:#cfe0d2; background:#f2f7f3; }
+  .tag.gray  { color:#5d6470; border-color:#dcdad3; background:#f6f5f2; }
+  .tag.teal  { color:#2b6a70; border-color:#cfe3e4; background:#f0f7f7; }
+  .code-tag { font-family:"JetBrains Mono",monospace; font-size:9px; color:#2b6a70; }
+  .ext-tag  { font-family:"JetBrains Mono",monospace; font-size:9px; color:#8a857d; }
+  .pill { font-family:"JetBrains Mono",monospace; font-size:10.5px; color:#2b6a70; border:1px solid #cfe3e4; background:#f0f7f7; border-radius:5px; padding:3px 7px; display:inline-block; }
+  .pill.gray { color:#5d6470; border-color:#dcdad3; background:#fff; }
+  .pill.dashed { color:#a8a39a; border-style:dashed; background:transparent; }
+  .pre-dark { background:#161f2e; color:#d7e0ee; border-radius:8px; padding:12px; font-family:"JetBrains Mono",monospace; font-size:11px; line-height:1.65; overflow-x:auto; white-space:pre; }
+  .pre-light { background:#f6f5f2; border:1px solid #e4e2db; color:#2b3342; border-radius:8px; padding:12px; font-family:"JetBrains Mono",monospace; font-size:11px; line-height:1.65; overflow-x:auto; white-space:pre; }
+  .grid-auto { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .grid-auto.wide { grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); }
+  .stat { background:#f6f5f2; border:1px solid #e4e2db; border-radius:9px; padding:10px 11px; }
+  .stat.dashed { background:#fff; border-style:dashed; border-color:#cfcdc7; }
+  .stat .k { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8a857d; display:flex; justify-content:space-between; gap:6px; }
+  .stat .v { font-size:15px; font-weight:600; margin-top:3px; }
+  .stat .v.muted { color:#a8a39a; }
+  .stat .sub { font-size:11.5px; color:#8a857d; margin-top:1px; }
+  .rowline { display:flex; flex-direction:column; gap:0; }
+  .rowitem { display:grid; gap:12px; align-items:start; border-bottom:1px solid #f0efea; padding:9px 8px; }
+  .rowitem:hover { background:#f6f5f2; }
+  .tbl { display:grid; gap:10px; align-items:center; padding:8px; border-bottom:1px solid #f4f3ef; font-size:12px; }
+  .tbl:hover { background:#f6f5f2; }
+  .tbl-hd { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8a857d; padding:0 8px 7px; border-bottom:1px solid #e9e7e0; }
+  .scroll-x { overflow-x:auto; }
+
+  /* ---------- diagram ---------- */
+  .dg-wrap { padding:14px; overflow-x:auto; }
+  .dg-box { position:relative; background:#f6f5f2; border:1px solid #e4e2db; border-radius:10px; background-image:radial-gradient(#dedcd4 1px, transparent 1px); background-size:22px 22px; }
+  .dg-node { position:absolute; border-radius:10px; padding:11px 13px; cursor:pointer; color:#fff; }
+  .dg-node .nm { font-size:13px; font-weight:600; }
+  .dg-node .sb { font-family:"JetBrains Mono",monospace; font-size:10px; margin-top:3px; }
+  .dg-node.own  { background:#222c3d; }
+  .dg-node.own:hover { background:#2d3a50; }
+  .dg-node.internal { background:#fff; border:1px solid #cfcdc7; color:#1d2430; }
+  .dg-node.internal .sb { color:#8a857d; }
+  .dg-node.internal:hover { border-color:#2b8a92; }
+  .dg-node.store { background:#1b3b3e; }
+  .dg-node.store .sb { color:#9ec9cc; }
+  .dg-node.store:hover { background:#265054; }
+  .dg-node.client { background:#222c3d; }
+  .dg-node.client:hover { background:#2d3a50; }
+  .dg-node .ring { position:absolute; inset:-4px; border:2px solid #2b8a92; border-radius:13px; pointer-events:none; }
+  .dg-legend { position:absolute; left:20px; bottom:16px; display:flex; gap:14px; font-family:"JetBrains Mono",monospace; font-size:10px; color:#8a857d; }
+  .dg-svg { position:absolute; inset:0; overflow:visible; pointer-events:none; }
+
+  /* ---------- chain steps ---------- */
+  .chain { position:relative; display:flex; align-items:center; min-width:900px; background:#f6f5f2; border:1px solid #e4e2db; border-radius:10px; background-image:radial-gradient(#dedcd4 1px, transparent 1px); background-size:22px 22px; padding:34px 22px 40px; }
+  .chain-cell { display:flex; align-items:center; flex:1 1 0; min-width:0; }
+  .chain-node { position:relative; flex:1 1 0; min-width:0; border-radius:10px; background:#222c3d; color:#fff; padding:12px 13px; cursor:pointer; }
+  .chain-node:hover { opacity:.92; }
+  .chain-node.sel { background:#2b8a92; }
+  .chain-node .n { font-family:"JetBrains Mono",monospace; font-size:9.5px; color:#93a0b4; }
+  .chain-node.sel .n { color:#d8f0f1; }
+  .chain-node .t { font-size:12.5px; font-weight:600; margin-top:3px; line-height:1.3; }
+  .chain-node .tech { font-family:"JetBrains Mono",monospace; font-size:10px; color:#93a0b4; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chain-node.sel .tech { color:#d8f0f1; }
+  .chain-arrow { width:76px; flex:0 0 76px; position:relative; height:40px; display:flex; align-items:center; justify-content:center; }
+  .chain-arrow .ln { position:absolute; left:8px; right:8px; top:19px; height:1.6px; background:#7cb8bd; }
+  .chain-arrow .ar { position:absolute; right:6px; top:14px; width:0; height:0; border-left:7px solid #7cb8bd; border-top:5px solid transparent; border-bottom:5px solid transparent; }
+  .chain-arrow .el { position:absolute; top:-2px; left:0; right:0; text-align:center; font-family:"JetBrains Mono",monospace; font-size:9.5px; color:#6f8f93; }
+
+  /* ---------- accordions ---------- */
+  .acc { border:1px solid #e4e2db; border-radius:10px; overflow:hidden; }
+  .acc.sel { border-color:#2b8a92; }
+  .acc-hd { padding:11px 13px; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; cursor:pointer; }
+  .acc-hd:hover { background:#f6f5f2; }
+  .caret { width:22px; height:22px; border:1px solid #dcdad3; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:11px; color:#5d6470; flex:0 0 22px; }
+  .acc-body { border-top:none; background:#fbfbfa; margin:0 10px; padding:0 6px 6px; border-radius:0 0 10px 10px; display:flex; flex-direction:column; gap:14px; }
+  .acc-inner { border:1px solid #cfe3e4; border-top:none; border-radius:0 0 10px 10px; background:#fbfbfa; margin:0 10px; padding:14px 16px 16px; display:flex; flex-direction:column; gap:14px; }
+  .callbox { border:1px solid #e4e2db; background:#fff; border-radius:8px; padding:9px 10px; }
+  .callbox .sig { font-family:"JetBrains Mono",monospace; font-size:11px; color:#2b3342; overflow-x:auto; white-space:pre; }
+  .callbox .meta { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:4px; }
+  .callbox .f { font-family:"JetBrains Mono",monospace; font-size:10px; color:#2b6a70; }
+  .callbox .w { font-size:11.5px; color:#5d6470; }
+
+  /* ---------- inspector ---------- */
+  .insp-hd { padding:15px 16px 12px; border-bottom:1px solid #e9e7e0; }
+  .insp-tabs { display:flex; gap:2px; padding:10px 12px 0; border-bottom:1px solid #e9e7e0; flex-wrap:wrap; }
+  .insp-tab { font-size:12px; padding:7px 10px; border-radius:6px 6px 0 0; cursor:pointer; color:#5d6470; background:none; border:none; font-family:inherit; }
+  .insp-tab:hover { background:#f6f5f2; }
+  .insp-tab.sel { background:#f6f5f2; font-weight:600; color:#1d2430; }
+  .insp-tab-hint { align-self:stretch; margin-left:auto; font-family:"JetBrains Mono",monospace; font-size:10.5px; color:#a8a39a; padding:9px 4px; }
+  .insp-body { padding:14px 16px 18px; display:flex; flex-direction:column; gap:12px; }
+  .dark-card { background:#161f2e; color:#cfd6e2; border-radius:12px; padding:16px; }
+  .dark-card .t { font-size:14px; font-weight:600; color:#fff; }
+  .dark-row { display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid #26314a; padding:7px 0; font-size:12.5px; line-height:1.5; }
+  .dark-row:last-child { border-bottom:none; }
+  .dark-row .k { color:#8792a5; }
+  .dark-row .v-risk { color:#e8a79c; }
+  .panel-open-strip { position:sticky; top:92px; background:#fff; border:1px solid #dcdad3; border-radius:12px; padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:14px; cursor:pointer; }
+  .panel-open-strip:hover { border-color:#2b8a92; }
+  .panel-open-strip .vt { writing-mode:vertical-rl; font-size:11.5px; letter-spacing:.06em; color:#5d6470; }
+
+  /* ---------- score ---------- */
+  .score-hero { display:flex; flex-wrap:wrap; gap:22px; align-items:center; }
+  .score-big { font-size:52px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+  .score-grade { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:9px; font-weight:700; font-size:16px; color:#fff; }
+  .bars { display:flex; align-items:flex-end; gap:10px; height:150px; padding-bottom:6px; border-bottom:1px solid #e9e7e0; }
+  .bar-cell { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:6px; height:100%; }
+  .bar-cell .bv { font-family:"JetBrains Mono",monospace; font-size:10px; color:#5d6470; }
+  .bar-cell .bar { width:100%; border-radius:5px 5px 0 0; background:#cfcdc7; }
+  .bars-x { display:flex; gap:10px; margin-top:7px; }
+  .bars-x .bx { flex:1; text-align:center; font-family:"JetBrains Mono",monospace; font-size:9.5px; color:#a8a39a; }
+
+  .env-search { width:100%; max-width:440px; background:#fff; border:1px solid #dcdad3; border-radius:8px; padding:8px 12px; font-size:12.5px; font-family:"JetBrains Mono",monospace; color:#1d2430; }
+  .env-search:focus { outline:none; border-color:#2b8a92; }
+  .env-name { font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:600; word-break:break-all; }
+  .env-val { font-family:"JetBrains Mono",monospace; font-size:10px; color:#a8a39a; margin-top:2px; word-break:break-all; }
+
+  .foot-note { font-family:"JetBrains Mono",monospace; font-size:10px; color:#a8a39a; }
+  .note-src { font-family:"JetBrains Mono",monospace; font-size:10.5px; color:#a8a39a; margin-top:5px; }
+  .legend-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:11px; font-family:"JetBrains Mono",monospace; font-size:10px; color:#5d6470; }
+
+  /* ---------- flow brief (card do topo) ---------- */
+  .brief-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  @media (max-width: 820px) { .brief-grid { grid-template-columns:1fr; } }
+  .brief-grid.one { grid-template-columns:1fr; }
+  .brief-pane { border:1px solid #e4e2db; border-radius:10px; padding:12px 13px; background:#fbfbfa; min-width:0; }
+  .brief-pane.happy { border-color:#cfe0d2; background:#f7fbf8; }
+  .brief-pane.unhappy { border-color:#e6cdc9; background:#fbf7f6; }
+  .brief-pane.fallback { border-color:#cfe3e4; background:#f3f8f8; }
+  .brief-pane .ph { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .brief-body { font-size:13px; color:#2b3342; line-height:1.6; }
+  .path-row { padding:8px 0; border-bottom:1px solid #efece6; }
+  .path-row:last-child { border-bottom:none; padding-bottom:0; }
+  .path-row:first-child { padding-top:0; }
+  .path-when { font-size:12.5px; font-weight:500; line-height:1.4; }
+  .path-then { font-size:12px; color:#5d6470; line-height:1.55; margin-top:3px; }
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;font-family:monospace">Atlas Docs precisa de JavaScript. O dado bruto está em app-model.json ao lado deste arquivo.</p></noscript>
+<div id="app"></div>
+<script id="atlas-data" type="application/json">@@ATLAS_DATA@@</script>
+<script>
+"use strict";
+/* Atlas Docs — dashboard data-driven. Nada aqui deve ser editado por handoff:
+   todo conteúdo vem do app-model.json injetado no island acima. */
+(function () {
+  var MODEL = null;
+  try { MODEL = JSON.parse(document.getElementById("atlas-data").textContent); }
+  catch (e) { document.getElementById("app").innerHTML = '<p style="padding:24px;font-family:monospace;color:#b4453a">Falha ao ler app-model.json: ' + e.message + "</p>"; return; }
+  if (!MODEL || !MODEL.app) {
+    document.getElementById("app").innerHTML = '<p style="padding:24px;font-family:monospace;color:#b4453a">Modelo ausente. Rode atlas_build.py com um app-model.json válido.</p>';
+    return;
+  }
+
+  /* ---------------- state ---------------- */
+  var S = { screen: "know", flow: null, node: null, step: 0, stepOpen: true, tab: "payload", panel: true, nav: true, view: "seq", acc: {}, envQ: "" };
+  var flows = MODEL.flows || [];
+  var richFlow = flows.filter(function (f) { return f.diagram && f.diagram.nodes && f.diagram.nodes.length; })[0] || null;
+  var chainFlows = flows.filter(function (f) { return f !== richFlow; });
+  if (richFlow && !S.flow) S.flow = richFlow.id;
+
+  /* ---------------- helpers ---------------- */
+  function E(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function arr(x) { return Array.isArray(x) ? x : []; }
+  function num(x, d) { x = parseInt(x, 10); return isNaN(x) ? d : x; }
+  function covColor(c) { c = num(c, 0); return c >= 85 ? "#8fd6da" : c >= 75 ? "#c9b98a" : "#c96b5e"; }
+  function covBarColor(c) { c = num(c, 0); return c >= 85 ? "#2b8a92" : c >= 75 ? "#68aeb3" : c >= 60 ? "#a9cfd2" : "#cfcdc7"; }
+  function sevTag(sev) {
+    var s = String(sev || "").toUpperCase();
+    if (s.indexOf("CRÍT") === 0 || s.indexOf("CRIT") === 0 || s === "FALHA" || s === "FAIL") return "red";
+    if (s === "ALTO" || s === "WARN" || s === "ATENÇÃO" || s === "BREAK") return "amber";
+    if (s === "MÉDIO" || s === "MEDIO" || s === "NOTA" || s === "INFO") return "teal";
+    if (s === "OK" || s === "PASS" || s === "NOVO" || s === "ADITIVO") return "green";
+    return "gray";
+  }
+  function stateTag(st) {
+    var s = String(st || "").toLowerCase();
+    if (s === "breaking" || s === "bad" || s === "fail") return "red";
+    if (s === "deprecado" || s === "warn") return "amber";
+    if (s === "estavel" || s === "ok" || s === "pass") return "green";
+    return "teal";
+  }
+  function critColor(c) { var s = String(c || "").toLowerCase(); return s.indexOf("crit") === 0 ? "#b4453a" : s === "alta" ? "#c08a2e" : "#3f7a4f"; }
+  function modeOf(step) {
+    if (step.mode) return step.mode;
+    var t = String(step.tech || "");
+    if (/manual/i.test(t)) return "manual";
+    if (/hmac|sftp|cnab|arquivo|webhook|async|fila|kafka|sqs|rabbit/i.test(t)) return "assíncrono";
+    return "síncrono";
+  }
+  function modeColor(m) { return m === "bloqueante" || m === "block" ? "#b4453a" : m === "fail-open" || m === "compensável" ? "#c08a2e" : m === "transacional" ? "#2b6a70" : "#3f7a4f"; }
+  function provBadge(prov) { return prov === "external" ? '<span class="ext-tag">NÃO CONECTADO</span>' : '<span class="code-tag">CÓDIGO</span>'; }
+  function dashVal(v, prov) { return prov === "external" && (v == null || v === "" || v === "—") ? "—" : (v == null || v === "" ? "—" : v); }
+
+  /* ---------------- nav ---------------- */
+  var NAV = [
+    { k: "know",  icon: "◈", label: "Know-how" },
+    { k: "fluxos", icon: "⇄", label: "Fluxos & diagramas" },
+    { k: "arq",   icon: "▦", label: "Arquitetura" },
+    { k: "con",   icon: "⌗", label: "Contratos de API" },
+    { k: "dados", icon: "▤", label: "Modelo de dados · DDL" },
+    { k: "env",   icon: "$", label: "Variáveis de ambiente" },
+    { k: "filas", icon: "≡", label: "Eventos & filas" },
+    { k: "third", icon: "◎", label: "Serviços de terceiros" },
+    { k: "deps",  icon: "⧉", label: "Dependências" },
+    { k: "run",   icon: "⚑", label: "Operação & alertas" },
+    { k: "score", icon: "◉", label: "Score & Quality Gateway" },
+    { k: "hist",  icon: "⟲", label: "Histórico de varreduras" }
+  ];
+  function crumbFor(sc) {
+    var app = E(MODEL.app.name || "app");
+    if (sc === "fluxos" && S.flow) {
+      var f = flowById(S.flow);
+      return app + " / fluxos / " + E(f ? (f.id || "") : "");
+    }
+    var map = { know: "know-how", arq: "arquitetura", con: "contratos", dados: "modelo de dados", env: "variáveis de ambiente", filas: "eventos & filas", third: "terceiros", deps: "dependências", run: "operação", score: "score", hist: "histórico" };
+    return app + " / " + (map[sc] || sc);
+  }
+  function titleFor(sc) {
+    if (sc === "fluxos" && S.flow) { var f = flowById(S.flow); return f ? (f.title || f.label || "Fluxo") : "Fluxos"; }
+    var map = { know: "Know-how — o que é, o que importa, o que já quebrou", fluxos: "Fluxos & diagramas", arq: "Arquitetura — containers, libs e decisões", con: "Contratos de API", dados: "Modelo de dados e DDL", env: "Variáveis de ambiente — o que a app espera do ambiente", filas: "Eventos, tópicos e filas", third: "Serviços de terceiros — URLs, credenciais e limites", deps: "Dependências internas e externas", run: "Operação — o que está declarado no repositório", score: "Score & Quality Gateway", hist: "Histórico de varreduras" };
+    return map[sc] || "Atlas Docs";
+  }
+  function flowById(id) { return flows.filter(function (f) { return f.id === id; })[0] || null; }
+
+  /* ---------------- render root ---------------- */
+  function render() {
+    var app = document.getElementById("app");
+    app.innerHTML = shell();
+    var h = location.hash || "";
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  function shell() {
+    var sc = S.screen;
+    var hasPanel = sc === "fluxos";
+    var panelOn = hasPanel && S.panel;
+    var colsCls = !hasPanel ? "cols panel-none" : panelOn ? "cols panel-on" : "cols panel-off";
+    var html = '<div class="shell' + (S.nav ? "" : " nav-closed") + '">';
+    html += sidebar();
+    html += '<div class="main">';
+    html += header(sc, hasPanel);
+    html += '<div class="' + colsCls + '">';
+    html += '<div class="col-main">' + page(sc) + "</div>";
+    if (hasPanel) html += panelOn ? inspector() : panelClosedStrip();
+    html += "</div></div></div>";
+    return html;
+  }
+
+  function sidebar() {
+    var a = MODEL.app, score = MODEL.score || {};
+    var hist = MODEL.history || {};
+    var lastScan = arr(hist.scans)[0];
+    var chg = arr(hist.changelog);
+    var nNovo = chg.filter(function (c) { return c.tag === "NOVO"; }).length;
+    var nBreak = chg.filter(function (c) { return c.tag === "BREAK"; }).length;
+    var nav = S.nav;
+    var html = '<aside class="side">';
+    html += '<div class="s-top"><div class="s-logo"><div class="s-mark">Ø</div>';
+    if (nav) html += '<div><div class="s-name">Atlas Docs</div><div class="s-ver">v' + E(MODEL.schema || "1") + " · " + E((a.generatedAt || "").slice(0, 10)) + "</div></div>";
+    html += "</div>";
+    if (nav) html += '<button class="s-btn" onclick="A.navT()" title="recolher">‹</button>';
+    else html += '<button class="s-btn wide" onclick="A.navT()" title="expandir">›</button>';
+    html += "</div>";
+    if (nav) {
+      html += '<div><div class="s-label">Aplicação analisada</div><div class="s-app">';
+      html += '<div class="s-app-hd"><div class="s-app-name">' + E(a.name || "—") + '</div><div class="s-app-score">' + E(score.overall != null ? score.overall + (score.grade ? " · " + score.grade : "") : "—") + "</div></div>";
+      html += '<div class="s-app-meta">';
+      html += "<div>" + E(a.repo || "—") + " · " + E(a.branch || "—") + "</div>";
+      html += "<div>" + E(a.commit || "—") + " · " + E(a.filesCount != null ? a.filesCount + " arquivos" : "—") + "</div>";
+      html += "<div>" + E(a.stackSummary || "") + (a.stackSummary ? " · " : "") + flows.length + " fluxos · " + E((MODEL.data && MODEL.data.engine) || "—") + "</div>";
+      html += "</div></div></div>";
+    }
+    html += '<div class="nav-sec">';
+    if (nav) html += '<div class="s-label" style="margin-bottom:6px">Documentação</div>';
+    NAV.slice(0, 2).forEach(function (n) { html += navRow(n, nav); });
+    if (nav) {
+      html += '<div style="display:flex;flex-direction:column;gap:1px;margin:2px 0 4px">';
+      flows.forEach(function (f) {
+        var sel = S.screen === "fluxos" && S.flow === f.id;
+        html += '<button class="nav-flow" onclick="A.flow(\'' + E(f.id) + '\')">';
+        html += '<span class="lb">' + E(f.label || f.id) + '</span>';
+        html += '<span class="cov" style="color:' + covColor(f.cov) + '">' + E(f.cov != null ? f.cov + "%" : "—") + "</span>";
+        if (sel) html += '<span class="bar"></span>';
+        html += "</button>";
+      });
+      html += "</div>";
+    }
+    NAV.slice(2).forEach(function (n) { html += navRow(n, nav); });
+    html += "</div>";
+    if (nav) {
+      html += '<div class="s-foot">';
+      html += "<div>último scan: " + E(lastScan ? lastScan.when + " · " + lastScan.commit : "—") + "</div>";
+      if (chg.length) html += '<div class="hl">+' + nNovo + " novos · " + nBreak + " breaking change" + (nBreak === 1 ? "" : "s") + "</div>";
+      html += "</div>";
+    }
+    html += "</aside>";
+    return html;
+  }
+
+  function navRow(n, nav) {
+    var sel = S.screen === n.k;
+    return '<button class="nav-row' + (sel ? " sel" : "") + '" onclick="A.go(\'' + n.k + '\')" title="' + E(n.label) + '">' +
+      '<span class="ic">' + n.icon + '</span>' + (nav ? '<span class="lb">' + E(n.label) + "</span>" : "") +
+      (sel ? '<span class="bar"></span>' : "") + "</button>";
+  }
+
+  function header(sc, hasPanel) {
+    var a = MODEL.app;
+    var html = '<header class="hd"><div style="min-width:0">';
+    html += '<div class="crumb">' + crumbFor(sc) + "</div>";
+    html += '<div class="title">' + E(titleFor(sc)) + "</div></div>";
+    html += '<div class="hd-chips">';
+    if (a.branch) html += '<div class="chip"><span style="width:7px;height:7px;border-radius:50%;background:#3f7a4f;display:inline-block"></span>' + E(a.syncNote || "sincronizado com " + a.branch) + "</div>";
+    if (a.commit) html += '<div class="chip">Diff: <strong style="color:#1d2430">' + E(a.commit) + (a.commitPrev ? " ← " + E(a.commitPrev) : "") + "</strong></div>";
+    if (hasPanel) html += '<button class="chip btn" onclick="A.panel()"><span class="mono">' + (S.panel ? "›" : "‹") + "</span>" + (S.panel ? "Recolher inspetor" : "Expandir diagrama") + "</button>";
+    html += "</div></header>";
+    return html;
+  }
+
+  /* ---------------- pages ---------------- */
+  function page(sc) {
+    switch (sc) {
+      case "know": return rKnow();
+      case "fluxos": return S.flow === (richFlow && richFlow.id) && richFlow ? rRich(richFlow) : rChain(flowById(S.flow) || chainFlows[0] || flows[0]);
+      case "arq": return rArq();
+      case "con": return rCon();
+      case "dados": return rDados();
+      case "env": return rEnv();
+      case "filas": return rFilas();
+      case "third": return rThird();
+      case "deps": return rDeps();
+      case "run": return rRun();
+      case "score": return rScore();
+      case "hist": return rHist();
+    }
+    return rKnow();
+  }
+
+  /* ----- inventário de entrypoints (régua de exaustividade) ----- */
+  function entrypointsCard() {
+    var eps = arr(MODEL.entrypoints);
+    if (!eps.length) return "";
+    var nMap = eps.filter(function (e) { return e.status === "mapeado"; }).length;
+    var nTri = eps.filter(function (e) { return e.status === "trivial"; }).length;
+    var nBad = eps.length - nMap - nTri;
+    var kindLabel = { http: "HTTP", consumer: "CONSUMER", cron: "CRON", webhook: "WEBHOOK", cli: "CLI", listener: "LISTENER" };
+    var html = '<section class="card">';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:12px"><div><div class="card-title">Inventário de entrypoints — régua de exaustividade</div>';
+    html += '<div class="card-sub">Toda a superfície de entrada da aplicação: cada item termina num fluxo documentado ou marcado como trivial</div></div><span class="code-tag">CÓDIGO</span></div>';
+    html += '<div class="scroll-x"><div style="min-width:620px">';
+    html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(86px,auto) minmax(180px,1.3fr) minmax(150px,1fr) minmax(140px,1.1fr)"><div>TIPO</div><div>REF</div><div>FLUXO</div><div>NOTA</div></div>';
+    eps.forEach(function (e) {
+      html += '<div class="tbl" style="grid-template-columns:minmax(86px,auto) minmax(180px,1.3fr) minmax(150px,1fr) minmax(140px,1.1fr);align-items:start">';
+      html += '<div><span class="tag ' + (e.status === "trivial" ? "gray" : "teal") + '">' + E(kindLabel[e.kind] || String(e.kind || "?").toUpperCase()) + "</span></div>";
+      html += '<div class="mono" style="font-size:11px;word-break:break-all">' + E(e.ref) + "</div>";
+      if (e.status === "mapeado" && e.flow) {
+        var f = flowById(e.flow);
+        html += '<div><button class="pill" style="cursor:pointer" onclick="A.flow(\'' + E(e.flow) + '\')" title="abrir fluxo">' + E(f && f.label ? f.label : e.flow) + "</button></div>";
+      } else if (e.status === "trivial") {
+        html += '<div><span class="tag gray">TRIVIAL</span></div>';
+      } else {
+        html += '<div><span class="tag red">SEM DESTINO</span></div>';
+      }
+      html += '<div style="font-size:11.5px;color:#8a857d;line-height:1.5">' + E(e.note || "") + "</div>";
+      html += "</div>";
+    });
+    html += "</div></div>";
+    html += '<div class="legend-pills"><span class="pill">' + nMap + ' mapeados</span><span class="pill gray">' + nTri + " triviais</span>" + (nBad ? '<span class="tag red">' + nBad + " sem destino</span>" : '<span class="pill">' + eps.length + " de " + eps.length + " com destino</span>") + "</div>";
+    html += "</section>";
+    return html;
+  }
+
+  /* ----- know ----- */
+  function rKnow() {
+    var id = MODEL.identity || {};
+    var html = "";
+    html += '<section class="card">';
+    html += '<div class="kv-label">' + E("O que é o " + (MODEL.app.name || "app")) + "</div>";
+    if (id.what) html += '<div style="font-size:14px;line-height:1.65;color:#2b3342;margin-top:9px;max-width:74ch">' + E(id.what) + "</div>";
+    if (id.firstRead) html += '<div style="font-size:13.5px;line-height:1.65;color:#5d6470;margin-top:11px;max-width:74ch">' + E(id.firstRead) + "</div>";
+    if (arr(id.stats).length) {
+      html += '<div class="grid-auto" style="margin-top:16px">';
+      arr(id.stats).forEach(function (s) {
+        var ext = s.prov === "external";
+        html += '<div class="stat' + (ext ? " dashed" : "") + '">';
+        html += '<div class="k"><span>' + E(s.k) + "</span>" + provBadge(s.prov) + "</div>";
+        html += '<div class="v' + (ext && dashVal(s.v, s.prov) === "—" ? " muted" : "") + '">' + E(dashVal(s.v, s.prov)) + "</div>";
+        if (s.sub) html += '<div class="sub">' + E(s.sub) + "</div>";
+        html += "</div>";
+      });
+      html += "</div>";
+      html += '<div class="legend-pills"><span class="pill">borda cheia = derivado do código</span><span class="pill dashed">borda tracejada = exige fonte externa</span></div>';
+    }
+    html += "</section>";
+    html += entrypointsCard();
+
+    if (arr(id.keyPoints).length) {
+      html += '<section class="card"><div class="card-title">Pontos principais</div><div class="card-sub" style="margin-bottom:14px">O que é preciso saber antes de mexer em qualquer parte do fluxo</div><div class="rowline">';
+      arr(id.keyPoints).forEach(function (k) {
+        html += '<div class="rowitem" style="grid-template-columns:28px minmax(0,1fr)">';
+        html += '<div class="mono" style="font-size:11px;color:#2b6a70">' + E(k.n || "") + "</div><div>";
+        html += '<div style="font-size:13px;font-weight:600">' + E(k.title) + "</div>";
+        html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.6;margin-top:4px">' + E(k.body) + "</div>";
+        if (k.src) html += '<div class="note-src">' + E(k.src) + "</div>";
+        html += "</div></div>";
+      });
+      html += "</div></section>";
+    }
+
+    if (arr(id.risks).length) {
+      html += '<section class="card"><div class="card-title">Falhas e armadilhas encontradas</div><div class="card-sub" style="margin-bottom:14px">Detectadas pela varredura do código ou registradas em incidentes anteriores</div><div style="display:flex;flex-direction:column;gap:11px">';
+      arr(id.risks).forEach(function (r) {
+        html += '<div style="border:1px solid #e4e2db;border-radius:10px;padding:12px 13px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start">';
+        html += '<span class="tag ' + sevTag(r.sev) + '">' + E(r.sev) + "</span>";
+        html += '<div style="flex:1 1 240px;min-width:0">';
+        html += '<div style="font-size:13px;font-weight:600">' + E(r.title) + "</div>";
+        html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.6;margin-top:4px">' + E(r.body) + "</div>";
+        if (r.fix) html += '<div style="font-size:12.5px;color:#2b6a70;line-height:1.55;margin-top:6px">Mitigação: ' + E(r.fix) + "</div>";
+        html += "</div>";
+        html += '<div class="note-src" style="align-self:flex-end">' + E(r.where || "") + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+
+    if (arr(id.incidents).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:13px">Incidentes que moldaram o desenho atual</div><div class="rowline">';
+      arr(id.incidents).forEach(function (i) {
+        html += '<div class="rowitem" style="grid-template-columns:minmax(92px,auto) minmax(0,1fr)">';
+        html += '<div><div class="mono" style="font-size:11px;color:#b4453a">' + E(i.id) + '</div><div class="mono" style="font-size:10px;color:#a8a39a;margin-top:2px">' + E(i.when) + "</div></div>";
+        html += "<div><div style=\"font-size:13px;font-weight:600\">" + E(i.title) + "</div>";
+        html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.6;margin-top:4px">' + E(i.body) + "</div>";
+        if (i.lesson) html += '<div style="font-size:12.5px;color:#2b6a70;line-height:1.55;margin-top:6px">Aprendizado: ' + E(i.lesson) + "</div>";
+        html += "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    return html;
+  }
+
+  /* ----- fluxos: rich (diagrama clicável) ----- */
+  function rRich(f) {
+    var html = flowBriefCard(f);
+    html += '<section class="card flush">';
+    html += '<div class="card-hd" style="display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between">';
+    html += "<div><div class=\"card-title\">Diagrama do fluxo — clique em qualquer nó</div>";
+    html += '<div class="card-sub">' + E(f.diagram.nodes.length + " componentes · cadeia derivada das chamadas encontradas no código") + "</div></div>";
+    html += '<div style="display:flex;gap:6px;font-size:11.5px" class="mono">';
+    ["seq", "comp", "er"].forEach(function (v) {
+      var lb = v === "seq" ? "sequência" : v === "comp" ? "componentes" : "ER";
+      html += '<button class="pill' + (S.view === v ? "" : " gray") + '" onclick="A.view(\'' + v + '\')">' + lb + "</button>";
+    });
+    html += "</div></div>";
+    html += '<div class="dg-wrap">' + (S.view === "seq" ? diagramSvg(f.diagram) : S.view === "comp" ? diagramComponents(f.diagram) : erMini()) + "</div>";
+    html += "</section>";
+
+    if (arr(f.seq).length) {
+      html += '<section class="card"><div class="card-title">Ordem de execução e acoplamento</div><div class="card-sub" style="margin-bottom:14px">O que é sequencial, o que é bloqueante e o que sai do caminho da resposta</div><div class="rowline">';
+      arr(f.seq).forEach(function (sp, i) {
+        var n = sp.n || String(i + 1).padStart(2, "0");
+        html += '<div class="rowitem" style="grid-template-columns:26px minmax(0,1fr) 118px">';
+        html += '<div class="mono" style="font-size:10.5px;color:#a8a39a">' + E(n) + "</div><div>";
+        html += '<div style="font-size:12.5px;font-weight:500">' + E(sp.name) + "</div>";
+        html += '<div style="font-size:12px;color:#5d6470;line-height:1.5;margin-top:2px">' + E(sp.note) + "</div></div>";
+        html += '<div class="mono" style="font-size:10px;text-align:right;color:' + modeColor(sp.mode || sp.kind) + '">' + E(sp.mode || sp.kind) + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+
+    if (arr(f.notes).length) html += notesCard(f);
+    return html;
+  }
+
+  function diagramNodes(d) {
+    var nodes = d.nodes.map(function (n) { return Object.assign({ w: 170, h: 66 }, n); });
+    var hasXY = nodes.every(function (n) { return typeof n.x === "number" && typeof n.y === "number"; });
+    if (!hasXY) autoLayout(nodes, d.edges || []);
+    return nodes;
+  }
+  function autoLayout(nodes, edges) {
+    var byId = {}; nodes.forEach(function (n) { byId[n.id] = n; });
+    var indeg = {}; nodes.forEach(function (n) { indeg[n.id] = 0; });
+    edges.forEach(function (e) { if (indeg[e.to] != null) indeg[e.to]++; });
+    var depth = {}; nodes.forEach(function (n) { depth[n.id] = indeg[n.id] === 0 ? 0 : null; });
+    for (var it = 0; it < nodes.length; it++) {
+      edges.forEach(function (e) {
+        if (depth[e.from] != null && depth[e.to] != null && depth[e.to] < depth[e.from] + 1) depth[e.to] = depth[e.from] + 1;
+        if (depth[e.from] != null && depth[e.to] == null) depth[e.to] = depth[e.from] + 1;
+      });
+    }
+    var cols = {};
+    nodes.forEach(function (n) {
+      var c = depth[n.id] == null ? 0 : depth[n.id];
+      cols[c] = cols[c] || []; cols[c].push(n);
+    });
+    var maxCol = 0, maxRows = 1;
+    Object.keys(cols).forEach(function (c) {
+      var ci = parseInt(c, 10); maxCol = Math.max(maxCol, ci); maxRows = Math.max(maxRows, cols[c].length);
+      cols[c].forEach(function (n, r) { n.x = 20 + ci * 246; n.y = 40 + r * 100; });
+    });
+    return { w: 20 + (maxCol + 1) * 246, h: 60 + maxRows * 100 };
+  }
+  function diagramSvg(d) {
+    var nodes = diagramNodes(d);
+    var w = d.width, h = d.height;
+    if (typeof w !== "number" || typeof h !== "number") {
+      var mx = 0, my = 0;
+      nodes.forEach(function (n) { mx = Math.max(mx, n.x + n.w); my = Math.max(my, n.y + n.h); });
+      w = mx + 20; h = my + 50;
+    }
+    var byId = {}; nodes.forEach(function (n) { byId[n.id] = n; });
+    var sel = S.node && byId[S.node] ? S.node : null;
+    var html = '<div class="dg-box" style="width:' + w + "px;height:" + h + 'px">';
+    html += '<svg class="dg-svg" viewBox="0 0 ' + w + " " + h + '" width="' + w + '" height="' + h + '"><defs>' +
+      '<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7cb8bd"></path></marker></defs>';
+    arr(d.edges).forEach(function (e) {
+      var a = byId[e.from], b = byId[e.to];
+      if (!a || !b) return;
+      var d1 = e.path || edgePath(a, b);
+      html += '<path d="' + d1 + '" fill="none" stroke="#7cb8bd" stroke-width="1.6" marker-end="url(#ar)"></path>';
+      var m = pathMid(d1);
+      if (e.label) html += '<text x="' + (m.x + 6) + '" y="' + (m.y - 4) + '" font-family="JetBrains Mono, monospace" font-size="10" fill="#6f8f93">' + E(e.label) + "</text>";
+    });
+    html += "</svg>";
+    nodes.forEach(function (n) {
+      html += '<div class="dg-node ' + (n.kind || "own") + '" style="left:' + n.x + "px;top:" + n.y + "px;width:" + n.w + "px;min-height:" + n.h + 'px" onclick="A.selNode(\'' + E(n.id) + '\')">';
+      html += '<div class="nm">' + E(n.label) + "</div>";
+      if (n.sub) html += '<div class="sb">' + E(n.sub) + "</div>";
+      if (sel === n.id) html += '<div class="ring"></div>';
+      html += "</div>";
+    });
+    html += '<div class="dg-legend"><span>■ serviço próprio</span><span>□ dependência interna</span><span style="color:#1b3b3e">■ persistência</span></div>';
+    html += "</div>";
+    return html;
+  }
+  function edgePath(a, b) {
+    var sameRow = Math.abs(a.y - b.y) < 24;
+    if (sameRow) return "M " + (a.x + a.w) + " " + (a.y + a.h / 2) + " L " + b.x + " " + (b.y + b.h / 2);
+    if (b.y > a.y) return "M " + (a.x + a.w / 2) + " " + (a.y + a.h) + " L " + (b.x + b.w / 2) + " " + b.y;
+    return "M " + (a.x + a.w / 2) + " " + a.y + " L " + (b.x + b.w / 2) + " " + (b.y + b.h);
+  }
+  function pathMid(d) {
+    var nums = String(d).match(/-?\d+(\.\d+)?/g) || [0, 0, 0, 0];
+    var xs = [], ys = [];
+    var pairs = [];
+    for (var i = 0; i + 1 < nums.length; i += 2) pairs.push([parseFloat(nums[i]), parseFloat(nums[i + 1])]);
+    if (!pairs.length) return { x: 0, y: 0 };
+    var a = pairs[0], b = pairs[pairs.length - 1];
+    return { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 };
+  }
+  function diagramComponents(d) {
+    var groups = { own: "Serviços próprios", internal: "Dependências internas", store: "Dados", client: "Clientes", extern: "Externos" };
+    var html = '<div class="grid-auto" style="padding:16px">';
+    Object.keys(groups).forEach(function (k) {
+      var ns = arr(d.nodes).filter(function (n) { return (n.kind || "own") === k; });
+      if (!ns.length) return;
+      html += '<div style="border:1px solid #e4e2db;border-radius:10px;padding:12px;background:#fff">';
+      html += '<div class="kv-label" style="margin-bottom:9px">' + groups[k] + "</div>";
+      html += '<div style="display:flex;flex-direction:column;gap:7px">';
+      ns.forEach(function (n) {
+        html += '<button class="pill gray" style="text-align:left;cursor:pointer" onclick="A.selNode(\'' + E(n.id) + '\')"><strong>' + E(n.label) + "</strong>" + (n.sub ? " · " + E(n.sub) : "") + "</button>";
+      });
+      html += "</div></div>";
+    });
+    html += "</div>";
+    return html;
+  }
+  function erMini() {
+    var html = '<div style="padding:16px">';
+    var model = arr(MODEL.data && MODEL.data.model);
+    if (!model.length) { html += '<div class="card-sub">Nenhum modelo de dados no scan.</div></div>'; return html; }
+    html += '<div class="grid-auto wide">';
+    model.forEach(function (t) {
+      html += '<div style="border:1px solid ' + (t.hl ? "#cfe3e4" : "#e4e2db") + ';border-radius:9px;overflow:hidden;background:#fff">';
+      html += '<div style="background:' + (t.hl ? "#1b3b3e" : "#222c3d") + ';color:#fff;padding:8px 11px;font-size:12.5px;font-weight:600">' + E(t.name) + "</div>";
+      html += '<div style="padding:9px 11px" class="mono"><div style="font-size:10.5px;line-height:1.9;color:#5d6470">';
+      arr(t.lines).slice(0, 6).forEach(function (l) { html += "<div>" + E(l) + "</div>"; });
+      html += "</div></div></div>";
+    });
+    html += "</div>";
+    html += '<div style="margin-top:12px"><button class="pill" onclick="A.go(\'dados\')">ver modelo completo e DDL →</button></div></div>';
+    return html;
+  }
+
+  /* ----- fluxos: chain ----- */
+  function rChain(f) {
+    if (!f) return '<section class="card"><div class="card-sub">Nenhum fluxo no scan.</div></section>';
+    var steps = arr(f.steps);
+    var html = flowBriefCard(f);
+
+    if (steps.length) {
+      html += '<section class="card flush"><div class="card-hd"><div class="card-title">Diagrama do fluxo — clique em qualquer nó</div>';
+      html += '<div class="card-sub">Cadeia gerada a partir das chamadas encontradas no código</div></div>';
+      html += '<div class="dg-wrap"><div class="chain">';
+      steps.forEach(function (p, i) {
+        var sel = i === S.step;
+        html += '<div class="chain-cell"><div class="chain-node' + (sel ? " sel" : "") + '" onclick="A.selStep(' + i + ')">';
+        html += '<div class="n">' + String(i + 1).padStart(2, "0") + "</div>";
+        html += '<div class="t">' + E((p.name || "").split(" · ")[0]) + "</div>";
+        html += '<div class="tech">' + E(p.tech || "") + "</div>";
+        if (sel) html += '<div class="ring"></div>';
+        html += "</div>";
+        if (i < steps.length - 1) {
+          html += '<div class="chain-arrow"><div class="ln"></div><div class="ar"></div><div class="el">' + E(modeOf(p)) + "</div></div>";
+        }
+        html += "</div>";
+      });
+      html += '<div class="dg-legend"><span>■ passo do fluxo</span><span style="color:#2b8a92">■ passo selecionado no inspetor</span><span>— chamada encontrada no código</span></div>';
+      html += "</div></div></section>";
+
+      html += '<section class="card"><div class="card-title">Passos do fluxo — clique para ver o payload</div>';
+      html += '<div class="card-sub" style="margin-bottom:15px">Cadeia derivada das chamadas encontradas no código</div><div style="display:flex;flex-direction:column;gap:0">';
+      steps.forEach(function (p, i) {
+        var sel = i === S.step && S.stepOpen;
+        html += '<div style="display:flex;flex-direction:column">';
+        html += '<div class="acc' + (sel ? " sel" : "") + '" style="border-radius:10px;margin-bottom:2px">';
+        html += '<div class="acc-hd" onclick="A.selStep(' + i + ')">';
+        html += '<div class="mono" style="font-size:11px;color:#2b6a70;width:24px">' + String(i + 1).padStart(2, "0") + "</div>";
+        html += '<div style="flex:1 1 200px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(p.name) + "</div>";
+        if (p.desc) html += '<div style="font-size:12px;color:#5d6470;line-height:1.5;margin-top:2px">' + E(p.desc) + "</div></div>";
+        html += '<div class="mono" style="font-size:10.5px;color:#8a857d">' + E(p.tech || "") + "</div>";
+        html += '<div class="mono" style="font-size:10px;color:#8a857d;text-align:right">' + E(modeOf(p)) + "</div>";
+        html += '<div class="caret">' + (sel ? "−" : "+") + "</div></div>";
+        if (sel) {
+          html += '<div class="acc-inner">';
+          if (p.does) html += "<div><div class=\"kv-label tight\">O QUE FAZ</div><div style=\"font-size:12.5px;color:#2b3342;line-height:1.6\">" + E(p.does) + "</div></div>";
+          if (arr(p.calls).length) {
+            html += '<div><div class="kv-label tight" style="margin-bottom:7px">MÉTODOS ACESSADOS</div><div style="display:flex;flex-direction:column;gap:8px">';
+            arr(p.calls).forEach(function (c) {
+              html += '<div class="callbox"><div class="sig">' + E(c.sig) + '</div><div class="meta"><span class="f">' + E(c.file) + '</span><span class="w">' + E(c.what) + "</span></div></div>";
+            });
+            html += "</div></div>";
+          }
+          html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">';
+          if (arr(p.touches).length) {
+            html += "<div><div class=\"kv-label tight\" style=\"margin-bottom:7px\">DADOS E RECURSOS TOCADOS</div><div style=\"display:flex;flex-wrap:wrap;gap:6px\">";
+            arr(p.touches).forEach(function (t) { html += '<span class="pill">' + E(t) + "</span>"; });
+            html += "</div></div>";
+          }
+          if (arr(p.guards).length) {
+            html += "<div><div class=\"kv-label tight\" style=\"margin-bottom:7px\">PRÉ-CONDIÇÕES</div><div style=\"display:flex;flex-direction:column;gap:4px\">";
+            arr(p.guards).forEach(function (g) { html += '<div style="font-size:12px;color:#5d6470;line-height:1.5">' + E(g) + "</div>"; });
+            html += "</div></div>";
+          }
+          html += "</div>";
+          if (arr(p.errs).length) {
+            html += "<div><div class=\"kv-label tight\" style=\"margin-bottom:7px\">O QUE PODE FALHAR</div><div style=\"display:flex;flex-direction:column;gap:6px\">";
+            arr(p.errs).forEach(function (er) {
+              html += '<div style="display:flex;gap:9px;align-items:baseline"><span class="mono" style="font-size:10.5px;color:#b4453a;min-width:110px">' + E(er.code) + '</span><span style="font-size:12px;color:#5d6470;line-height:1.5">' + E(er.msg) + "</span></div>";
+            });
+            html += "</div></div>";
+          }
+          html += '<div style="display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #f0efea;padding-top:11px" class="mono">';
+          if (p.src) html += '<span style="font-size:10.5px;color:#8a857d">' + E(p.src) + "</span>";
+          html += '<span style="font-size:10.5px;color:#2b6a70">payload completo no inspetor →</span></div>';
+          html += "</div>";
+        }
+        html += "</div>";
+        if (i < steps.length - 1) html += '<div style="width:1px;height:18px;background:#7cb8bd;margin:0 0 0 27px"></div>';
+        html += "</div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(f.notes).length) html += notesCard(f);
+    return html;
+  }
+
+  function pathItems(list) {
+    return arr(list).map(function (x) {
+      if (x == null) return null;
+      if (typeof x === "string") return { when: "", then: x, src: "" };
+      return { when: x.when || x.title || "", then: x.then || x.body || "", src: x.src || "" };
+    }).filter(function (p) { return p && (p.when || p.then); });
+  }
+  function pathList(list) {
+    var items = pathItems(list);
+    if (!items.length) return "";
+    var html = "";
+    items.forEach(function (p) {
+      html += '<div class="path-row">';
+      if (p.when) html += '<div class="path-when">' + E(p.when) + "</div>";
+      if (p.then) html += '<div class="' + (p.when ? "path-then" : "path-when") + '">' + (p.when ? "→ " : "") + E(p.then) + "</div>";
+      if (p.src) html += '<div class="note-src">' + E(p.src) + "</div>";
+      html += "</div>";
+    });
+    return html;
+  }
+  function briefPane(title, tagClass, count, bodyHtml, extraClass) {
+    if (!bodyHtml) return "";
+    var html = '<div class="brief-pane' + (extraClass ? " " + extraClass : "") + '">';
+    html += '<div class="ph"><div class="kv-label">' + title + "</div>";
+    if (count) html += '<span class="tag ' + tagClass + '">' + count + "</span>";
+    html += "</div>" + bodyHtml + "</div>";
+    return html;
+  }
+  function flowBriefCard(f) {
+    if (!f) return "";
+    var b = (f.brief && typeof f.brief === "object") ? f.brief : {};
+    var what = b.what || f.resumo || "";
+    var does = b.does || "";
+    var happy = pathItems(b.happy);
+    var unhappy = pathItems(b.unhappy);
+    var falls = pathItems(b.fallbacks);
+    var stats = arr(f.stats);
+    if (!what && !does && !happy.length && !unhappy.length && !falls.length && !stats.length && !f.tag) return "";
+    var html = '<section class="card" data-atlas="flow-brief">';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:space-between">';
+    html += "<div>";
+    html += '<div class="kv-label">' + E(f.tag || "este fluxo") + "</div>";
+    html += '<div class="card-title" style="margin-top:4px">O que é, o que faz, o que pode acontecer</div>';
+    html += '<div class="card-sub">Orientação da jornada antes do diagrama — derivada do código, não de tráfego</div>';
+    html += "</div>";
+    var chips = [];
+    if (happy.length) chips.push(happy.length + (happy.length === 1 ? " caminho feliz" : " caminhos felizes"));
+    if (unhappy.length) chips.push(unhappy.length + (unhappy.length === 1 ? " não feliz" : " não felizes"));
+    if (falls.length) chips.push(falls.length + (falls.length === 1 ? " fallback" : " fallbacks"));
+    if (chips.length) html += '<div class="legend-pills" style="margin-top:0">' + chips.map(function (c) { return "<span>" + E(c) + "</span>"; }).join("") + "</div>";
+    html += "</div>";
+    if (stats.length) {
+      html += '<div class="grid-auto" style="margin-top:14px">';
+      stats.forEach(function (st) {
+        html += '<div class="stat"><div class="k"><span>' + E(st.k) + '</span></div><div class="v" style="font-size:14px">' + E(st.v) + "</div></div>";
+      });
+      html += "</div>";
+    }
+    var intro = "";
+    if (what) intro += briefPane("O que é", "teal", "", '<div class="brief-body">' + E(what) + "</div>");
+    if (does) intro += briefPane("O que faz", "teal", "", '<div class="brief-body">' + E(does) + "</div>");
+    if (intro) html += '<div class="brief-grid' + ((what && does) ? "" : " one") + '">' + intro + "</div>";
+    var paths = "";
+    if (happy.length) paths += briefPane("Caminho feliz", "green", String(happy.length), pathList(b.happy), "happy");
+    if (unhappy.length) paths += briefPane("Caminho não feliz", "red", String(unhappy.length), pathList(b.unhappy), "unhappy");
+    if (paths) html += '<div class="brief-grid' + ((happy.length && unhappy.length) ? "" : " one") + '">' + paths + "</div>";
+    if (falls.length) {
+      html += '<div class="brief-grid one" style="margin-top:12px">';
+      html += briefPane("Fallbacks", "teal", String(falls.length), pathList(b.fallbacks), "fallback");
+      html += "</div>";
+    }
+    html += "</section>";
+    return html;
+  }
+
+  function notesCard(f) {
+    var html = '<section class="card"><div class="card-title" style="margin-bottom:12px">Pontos de atenção deste fluxo</div><div style="display:flex;flex-direction:column;gap:10px">';
+    arr(f.notes).forEach(function (nt) {
+      html += '<div style="display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid #f0efea;padding-bottom:9px">';
+      html += '<span class="tag ' + sevTag(nt.tag) + '">' + E(nt.tag) + '</span><div style="font-size:12.5px;color:#2b3342;line-height:1.55">' + E(nt.body) + "</div></div>";
+    });
+    html += "</div></section>";
+    return html;
+  }
+
+  /* ----- arquitetura ----- */
+  function rArq() {
+    var a = MODEL.architecture || {};
+    var html = "";
+    if (arr(a.containers).length) {
+      var groups = { borda: ["Borda", "#f6f5f2", "#e4e2db", "#8a857d"], dominio: ["Domínio", "#f3f8f8", "#cfe3e4", "#2b6a70"], dados: ["Dados", "#f6f5f2", "#e4e2db", "#8a857d"], externos: ["Externos", "#fff", "#cfcdc7", "#8a857d"] };
+      html += '<section class="card"><div class="card-title">Mapa de containers · nível C4-2</div><div class="card-sub" style="margin-bottom:16px">Inferido de imports, service discovery e manifests de infra</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px">';
+      Object.keys(groups).forEach(function (g) {
+        var items = arr(a.containers).filter(function (c) { return c.group === g; });
+        if (!items.length) return;
+        var meta = groups[g];
+        html += '<div style="border:1px ' + (g === "externos" ? "dashed " : "solid ") + meta[1] + ';border-radius:10px;padding:12px;background:' + (g === "dominio" ? "#f3f8f8" : g === "externos" ? "transparent" : "#f6f5f2") + '">';
+        html += '<div class="mono" style="font-size:10px;color:' + meta[2] + ';text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px">' + meta[0] + "</div>";
+        html += '<div style="display:flex;flex-direction:column;gap:7px">';
+        items.forEach(function (c) {
+          var dark = g === "dominio" || g === "dados";
+          html += '<div style="' + (dark ? "background:#222c3d;color:#fff;" : "background:#fff;border:1px solid #dcdad3;") + 'border-radius:7px;padding:8px 9px"><div style="font-size:12.5px;font-weight:500">' + E(c.name) + '</div><div class="mono" style="font-size:10px;color:' + (dark ? "#93a0b4" : "#8a857d") + ';margin-top:2px">' + E(c.sub || "") + "</div></div>";
+        });
+        html += "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(a.libs).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Bibliotecas e versões</div><div class="card-sub">Lido dos manifests de dependência do repo</div></div><span class="code-tag">CÓDIGO</span></div>';
+      html += '<div style="display:flex;flex-direction:column;gap:16px">';
+      arr(a.libs).forEach(function (g) {
+        html += '<div><div class="mono" style="font-size:10.5px;color:#2b6a70;margin-bottom:8px">' + E(g.group) + "</div>";
+        html += '<div class="scroll-x"><div style="min-width:540px">';
+        html += '<div style="display:grid;grid-template-columns:minmax(200px,1.4fr) 96px minmax(150px,1fr) 150px;gap:10px" class="tbl-hd"><div>PACOTE</div><div>VERSÃO</div><div>USO</div><div style="text-align:right">SITUAÇÃO</div></div>';
+        arr(g.items).forEach(function (l) {
+          html += '<div class="tbl" style="grid-template-columns:minmax(200px,1.4fr) 96px minmax(150px,1fr) 150px">';
+          html += '<div class="mono" style="font-size:11px;overflow:hidden;text-overflow:ellipsis">' + E(l.name) + "</div>";
+          html += '<div class="mono" style="font-size:11px;color:#5d6470">' + E(l.ver) + "</div>";
+          html += '<div style="font-size:12px;color:#5d6470">' + E(l.use) + "</div>";
+          html += '<div class="mono" style="font-size:10px;text-align:right;color:' + (l.state === "bad" ? "#b4453a" : l.state === "warn" ? "#c08a2e" : "#3f7a4f") + '">' + E(l.note) + "</div></div>";
+        });
+        html += "</div></div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(a.compose).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Containers — clique para ver o compose</div><div class="card-sub">Definições de infra as code · senhas, chaves e tokens substituídos por ****</div></div><span class="code-tag">CÓDIGO</span></div>';
+      html += '<div style="display:flex;flex-direction:column;gap:9px">';
+      arr(a.compose).forEach(function (d, i) {
+        var open = !!S.acc["dock" + i];
+        html += '<div class="acc' + (open ? " sel" : "") + '">';
+        html += '<div class="acc-hd" onclick="A.tgl(\'dock' + i + '\')"><div style="flex:1 1 200px;min-width:0"><div class="mono" style="font-size:13px;font-weight:600">' + E(d.name) + '</div><div style="font-size:12px;color:#5d6470;margin-top:2px">' + E(d.sub || "") + "</div></div>";
+        html += '<div class="mono" style="font-size:10px;color:#8a857d">' + E(d.file || "") + '</div><div class="caret">' + (open ? "−" : "+") + "</div></div>";
+        if (open) html += '<div style="padding:0 13px 13px"><pre class="pre-dark">' + E(d.yaml) + '</pre><div class="note-src" style="margin-top:8px">valores sensíveis mascarados na geração da documentação</div></div>';
+        html += "</div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(a.adrs).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:13px">Decisões de arquitetura (ADR)</div><div class="rowline">';
+      arr(a.adrs).forEach(function (x) {
+        html += '<div class="rowitem" style="grid-template-columns:62px minmax(0,1fr) 92px">';
+        html += '<div class="mono" style="font-size:11px;color:#2b6a70">' + E(x.id) + "</div>";
+        html += "<div><div style=\"font-size:13px;font-weight:500\">" + E(x.title) + '</div><div style="font-size:12px;color:#5d6470;line-height:1.55;margin-top:3px">' + E(x.body) + "</div></div>";
+        html += '<div class="mono" style="font-size:10.5px;color:#8a857d;text-align:right">' + E(x.status) + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(a.cross).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:13px">Preocupações transversais</div><div class="grid-auto" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">';
+      arr(a.cross).forEach(function (c) {
+        html += '<div style="border:1px solid ' + (c.gap ? "#e6cdc9" : "#e4e2db") + ";background:" + (c.gap ? "#faf3f2" : "#fff") + ';border-radius:9px;padding:11px">';
+        html += '<div class="mono" style="font-size:10px;color:' + (c.gap ? "#b4453a" : "#8a857d") + '">' + E(c.k) + (c.gap ? " · LACUNA" : "") + '</div><div style="font-size:12.5px;margin-top:4px;line-height:1.5">' + E(c.body) + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    return html;
+  }
+
+  /* ----- contratos ----- */
+  function rCon() {
+    var c = MODEL.contracts || {};
+    var html = "";
+    if (arr(c.endpoints).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Contratos de API</div><div class="card-sub">' + arr(c.endpoints).length + " operações" + (c.source ? " · " + E(c.source) : "") + '</div></div></div>';
+      html += '<div class="scroll-x"><div style="min-width:580px">';
+      html += '<div class="tbl-hd" style="display:grid;grid-template-columns:64px minmax(140px,1.5fr) 58px minmax(150px,1fr) 96px"><div>MÉTODO</div><div>ROTA</div><div>VER</div><div>CONSUMIDORES</div><div style="text-align:right">ESTADO</div></div>';
+      arr(c.endpoints).forEach(function (e) {
+        html += '<div class="tbl" style="grid-template-columns:64px minmax(140px,1.5fr) 58px minmax(150px,1fr) 96px">';
+        html += '<div class="mono" style="font-size:10.5px;color:#2b6a70">' + E(e.m) + "</div>";
+        html += '<div class="mono" style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis">' + E(e.path) + "</div>";
+        html += '<div class="mono" style="font-size:10.5px;color:#8a857d">' + E(e.ver) + "</div>";
+        html += '<div style="font-size:12px;color:#5d6470;overflow:hidden;text-overflow:ellipsis">' + E(e.consumers) + "</div>";
+        html += '<div class="mono" style="font-size:10px;text-align:right;color:' + (stateTag(e.state) === "red" ? "#b4453a" : stateTag(e.state) === "amber" ? "#c08a2e" : stateTag(e.state) === "green" ? "#3f7a4f" : "#2b6a70") + '">' + E(e.state) + "</div></div>";
+      });
+      html += "</div></div></section>";
+    }
+    arr(c.schemas || []).forEach(function (s) {
+      html += '<section class="card"><div class="card-title">' + E(s.title) + '</div><div class="card-sub" style="margin-bottom:13px">Campos derivados da validação encontrada no código</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
+      if (s.reqPre) html += '<div><div class="kv-label tight">REQUEST SCHEMA</div><pre class="pre-dark">' + E(s.reqPre) + "</pre></div>";
+      if (s.resPre) html += '<div><div class="kv-label tight">RESPONSE</div><pre class="pre-light">' + E(s.resPre) + "</pre></div>";
+      html += "</div>";
+      if (arr(s.compat).length) {
+        html += '<div style="margin-top:14px;border-top:1px solid #f0efea;padding-top:12px"><div class="kv-label tight" style="margin-bottom:8px">COMPATIBILIDADE</div><div style="display:flex;flex-direction:column;gap:8px">';
+        arr(s.compat).forEach(function (k) {
+          html += '<div style="display:flex;gap:9px"><span class="tag ' + (k.tag === "BREAK" ? "red" : "green") + '">' + E(k.tag) + '</span><div style="font-size:12.5px;line-height:1.55">' + E(k.body) + "</div></div>";
+        });
+        html += "</div></div>";
+      }
+      html += "</section>";
+    });
+    if (!html) html = '<section class="card"><div class="card-sub">Nenhum contrato detectado no scan.</div></section>';
+    return html;
+  }
+
+  /* ----- dados ----- */
+  function rDados() {
+    var d = MODEL.data || {};
+    var html = "";
+    if (arr(d.model).length) {
+      html += '<section class="card"><div class="card-title">Modelo relacional</div><div class="card-sub" style="margin-bottom:14px">' + E(d.engine || "") + '</div><div class="grid-auto wide">';
+      arr(d.model).forEach(function (t) {
+        html += '<div style="border:1px solid ' + (t.hl ? "#cfe3e4" : "#e4e2db") + ';border-radius:9px;overflow:hidden">';
+        html += '<div style="background:' + (t.hl ? "#1b3b3e" : "#222c3d") + ';color:#fff;padding:8px 11px;font-size:12.5px;font-weight:600">' + E(t.name) + "</div>";
+        html += '<div style="padding:9px 11px" class="mono"><div style="font-size:10.5px;line-height:1.9;color:#5d6470">';
+        arr(t.lines).forEach(function (l) {
+          var color = /^PK |^FK |^UQ /.test(l) ? "#2b6a70" : /^UQ /.test(l) ? "#b4453a" : null;
+          html += "<div" + (color ? ' style="color:' + color + '"' : "") + ">" + E(l) + "</div>";
+        });
+        html += "</div></div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(d.tables).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:12px">Tabelas em produção</div>';
+      html += '<div class="scroll-x"><div style="min-width:580px">';
+      html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(160px,1fr) 84px 78px 86px 110px"><div>TABELA</div><div style="text-align:right">LINHAS</div><div style="text-align:right">TAM.</div><div style="text-align:right">ESCRITA/S</div><div style="text-align:right">RETENÇÃO</div></div>';
+      arr(d.tables).forEach(function (t) {
+        html += '<div class="tbl" style="grid-template-columns:minmax(160px,1fr) 84px 78px 86px 110px">';
+        html += '<div class="mono" style="font-size:11.5px">' + E(t.name) + "</div>";
+        ["rows", "size", "wps"].forEach(function (k) {
+          html += '<div style="text-align:right;color:#5d6470" class="mono">' + E(dashVal(t[k], t.prov)) + "</div>";
+        });
+        html += '<div style="text-align:right;color:#8a857d;font-size:11.5px" class="mono">' + E(t.keep || "—") + "</div></div>";
+      });
+      html += "</div></div>";
+      html += '<div class="legend-pills"><span class="pill dashed">volume e latência exigem telemetria — sem fonte conectada aparecem como —</span></div></section>';
+    }
+    if (d.ddl && d.ddl.sql) {
+      html += '<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:11px"><div class="card-title">DDL · última migração</div><div class="mono" style="font-size:10.5px;color:#8a857d">' + E(d.ddl.file || "") + "</div></div>";
+      html += '<pre class="pre-dark" style="line-height:1.75">' + E(d.ddl.sql) + "</pre>";
+      if (arr(d.ddl.meta).length) {
+        html += '<div class="legend-pills" style="margin-top:12px">';
+        arr(d.ddl.meta).forEach(function (m) { html += '<span class="pill">' + E(m) + "</span>"; });
+        html += "</div>";
+      }
+      html += "</section>";
+    }
+    if (!html) html = '<section class="card"><div class="card-sub">Nenhum modelo de dados detectado.</div></section>';
+    return html;
+  }
+
+  /* ----- variáveis de ambiente ----- */
+  function envVars() { return arr((MODEL.env || {}).vars); }
+  function envIsSecret(v) {
+    return !!v.secret || /key|secret|token|passwd|password|credential|private/i.test(String(v.name || ""));
+  }
+  function envUndeclared(v) { return arr(v.used).length > 0 && arr(v.sources).length === 0; }
+  function envMatches(v) {
+    var q = (S.envQ || "").trim().toLowerCase();
+    if (!q) return true;
+    return [v.name, v.desc, arr(v.flows).join(" "), arr(v.used).join(" "), arr(v.sources).join(" ")].join(" ").toLowerCase().indexOf(q) !== -1;
+  }
+  function envList() {
+    var vars = envVars();
+    var shown = vars.filter(envMatches);
+    var html = '<div class="scroll-x"><div style="min-width:720px">';
+    html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(180px,auto) minmax(0,1fr) 128px minmax(130px,auto)"><div>VARIÁVEL</div><div>O QUE É · ONDE ENTRA</div><div>CONDIÇÃO</div><div style="text-align:right">DECLARADA EM</div></div>';
+    if (!shown.length) {
+      html += '<div style="padding:14px 8px;font-size:12.5px;color:#8a857d">nenhuma variável corresponde ao filtro</div>';
+    }
+    shown.forEach(function (v) {
+      var secret = envIsSecret(v);
+      var undecl = envUndeclared(v);
+      html += '<div class="tbl" style="grid-template-columns:minmax(180px,auto) minmax(0,1fr) 128px minmax(130px,auto);align-items:start">';
+      html += '<div><div class="env-name">' + E(v.name) + "</div>";
+      if (v.value) html += '<div class="env-val">' + E(secret ? "****" : v.value) + "</div>";
+      else if (v.default) html += '<div class="env-val">default: ' + E(secret ? "****" : v.default) + "</div>";
+      html += "</div>";
+      html += '<div style="min-width:0">';
+      if (v.desc) html += '<div style="font-size:12.5px;color:#2b3342;line-height:1.55">' + E(v.desc) + "</div>";
+      if (arr(v.flows).length) {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px">';
+        arr(v.flows).forEach(function (fid) {
+          var f = flowById(fid);
+          html += '<button class="pill" style="cursor:pointer" onclick="A.flow(\'' + E(fid) + '\')" title="abrir fluxo">' + E(f && f.label ? f.label : fid) + "</button>";
+        });
+        html += "</div>";
+      }
+      if (arr(v.used).length) html += '<div class="mono" style="font-size:10px;color:#2b6a70;margin-top:5px;word-break:break-all">' + E(arr(v.used).join(" · ")) + "</div>";
+      if (v.scope && v.scope !== "todos") html += '<div class="mono" style="font-size:10px;color:#a8a39a;margin-top:3px">escopo: ' + E(v.scope) + "</div>";
+      html += "</div>";
+      html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">';
+      if (secret) html += '<span class="tag red">SEGREDO</span>';
+      if (undecl) html += '<span class="tag red" style="border-style:dashed">NÃO DECLARADA</span>';
+      if (v.required === true) html += '<span class="tag teal">OBRIGATÓRIA</span>';
+      else if (v.required === false) html += '<span class="tag gray">OPCIONAL</span>';
+      html += "</div>";
+      html += '<div class="mono" style="font-size:10px;color:#8a857d;text-align:right;word-break:break-all;white-space:pre-line">' + (arr(v.sources).length ? E(arr(v.sources).join("\n")) : "—") + "</div>";
+      html += "</div>";
+    });
+    html += "</div></div>";
+    if (S.envQ) html += '<div class="foot-note" style="margin-top:7px">' + shown.length + " de " + vars.length + ' variáveis</div>';
+    return html;
+  }
+  function rEnv() {
+    var e = MODEL.env || {};
+    var vars = envVars();
+    var secrets = vars.filter(envIsSecret).length;
+    var undecl = vars.filter(envUndeclared).length;
+    var required = vars.filter(function (v) { return v.required === true; }).length;
+    if (!vars.length) {
+      return '<section class="card" style="border-style:dashed"><div class="card-title">Variáveis de ambiente</div><div class="card-sub">Nenhuma variável detectada no scan — cheque .env.example, docker-compose e leituras de ambiente no código.</div></section>';
+    }
+    var html = '<section class="card">';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between"><div><div class="card-title">Variáveis de ambiente — o que a app espera, onde entra</div>';
+    html += '<div class="card-sub">' + (arr(e.sources).length ? "fontes: " + E(arr(e.sources).join(" · ")) : "lidas do código e dos manifests") + "</div></div>";
+    html += '<span class="code-tag">CÓDIGO</span></div>';
+    html += '<div class="grid-auto" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">';
+    html += '<div class="stat"><div class="k"><span>TOTAL</span></div><div class="v">' + vars.length + "</div></div>";
+    html += '<div class="stat"><div class="k"><span>SEGREDOs</span></div><div class="v">' + secrets + "</div></div>";
+    html += '<div class="stat"><div class="k"><span>OBRIGATÓRIAs</span></div><div class="v">' + required + "</div></div>";
+    html += '<div class="stat' + (undecl ? " dashed" : "") + '"><div class="k"><span>NÃO DECLARADAs</span></div><div class="v' + (undecl ? "" : " muted") + '">' + undecl + "</div></div>";
+    html += "</div>";
+    html += '<div style="margin-top:14px"><input class="env-search" placeholder="filtrar por nome, descrição, fluxo ou arquivo…" value="' + E(S.envQ) + '" oninput="A.envQ(this.value)"></div>';
+    html += '<div id="env-list" style="margin-top:10px">' + envList() + "</div>";
+    if (undecl) html += '<div class="legend-pills"><span class="pill dashed">NÃO DECLARADA = lida no código e ausente de todo .env/compose — drift que o deploy sente</span></div>';
+    html += "</section>";
+    return html;
+  }
+
+  /* ----- filas ----- */
+  function rFilas() {
+    var ev = MODEL.events || {};
+    var html = "";
+    if (arr(ev.topics).length) {
+      html += '<section class="card"><div class="card-title">Tópicos e consumidores</div><div class="card-sub" style="margin-bottom:14px">' + E(ev.engine || "") + '</div>';
+      html += '<div class="scroll-x"><div style="min-width:600px">';
+      html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(190px,1.4fr) 62px minmax(140px,1fr) 72px 92px"><div>TÓPICO</div><div style="text-align:right">PART.</div><div>CONSUMIDOR</div><div style="text-align:right">LAG</div><div style="text-align:right">DLQ</div></div>';
+      arr(ev.topics).forEach(function (q) {
+        html += '<div class="tbl" style="grid-template-columns:minmax(190px,1.4fr) 62px minmax(140px,1fr) 72px 92px">';
+        html += '<div class="mono" style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis">' + E(q.topic) + "</div>";
+        html += '<div style="text-align:right;color:#5d6470">' + E(q.parts) + "</div>";
+        html += '<div style="color:#5d6470;overflow:hidden;text-overflow:ellipsis">' + E(q.group) + "</div>";
+        html += '<div style="text-align:right" class="mono"><span style="font-size:11px;color:' + (q.lagKind === "bad" ? "#b4453a" : q.lagKind === "warn" ? "#c08a2e" : "#3f7a4f") + '">' + E(dashVal(q.lag, q.prov)) + "</span></div>";
+        html += '<div style="text-align:right" class="mono"><span style="font-size:10.5px;color:#8a857d">' + E(q.dlq || "—") + "</span></div></div>";
+      });
+      html += "</div></div></section>";
+    }
+    if (arr(ev.catalog).length) {
+      html += '<section class="card"><div class="card-title">Catálogo de eventos</div><div class="card-sub" style="margin-bottom:13px">Schemas derivados dos producers/consumidores do código</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:12px">';
+      arr(ev.catalog).forEach(function (c, i) {
+        if (c.schema) {
+          html += '<div><div class="kv-label tight">' + E(c.name) + '</div><pre class="pre-dark">' + E(c.schema) + "</pre></div>";
+        } else {
+          html += '<div style="border:1px solid #e4e2db;border-radius:9px;padding:11px"><div style="font-size:12.5px;font-weight:500">' + E(c.name) + '</div><div style="font-size:12px;color:#5d6470;line-height:1.55;margin-top:4px">' + E(c.desc || "") + "</div></div>";
+        }
+      });
+      html += "</div>";
+      if (arr(ev.guarantees).length) {
+        html += '<div style="margin-top:14px;border-top:1px solid #f0efea;padding-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">';
+        arr(ev.guarantees).forEach(function (g) {
+          html += '<div class="stat"><div class="k"><span>' + E(g.k) + '</span></div><div class="v" style="font-size:12.5px">' + E(g.v) + "</div></div>";
+        });
+        html += "</div>";
+      }
+      html += "</section>";
+    }
+    if (!html) html = '<section class="card"><div class="card-sub">Nenhum evento/fila detectado no scan.</div></section>';
+    return html;
+  }
+
+  /* ----- terceiros ----- */
+  function rThird() {
+    var list = arr(MODEL.thirdParty);
+    if (!list.length) return '<section class="card"><div class="card-sub">Nenhum serviço de terceiros detectado.</div></section>';
+    var html = '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Serviços de terceiros — clique para ver URLs e credenciais</div><div class="card-sub">Extraído de clientes HTTP, gRPC e SFTP no código + config de ambientes · segredos mascarados com ****</div></div><span class="code-tag">CÓDIGO</span></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:9px">';
+    list.forEach(function (t, i) {
+      var open = !!S.acc["tp" + i];
+      html += '<div class="acc' + (open ? " sel" : "") + '">';
+      html += '<div class="acc-hd" onclick="A.tgl(\'tp' + i + '\')">';
+      html += '<div style="flex:1 1 220px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(t.name) + '</div><div class="mono" style="font-size:10.5px;color:#5d6470;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + E(t.prod || "") + "</div></div>";
+      html += '<div class="mono" style="font-size:10px;color:#8a857d">' + E(t.kind || "") + "</div>";
+      html += '<div class="mono" style="font-size:10px;width:74px;text-align:right;color:' + critColor(t.crit) + '">' + E(t.crit || "") + '</div><div class="caret">' + (open ? "−" : "+") + "</div></div>";
+      if (open) {
+        html += '<div style="padding:0 13px 14px;display:flex;flex-direction:column;gap:13px">';
+        if (t.does) html += '<div style="font-size:12.5px;color:#2b3342;line-height:1.6;max-width:78ch">' + E(t.does) + "</div>";
+        if (arr(t.urls).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">ENDEREÇOS</div>';
+          arr(t.urls).forEach(function (u) {
+            html += '<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;border-bottom:1px solid #f4f3ef;padding-bottom:6px;margin-bottom:6px">';
+            html += '<span class="mono" style="font-size:10px;color:#2b6a70;width:74px">' + E(u.env) + '</span><span class="mono" style="font-size:11px;color:#2b3342;flex:1 1 240px;min-width:0;overflow-x:auto;white-space:nowrap">' + E(u.url) + "</span></div>";
+          });
+          html += "</div>";
+        }
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">';
+        if (t.auth) html += '<div class="stat"><div class="k"><span>AUTENTICAÇÃO</span></div><div class="mono" style="font-size:11px;margin-top:4px;line-height:1.6;white-space:pre-wrap">' + E(t.auth) + "</div></div>";
+        if (t.limits) html += '<div class="stat"><div class="k"><span>TIMEOUT E RETRY</span></div><div style="font-size:12px;margin-top:4px;line-height:1.55">' + E(t.limits) + "</div></div>";
+        html += "</div>";
+        if (arr(t.used).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">ONDE É USADO</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
+          arr(t.used).forEach(function (u) { html += '<span class="pill">' + E(u) + "</span>"; });
+          html += "</div></div>";
+        }
+        if (t.sends) html += '<div><div class="kv-label tight" style="margin-bottom:5px">DADOS TRAFEGADOS</div><div style="font-size:12.5px;color:#5d6470;line-height:1.55">' + E(t.sends) + "</div></div>";
+        if (t.risk) {
+          html += '<div style="display:flex;gap:9px;align-items:flex-start;border-top:1px solid #f0efea;padding-top:11px">';
+          html += '<span class="tag ' + sevTag(t.riskTag) + '">' + E(t.riskTag || "NOTA") + '</span><div style="font-size:12.5px;color:#2b3342;line-height:1.55">' + E(t.risk) + "</div></div>";
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+    });
+    html += "</div></section>";
+    return html;
+  }
+
+  /* ----- dependências ----- */
+  function rDeps() {
+    var list = arr(MODEL.deps);
+    if (!list.length) return '<section class="card"><div class="card-sub">Nenhuma dependência detectada.</div></section>';
+    var html = '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Dependências — clique para ver endereço, contrato e erros</div><div class="card-sub">Criticidade pelo número de fluxos que param sem a dependência</div></div><span class="code-tag">CÓDIGO</span></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:9px">';
+    list.forEach(function (d, i) {
+      var open = !!S.acc["dp" + i];
+      html += '<div class="acc' + (open ? " sel" : "") + '">';
+      html += '<div class="acc-hd" onclick="A.tgl(\'dp' + i + '\')">';
+      html += '<div style="flex:1 1 230px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(d.name) + '</div><div style="font-size:12px;color:#5d6470;line-height:1.5;margin-top:3px">' + E(d.desc || "") + '</div><div class="mono" style="font-size:10.5px;color:#2b6a70;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + E(d.addr || "") + "</div></div>";
+      html += '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">';
+      html += '<div><div class="kv-label">TIPO</div><div style="font-size:12px;margin-top:2px">' + E(d.kind || "") + "</div></div>";
+      html += '<div><div class="kv-label">LIMITES</div><div style="font-size:12px;margin-top:2px">' + E(d.sla || "") + "</div></div>";
+      html += '<div><div class="kv-label">CRITICIDADE</div><div style="font-size:12px;margin-top:2px;color:' + critColor(d.crit) + '">' + E(d.crit || "") + '</div></div><div class="caret">' + (open ? "−" : "+") + "</div></div></div>";
+      if (open) {
+        html += '<div style="padding:0 13px 15px;display:flex;flex-direction:column;gap:14px">';
+        if (arr(d.endpoints).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">ENDPOINTS CHAMADOS</div>';
+          arr(d.endpoints).forEach(function (e) {
+            html += '<div style="display:grid;grid-template-columns:52px minmax(120px,auto) minmax(0,1fr);gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f4f3ef">';
+            html += '<span class="mono" style="font-size:10.5px;color:#2b6a70">' + E(e.m) + '</span><span class="mono" style="font-size:11px;color:#2b3342">' + E(e.path) + '</span><span style="font-size:12px;color:#5d6470">' + E(e.what) + "</span></div>";
+          });
+          html += "</div>";
+        }
+        if (d.req || d.res) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">CONTRATO</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">';
+          if (d.req) html += '<pre class="pre-dark">' + E(d.req) + "</pre>";
+          if (d.res) html += '<pre class="pre-light">' + E(d.res) + "</pre>";
+          html += "</div></div>";
+        }
+        if (arr(d.errs).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">CÓDIGOS DE ERRO E TRATAMENTO</div>';
+          arr(d.errs).forEach(function (er) {
+            html += '<div style="display:flex;flex-wrap:wrap;gap:9px;align-items:baseline;margin-bottom:6px"><span class="mono" style="font-size:10.5px;color:#b4453a;min-width:128px">' + E(er.code) + '</span><span style="font-size:12px;color:#5d6470;flex:1 1 220px">' + E(er.msg) + "</span></div>";
+          });
+          html += "</div>";
+        }
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">';
+        if (d.limits) html += '<div class="stat"><div class="k"><span>TIMEOUT E RETRY</span></div><div style="font-size:12px;margin-top:4px;line-height:1.55">' + E(d.limits) + "</div></div>";
+        if (d.fallback) html += '<div class="stat"><div class="k"><span>FALLBACK</span></div><div style="font-size:12px;margin-top:4px;line-height:1.55">' + E(d.fallback) + "</div></div>";
+        html += "</div>";
+        if (arr(d.used).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">CHAMADO EM</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
+          arr(d.used).forEach(function (u) { html += '<span class="pill">' + E(u) + "</span>"; });
+          html += "</div></div>";
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+    });
+    html += "</div></section>";
+    return html;
+  }
+
+  /* ----- operação ----- */
+  function rRun() {
+    var o = MODEL.ops || {};
+    var html = "";
+    if (arr(o.slos).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Alvos e alertas declarados</div><div class="card-sub">Lido dos arquivos de SLO e regras de alerta no repositório. O cumprimento depende de telemetria e não é lido aqui.</div></div><span class="code-tag">CÓDIGO</span></div>';
+      html += '<div class="scroll-x"><div style="min-width:560px">';
+      html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(200px,1.4fr) 120px minmax(160px,1fr) 130px"><div>OBJETIVO</div><div>ALVO</div><div>DECLARADO EM</div><div style="text-align:right">SITUAÇÃO</div></div>';
+      arr(o.slos).forEach(function (s) {
+        html += '<div class="tbl" style="grid-template-columns:minmax(200px,1.4fr) 120px minmax(160px,1fr) 130px">';
+        html += '<div style="font-size:12.5px;font-weight:500">' + E(s.name) + "</div>";
+        html += '<div class="mono" style="font-size:11px;color:#5d6470">' + E(s.target) + "</div>";
+        html += '<div class="mono" style="font-size:10.5px;color:#2b6a70;overflow:hidden;text-overflow:ellipsis">' + E(s.file || "—") + "</div>";
+        html += '<div class="mono" style="font-size:10px;text-align:right;color:' + (s.state === "bad" ? "#b4453a" : "#3f7a4f") + '">' + E(s.stateLabel || s.state || "") + "</div></div>";
+      });
+      html += "</div></div></section>";
+    }
+    arr(o.runbooks || []).forEach(function (rb) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:12px"><div><div class="card-title">Runbook · ' + E(rb.title) + '</div><div class="card-sub">' + E(rb.file || "repositório") + '</div></div><span class="code-tag">REPOSITÓRIO</span></div>';
+      html += '<div class="rowline">';
+      arr(rb.steps).forEach(function (r) {
+        html += '<div class="rowitem" style="grid-template-columns:26px minmax(0,1fr)">';
+        html += '<div class="mono" style="font-size:11px;color:#2b6a70">' + E(r.n) + "</div><div>";
+        html += '<div style="font-size:12.5px;font-weight:500">' + E(r.title) + '</div><div class="mono" style="font-size:11px;color:#5d6470;background:#f6f5f2;border:1px solid #e9e7e0;border-radius:6px;padding:7px 9px;margin-top:6px;overflow-x:auto;white-space:pre">' + E(r.cmd) + "</div></div></div>";
+      });
+      html += "</div></section>";
+    });
+    if (arr(o.owners).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:13px"><div><div class="card-title">Donos por área</div><div class="card-sub">Lido do CODEOWNERS</div></div><span class="code-tag">CÓDIGO</span></div>';
+      arr(o.owners).forEach(function (ow) {
+        html += '<div class="tbl" style="grid-template-columns:minmax(0,1fr) minmax(130px,auto) 120px">';
+        html += "<div style=\"font-size:12.5px\">" + E(ow.area) + '</div><div style="font-size:12.5px;font-weight:500">' + E(ow.who) + '</div><div class="mono" style="font-size:10px;color:#8a857d;text-align:right">' + E(ow.file || "—") + "</div></div>";
+      });
+      html += "</section>";
+    }
+    if (!html) html = '<section class="card"><div class="card-sub">Nada de operação declarado no repositório.</div></section>';
+    return html;
+  }
+
+  /* ----- score ----- */
+  function rScore() {
+    var q = MODEL.quality || {};
+    var sc = MODEL.score || {};
+    var cov = arr((MODEL.history || {}).coverage);
+    var prev = cov.length > 1 ? cov[cov.length - 2].v : null;
+    var delta = prev != null && sc.overall != null ? sc.overall - prev : null;
+    var gradeColor = sc.overall >= 90 ? "#3f7a4f" : sc.overall >= 75 ? "#2b8a92" : sc.overall >= 60 ? "#c08a2e" : "#b4453a";
+    var html = "";
+    html += '<section class="card"><div class="score-hero">';
+    html += '<div><div class="kv-label">SCORE ATLAS</div><div style="display:flex;align-items:center;gap:14px;margin-top:6px">';
+    html += '<div class="score-big" style="color:' + gradeColor + '">' + E(sc.overall != null ? sc.overall : "—") + "</div>";
+    if (sc.grade) html += '<div class="score-grade" style="background:' + gradeColor + '">' + E(sc.grade) + "</div>";
+    if (delta != null) html += '<div class="mono" style="font-size:12px;color:' + (delta >= 0 ? "#3f7a4f" : "#b4453a") + '">' + (delta >= 0 ? "+" : "") + delta + " vs scan anterior</div>";
+    html += "</div></div>";
+    html += '<div style="flex:1 1 300px;min-width:0"><div style="font-size:12.5px;color:#5d6470;line-height:1.6;max-width:60ch">Apuração determinística por script (atlas_build.py): cobertura dos fluxos, completude do modelo e quality gates. Gates ausentes ficam como lacuna visível e não derrubam a nota.</div></div>';
+    html += "</div>";
+    if (arr(sc.breakdown).length) {
+      html += '<div class="grid-auto" style="margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">';
+      arr(sc.breakdown).forEach(function (b) {
+        var ext = b.prov === "external";
+        html += '<div class="stat' + (ext ? " dashed" : "") + '"><div class="k"><span>' + E(b.k) + "</span>" + provBadge(b.prov) + "</div>";
+        html += '<div class="v">' + E(b.v != null ? b.v : "—") + '<span style="font-size:11px;color:#8a857d;font-weight:400"> · peso ' + E(b.weight) + "</span></div></div>";
+      });
+      html += "</div>";
+    }
+    html += "</section>";
+
+    if (arr(q.gates).length) {
+      html += '<section class="card"><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div><div class="card-title">Quality Gateway</div><div class="card-sub">Resultado declarado no CI e em packs de auditoria</div></div></div>';
+      html += '<div class="scroll-x"><div style="min-width:540px">';
+      html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(150px,.8fr) 76px minmax(180px,1.2fr) minmax(150px,1fr)"><div>GATE</div><div>STATUS</div><div>DETALHE</div><div>FONTE</div></div>';
+      arr(q.gates).forEach(function (g) {
+        html += '<div class="tbl" style="grid-template-columns:minmax(150px,.8fr) 76px minmax(180px,1.2fr) minmax(150px,1fr)">';
+        html += '<div style="font-size:12.5px;font-weight:500">' + E(g.name) + "</div>";
+        html += '<div><span class="tag ' + (g.status === "pass" ? "green" : g.status === "warn" ? "amber" : g.status === "fail" ? "red" : "gray") + '">' + E(String(g.status || "").toUpperCase()) + "</span></div>";
+        html += '<div style="font-size:12px;color:#5d6470">' + E(g.detail || "") + "</div>";
+        html += '<div class="mono" style="font-size:10px;color:#8a857d">' + E(g.source || "—") + "</div></div>";
+      });
+      html += "</div></div></section>";
+    } else {
+      html += '<section class="card" style="border-style:dashed"><div class="card-title">Quality Gateway</div><div class="card-sub">Nenhum gate conectado. CI, cobertura de testes e packs de auditoria (ex.: ultra-deep-audit) alimentam esta seção quando existem no repo.</div></section>';
+    }
+
+    if (q.tests) {
+      html += '<section class="card"><div class="card-title">Testes</div><div class="grid-auto" style="margin-top:12px">';
+      html += '<div class="stat"><div class="k"><span>FRAMEWORK</span></div><div class="v" style="font-size:13px">' + E(q.tests.framework || "—") + "</div></div>";
+      html += '<div class="stat"><div class="k"><span>COBERTURA</span>' + provBadge("code") + '</div><div class="v">' + E(q.tests.coveragePct != null ? q.tests.coveragePct + "%" : "—") + "</div></div>";
+      html += '<div class="stat"><div class="k"><span>FONTE</span></div><div class="v" style="font-size:12px">' + E(q.tests.source || "—") + "</div></div></div></section>";
+    }
+
+    if (arr(q.findings).length) {
+      var sevOrder = { "CRÍTICO": 0, CRITICO: 0, ALTO: 1, "MÉDIO": 2, MEDIO: 2, BAIXO: 3 };
+      var sorted = arr(q.findings).slice().sort(function (a, b) { return (sevOrder[String(a.sev).toUpperCase()] || 9) - (sevOrder[String(b.sev).toUpperCase()] || 9); });
+      html += '<section class="card"><div class="card-title" style="margin-bottom:12px">Findings importados</div><div class="rowline">';
+      sorted.forEach(function (f) {
+        html += '<div class="rowitem" style="grid-template-columns:86px minmax(0,1fr) minmax(120px,auto)">';
+        html += '<div><span class="tag ' + sevTag(f.sev) + '">' + E(f.sev) + "</span></div>";
+        html += '<div><div style="font-size:12.5px;font-weight:500">' + E(f.title) + '</div><div class="mono" style="font-size:10.5px;color:#a8a39a;margin-top:3px">' + E(f.where || "") + "</div></div>";
+        html += '<div class="mono" style="font-size:10px;color:#8a857d;text-align:right">' + E(f.source || "") + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+
+    if (cov.length) html += coverageCard(cov);
+    return html;
+  }
+
+  function coverageCard(cov) {
+    var html = '<section class="card"><div class="card-title">Cobertura por varredura</div><div class="card-sub" style="margin-bottom:16px">Percentual apurado a cada scan</div><div class="bars">';
+    cov.forEach(function (c) {
+      html += '<div class="bar-cell"><div class="bv">' + E(c.v) + '</div><div class="bar" style="height:' + Math.max(2, num(c.v, 0)) + "%;background:" + covBarColor(c.v) + '"></div></div>';
+    });
+    html += '</div><div class="bars-x">';
+    cov.forEach(function (c) { html += '<div class="bx">' + E(c.day) + "</div>"; });
+    html += "</div></section>";
+    return html;
+  }
+
+  /* ----- histórico ----- */
+  function rHist() {
+    var h = MODEL.history || {};
+    var html = "";
+    if (arr(h.coverage).length) html += coverageCard(arr(h.coverage));
+    if (arr(h.scans).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:13px">Varreduras</div><div style="display:flex;flex-direction:column;gap:12px">';
+      arr(h.scans).forEach(function (s) {
+        html += '<div style="display:grid;grid-template-columns:104px minmax(0,1fr) 82px;gap:12px;align-items:start;border-bottom:1px solid #f0efea;padding-bottom:11px">';
+        html += '<div><div class="mono" style="font-size:11px;color:#2b6a70">' + E(s.commit) + '</div><div class="mono" style="font-size:10px;color:#a8a39a;margin-top:2px">' + E(s.when) + "</div></div>";
+        html += "<div><div style=\"font-size:12.5px;font-weight:500\">" + E(s.title) + '</div><div style="font-size:12px;color:#5d6470;line-height:1.55;margin-top:3px">' + E(s.detail || "") + "</div></div>";
+        html += '<div class="mono" style="font-size:10.5px;text-align:right;color:' + (s.deltaKind === "bad" ? "#b4453a" : "#3f7a4f") + '">' + E(s.delta || "") + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (arr(h.changelog).length) {
+      html += '<section class="card"><div class="card-title" style="margin-bottom:12px">Changelog da documentação</div><div style="display:flex;flex-direction:column;gap:11px">';
+      arr(h.changelog).forEach(function (c) {
+        html += '<div style="display:flex;gap:9px"><span class="tag ' + sevTag(c.tag) + '">' + E(c.tag) + '</span><div style="font-size:12.5px;line-height:1.55;color:#2b3342">' + E(c.body) + "</div></div>";
+      });
+      html += "</div></section>";
+    }
+    if (!html) html = '<section class="card"><div class="card-sub">Primeiro scan — o histórico começa agora.</div></section>';
+    return html;
+  }
+
+  /* ----- inspector ----- */
+  function panelClosedStrip() {
+    return '<div class="panel-open-strip" onclick="A.panel()"><div class="mono" style="font-size:14px;color:#2b6a70">‹</div><div class="vt">abrir inspetor</div></div>';
+  }
+
+  function inspector() {
+    var f = S.flow === (richFlow && richFlow.id) && richFlow ? richFlow : flowById(S.flow);
+    var html = "";
+    if (richFlow && S.flow === richFlow.id) html += nodeInspector(richFlow);
+    else if (f) html += stepInspector(f);
+    html += changelogCard();
+    html += archCard();
+    return html;
+  }
+
+  function nodeInspector(f) {
+    var nodes = diagramNodes(f.diagram);
+    var n = nodes.filter(function (x) { return x.id === S.node; })[0] || nodes[0];
+    if (!n) return "";
+    var insp = n.insp || {};
+    var tab = S.tab;
+    var html = '<section class="card flush">';
+    html += '<div class="insp-hd"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">';
+    html += '<div class="kv-label">' + E(insp.kind || n.kind || "componente") + '</div>';
+    html += '<div style="display:flex;gap:5px"><div class="caret" style="cursor:pointer" onclick="A.tgl(\'insp\')">' + (S.acc.insp === false ? "+" : "−") + '</div><div class="caret" style="cursor:pointer" onclick="A.panel()">›</div></div></div>';
+    html += '<div style="font-size:16px;font-weight:600;margin-top:4px">' + E(n.label) + "</div>";
+    if (insp.desc) html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.55;margin-top:6px">' + E(insp.desc) + "</div>";
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:11px" class="mono">';
+    [insp.tech, insp.owner, insp.slo].forEach(function (t) { if (t) html += '<span class="pill gray">' + E(t) + "</span>"; });
+    html += "</div>";
+    if (insp.src) html += '<div class="note-src" style="margin-top:9px">' + E(insp.src) + "</div></div>";
+    if (S.acc.insp !== false) {
+      html += '<div class="insp-tabs">';
+      [["payload", "Payload", "exemplo derivado do código"], ["contract", "Contrato", "fatos e erros mapeados"], ["ddl", "DDL", "migrações aplicadas"], ["code", "Código", "links para o repositório"]].forEach(function (t) {
+        html += '<button class="insp-tab' + (tab === t[0] ? " sel" : "") + '" onclick="A.tab(\'' + t[0] + '\')">' + t[1] + "</button>";
+      });
+      html += '<span class="insp-tab-hint">' + ({ payload: "exemplo derivado do código", contract: "fatos e erros mapeados", ddl: "migrações aplicadas", code: "links para o repositório" }[tab] || "") + "</span></div>";
+      html += '<div class="insp-body">';
+      if (tab === "payload") {
+        if (insp.reqPayload) html += '<div><div class="kv-label tight">REQUEST ↓</div><pre class="pre-dark">' + E(insp.reqPayload) + "</pre></div>";
+        if (insp.resPayload) html += '<div><div class="kv-label tight">RESPONSE ↑</div><pre class="pre-light">' + E(insp.resPayload) + "</pre></div>";
+        if (!insp.reqPayload && !insp.resPayload) html += '<div class="card-sub">Sem payload derivado para este nó.</div>';
+      } else if (tab === "contract") {
+        if (arr(insp.facts).length) {
+          html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+          arr(insp.facts).forEach(function (x) {
+            html += '<div class="stat"><div class="k"><span>' + E(x.k) + '</span></div><div class="v" style="font-size:12.5px">' + E(x.v) + "</div></div>";
+          });
+          html += "</div>";
+        }
+        if (arr(insp.errors).length) {
+          html += '<div><div class="kv-label tight" style="margin-bottom:7px">ERROS MAPEADOS</div>';
+          arr(insp.errors).forEach(function (e2) {
+            html += '<div style="display:flex;gap:9px;align-items:baseline;border-bottom:1px solid #f0efea;padding-bottom:7px;margin-bottom:7px"><span class="mono" style="font-size:11px;color:#b4453a;min-width:96px">' + E(e2.code) + '</span><span style="font-size:12px;color:#5d6470;line-height:1.5">' + E(e2.msg) + "</span></div>";
+          });
+          html += "</div>";
+        }
+        if (!arr(insp.facts).length && !arr(insp.errors).length) html += '<div class="card-sub">Sem contrato derivado para este nó.</div>';
+      } else if (tab === "ddl") {
+        html += insp.ddl ? '<pre class="pre-dark" style="line-height:1.7">' + E(insp.ddl) + "</pre>" : '<div class="card-sub">Sem persistência derivada para este nó.</div>';
+      } else {
+        if (arr(insp.code).length) {
+          arr(insp.code).forEach(function (c) {
+            html += '<div class="callbox"><div class="f">' + E(c.file) + '</div><div class="w" style="margin-top:4px">' + E(c.what) + "</div></div>";
+          });
+        } else html += '<div class="card-sub">Sem links de código para este nó.</div>';
+      }
+      html += "</div>";
+    }
+    html += "</section>";
+    return html;
+  }
+
+  function stepInspector(f) {
+    var steps = arr(f.steps);
+    var p = steps[Math.min(S.step, Math.max(0, steps.length - 1))];
+    if (!p) return "";
+    var html = '<section class="card flush">';
+    html += '<div class="insp-hd"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">';
+    html += '<div class="kv-label">passo ' + String(S.step + 1).padStart(2, "0") + '</div>';
+    html += '<div class="caret" style="cursor:pointer" onclick="A.panel()">›</div></div>';
+    html += '<div style="font-size:16px;font-weight:600;margin-top:4px">' + E((p.name || "").split(" · ")[0]) + "</div>";
+    if (p.desc) html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.55;margin-top:6px">' + E(p.desc) + "</div>";
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:11px" class="mono">';
+    if (p.tech) html += '<span class="pill gray">' + E(p.tech) + "</span>";
+    html += '<span class="pill">' + E(modeOf(p)) + "</span></div>";
+    if (p.src) html += '<div class="note-src" style="margin-top:9px">' + E(p.src) + "</div></div>";
+    html += '<div class="insp-body"><div><div class="kv-label tight">PAYLOAD</div><pre class="pre-dark">' + E(p.payload || "—") + "</pre></div></div>";
+    html += "</section>";
+    return html;
+  }
+
+  function changelogCard() {
+    var h = MODEL.history || {};
+    var chg = arr(h.changelog);
+    var open = S.acc.chg !== false;
+    var html = '<section class="card">';
+    html += '<div onclick="A.tgl(\'chg\')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "12px" : "0") + ';cursor:pointer">';
+    html += '<div class="card-title">Documentação incremental</div><div style="display:flex;align-items:center;gap:8px"><span class="mono" style="font-size:10.5px;color:#8a857d">' + E(MODEL.app.commit || "") + '</span><div class="caret">' + (open ? "−" : "+") + "</div></div></div>";
+    if (open) {
+      if (!chg.length) html += '<div class="card-sub">Sem mudanças registradas ainda.</div>';
+      else {
+        html += '<div style="display:flex;flex-direction:column;gap:11px">';
+        chg.slice(0, 6).forEach(function (c) {
+          html += '<div style="display:flex;gap:9px"><span class="tag ' + sevTag(c.tag) + '">' + E(c.tag) + '</span><div style="font-size:12.5px;line-height:1.55;color:#2b3342">' + E(c.body) + "</div></div>";
+        });
+        html += "</div>";
+        var scans = arr(h.scans);
+        if (scans.length) {
+          html += '<div class="legend-pills" style="margin-top:14px;border-top:1px solid #f0efea;padding-top:11px"><span>' + scans.length + " scans</span>";
+          var cov = arr(h.coverage);
+          if (cov.length > 1) {
+            var d = num(cov[cov.length - 1].v, 0) - num(cov[0].v, 0);
+            html += '<span style="color:' + (d >= 0 ? "#3f7a4f" : "#b4453a") + '">' + (d >= 0 ? "+" : "") + d + "% cobertura</span>";
+          }
+          html += "</div>";
+        }
+      }
+    }
+    html += "</section>";
+    return html;
+  }
+
+  function archCard() {
+    var a = MODEL.architecture || {};
+    if (!a.style && !arr(a.risks).length && !a.consistency && !a.idempotency) return "";
+    var open = S.acc.arch !== false;
+    var html = '<section class="dark-card">';
+    html += '<div onclick="A.tgl(\'arch\')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "10px" : "0") + ';cursor:pointer">';
+    html += '<div class="t">Arquitetura detectada</div><div class="caret" style="border-color:#33405c;color:#8fd6da">' + (open ? "−" : "+") + "</div></div>";
+    if (open) {
+      var rows = [["Estilo", a.style], ["Consistência", a.consistency], ["Idempotência", a.idempotency]];
+      rows.forEach(function (r) { if (r[1]) html += '<div class="dark-row"><span class="k">' + E(r[0]) + "</span><span>" + E(r[1]) + "</span></div>"; });
+      arr(a.risks).forEach(function (r) { html += '<div class="dark-row"><span class="k">' + E(r.k || "Risco") + '</span><span class="v-risk">' + E(r.v) + "</span></div>"; });
+    }
+    html += "</section>";
+    return html;
+  }
+
+  /* ---------------- actions ---------------- */
+  function setHash() {
+    var h = "#/" + S.screen + (S.screen === "fluxos" && S.flow ? "/" + S.flow : "");
+    try { if (location.hash !== h) history.replaceState(null, "", h); } catch (e) {}
+  }
+  window.A = {
+    go: function (k) { S.screen = k; setHash(); render(); },
+    flow: function (id) { S.screen = "fluxos"; S.flow = id; S.step = 0; S.stepOpen = true; S.node = null; setHash(); render(); },
+    selNode: function (id) { S.node = id; render(); },
+    selStep: function (i) { if (S.step === i) S.stepOpen = !S.stepOpen; else { S.step = i; S.stepOpen = true; } render(); },
+    tab: function (t) { S.tab = t; render(); },
+    view: function (v) { S.view = v; render(); },
+    panel: function () { S.panel = !S.panel; render(); },
+    navT: function () { S.nav = !S.nav; render(); },
+    envQ: function (v) {
+      S.envQ = v;
+      var el = document.getElementById("env-list");
+      if (el) { el.outerHTML = '<div id="env-list" style="margin-top:10px">' + envList() + "</div>"; }
+    },
+    tgl: function (k) { S.acc[k] = !S.acc[k]; render(); }
+  };
+
+  /* ---------------- boot: hash router ---------------- */
+  (function boot() {
+    var h = (location.hash || "").replace(/^#\/?/, "");
+    var parts = h.split("/");
+    if (parts[0] && NAV.some(function (n) { return n.k === parts[0]; })) S.screen = parts[0];
+    if (S.screen === "fluxos" && parts[1] && flowById(parts[1])) S.flow = parts[1];
+    setHash();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
