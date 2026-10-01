@@ -195,7 +195,8 @@ function cmdMerge() {
   if (current !== into) gitOk(['checkout', into]);
   gitOk(['merge', '--no-ff', '--no-edit', slice.branch]);
   gitOk(['worktree', 'remove', '--force', slice.dir]);
-  git(['branch', '-d', slice.branch]);
+  gitOk(['branch', '-d', slice.branch]);
+  dropEmptyWorktreesRoot(repo);
   slice.merged = true;
   slice.removed = true;
   slice.merged_into = into;
@@ -230,28 +231,61 @@ function leftover(prefixName) {
   return leftoverWorktrees(root, prefixName);
 }
 
+function sliceBranches(repo, prefixName) {
+  const r = git(['for-each-ref', '--format=%(refname:short)', `refs/heads/${prefixName}/slice-*`], repo);
+  if (r.status !== 0) return [];
+  return (r.stdout || '').split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+function sliceDirs(repo, prefixName) {
+  const dir = path.join(repo, '.worktrees');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir)
+    .filter((name) => name.startsWith(`${prefixName}-`))
+    .map((name) => path.join(dir, name));
+}
+
+function dropEmptyWorktreesRoot(repo) {
+  const parent = path.join(repo, '.worktrees');
+  if (fs.existsSync(parent) && fs.readdirSync(parent).length === 0) {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+}
+
+function prefixDirt(repo, prefixName) {
+  const parent = path.join(repo, '.worktrees');
+  const emptyParent = fs.existsSync(parent) && fs.readdirSync(parent).length === 0;
+  return {
+    worktrees: leftoverWorktrees(repo, prefixName),
+    branches: sliceBranches(repo, prefixName),
+    dirs: sliceDirs(repo, prefixName),
+    empty_dir: emptyParent ? parent : null,
+  };
+}
+
 function cmdRemove() {
   const repo = ensureGit();
   if (!repo) throw new Error('not a git repo');
   for (const h of leftover(prefix)) {
     git(['worktree', 'remove', '--force', h.dir]);
-    if (h.branch) git(['branch', '-D', h.branch]);
   }
-  const dir = path.join(repo, '.worktrees');
-  if (fs.existsSync(dir)) {
-    for (const name of fs.readdirSync(dir)) {
-      if (name.startsWith(`${prefix}-`)) {
-        fs.rmSync(path.join(dir, name), { recursive: true, force: true });
-      }
-    }
+  for (const dir of sliceDirs(repo, prefix)) {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
+  for (const branch of sliceBranches(repo, prefix)) {
+    git(['branch', '-D', branch]);
+  }
+  dropEmptyWorktreesRoot(repo);
   git(['worktree', 'prune']);
   console.log('removed leftover worktrees');
 }
 
 function cmdVerify() {
-  const hits = leftover(prefix);
-  if (hits.length) {
+  const repo = ensureGit();
+  if (!repo) throw new Error('not a git repo');
+  const hits = prefixDirt(repo, prefix);
+  const dirty = hits.worktrees.length || hits.branches.length || hits.dirs.length || hits.empty_dir;
+  if (dirty) {
     console.error(JSON.stringify(hits, null, 2));
     process.exit(1);
   }

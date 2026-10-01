@@ -29,6 +29,13 @@ if (!dir) {
 const AGENT_CODE = {
   Atlas: 'ATL',
   Sentinel: 'SEN',
+  Lyra: 'LYR',
+  Janus: 'JAN',
+  Moira: 'MOI',
+  Sigil: 'SIG',
+  Basilisk: 'BAS',
+  Proteus: 'PRO',
+  Mirage: 'MIR',
   Nexus: 'NEX',
   Hermes: 'HER',
   Hydra: 'HYD',
@@ -42,6 +49,16 @@ const AGENT_CODE = {
   Artemis: 'ART',
   Oracle: 'ORA',
 };
+
+const PANEL_SECURITY = new Set([
+  'Sentinel',
+  'Lyra',
+  'Janus',
+  'Moira',
+  'Sigil',
+  'Basilisk',
+  'Proteus',
+]);
 
 const DOMAIN_PREFIX = {
   architecture: 'ARCH',
@@ -62,6 +79,7 @@ const DOMAIN_PREFIX = {
   tests: 'TEST',
   classic_bugs: 'BUG',
   classic_bug: 'BUG',
+  imports: 'IMP',
 };
 
 const sevRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
@@ -99,7 +117,8 @@ function dedupeKey(f) {
 function domainPrefix(f) {
   const d = String(f.domain || '').toLowerCase();
   if (DOMAIN_PREFIX[d]) return DOMAIN_PREFIX[d];
-  if (f.agent === 'Sentinel') return 'SEC';
+  if (PANEL_SECURITY.has(f.agent)) return 'SEC';
+  if (f.agent === 'Mirage') return 'IMP';
   if (f.agent === 'Artemis') return 'BUG';
   if (f.agent === 'Nexus') return 'N1';
   if (f.agent === 'Hermes') return 'RACE';
@@ -170,7 +189,7 @@ for (const f of merged) {
     f.blocks_pr = Boolean(highImpact && f.confidence === 'high');
   }
   // Sentinel panel CRITICAL/HIGH+high always block; panel HIGH+medium blocks in full
-  if (f.agent === 'Sentinel' && f.verification === 'panel') {
+  if (PANEL_SECURITY.has(f.agent) && f.verification === 'panel') {
     if (f.severity === 'CRITICAL') f.blocks_pr = true;
     else if (f.severity === 'HIGH' && f.confidence === 'high') f.blocks_pr = true;
     else if (f.severity === 'HIGH' && mode === 'full' && f.confidence === 'medium') f.blocks_pr = true;

@@ -33,10 +33,42 @@ export function effectiveCoverageFloor(requested) {
   return Math.max(COVERAGE_FLOOR_MIN, parseCoverageFloor(requested));
 }
 
-function verdictOf(md) {
+const VERDICTS = new Set(['APPROVE', 'REJECT', 'SKIP']);
+
+export function verdictOf(md) {
   if (!md) return null;
   const m = md.match(/VERDICT:\s*(APPROVE|REJECT|SKIP)/i);
   return m ? m[1].toUpperCase() : null;
+}
+
+function safeJson(file) {
+  try {
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verdict of one review axis. `reviews/<axis>.json` (structured, see
+ * references/pack-schemas.md) wins; `reviews/<axis>.md` with a `VERDICT:` line
+ * is the fallback for older packs.
+ */
+export function axisVerdict(dir, axis) {
+  const doc = safeJson(path.join(dir, 'reviews', `${axis}.json`));
+  const fromJson = doc && String(doc.verdict || '').toUpperCase();
+  if (fromJson && VERDICTS.has(fromJson)) return fromJson;
+  const md = path.join(dir, 'reviews', `${axis}.md`);
+  return verdictOf(fs.existsSync(md) ? fs.readFileSync(md, 'utf8') : '');
+}
+
+/** Immutability suite as a list of names; accepts strings or `{ name }` objects. */
+export function immutabilityTests(immut) {
+  const raw = Array.isArray(immut?.tests) ? immut.tests : Array.isArray(immut?.suite) ? immut.suite : [];
+  return raw
+    .map((t) => (typeof t === 'string' ? t : t && (t.name || t.test || t.id)))
+    .filter(Boolean)
+    .map(String);
 }
 
 function readCoverage(dir) {
@@ -68,14 +100,9 @@ export function scorePack(dir) {
   const tasks = tasksDoc.tasks || [];
   const immut = loadJson(path.join(dir, 'immutability.json'), { green: false });
   const wt = loadJson(path.join(dir, 'worktrees.json'), { slices: [], skipped: false });
-  const reviewsDir = path.join(dir, 'reviews');
-  const readReview = (name) => {
-    const f = path.join(reviewsDir, name);
-    return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-  };
-  const standards = verdictOf(readReview('standards.md'));
-  const spec = verdictOf(readReview('spec.md'));
-  const correctness = verdictOf(readReview('correctness.md'));
+  const standards = axisVerdict(dir, 'standards');
+  const spec = axisVerdict(dir, 'spec');
+  const correctness = axisVerdict(dir, 'correctness');
 
   const gates = [];
 
@@ -95,10 +122,14 @@ export function scorePack(dir) {
     detail: rg ? 'each DONE has tests_added>=1 and red_green' : 'missing tests or red_green on a DONE task',
   });
 
+  const immutNames = immutabilityTests(immut);
   gates.push({
     id: 'immutability',
     ok: immut.green === true,
-    detail: immut.green ? (immut.suite || []).join(', ') || 'green' : 'immutability.json not green',
+    detail: immut.green
+      ? (immutNames.length ? `${immutNames.length} contract test(s) green` : 'green')
+      : 'immutability.json not green',
+    items: immutNames,
   });
 
   const specOk = spec === 'APPROVE' || spec === 'SKIP';
