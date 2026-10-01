@@ -2,13 +2,16 @@
 name: ultra-deep-audit
 description: >
   Auditoria ultra-deep multi-agente: Atlas, Sentinel (sec fast|deep com panel),
-  Nexus, Hermes, Hydra, Daedalus (CC), Echo (dup), Laconic (verbosidade),
-  Mentor (Clean Code/patterns/BP), Forge, Prism, Argus, Artemis (Caça-bugs), Oracle.
+  Lyra (XSS), Janus (rota exposta), Moira (rate limit real / IP / vazamento),
+  Sigil (segredo no código), Basilisk (SQL injection), Proteus (prompt injection),
+  Mirage (import inventado ou sem uso), Nexus, Hermes, Hydra, Daedalus (CC),
+  Echo (dup), Laconic (verbosidade), Mentor (Clean Code/patterns/BP), Forge,
+  Prism, Argus, Artemis (Caça-bugs), Oracle.
   Detecta N+1, race, leak, security/IDOR, classic bugs, backpressure, complexity,
   duplication, verbosity, best practices, arquitetura, testes, CVE, deps
   desatualizadas (latest stable only). Gera FINDINGS.json + REPORT + ROADMAP + TASKS + HTML.
   Sentinel deep: cartographer→hunters→refuter 2/3→sec-verify.mjs. Fix = red→green.
-  Trigger: /ultra-deep-audit, --full, --depth deep, --only sentinel|artemis|daedalus|echo|laconic|mentor.
+  Trigger: /ultra-deep-audit, --full, --depth deep, --only sentinel|lyra|janus|moira|sigil|basilisk|proteus|mirage|artemis|daedalus|echo|laconic|mentor.
 ---
 
 # Ultra-Deep Audit
@@ -25,10 +28,11 @@ Skill **agnóstica de repo**: adapta stack via manifests + `AGENTS.md`. Hooks de
 | Release / "ultra deep full" | `--full` |
 | Só um domínio | `--only nexus,sentinel,artemis` |
 | Sec adversarial completa | `--only sentinel --depth deep` |
+| Uma lente da bancada | `--only lyra` · `janus` · `moira` · `sigil` · `basilisk` · `proteus` · `mirage` · `surface` |
 | Só Caça-bugs | `--only artemis` ou `--only caca-bugs` |
 | Só Quality Guild | `--only daedalus,echo,laconic,mentor,forge` |
 | Só complexidade / dup / verbosidade / BP | `--only daedalus` / `echo` / `laconic` / `mentor` |
-| Sec deep + bugs no full | `--full` (Sentinel deep + Artemis + Quality Guild) |
+| Sec deep + bugs no full | `--full` (Sentinel deep + bancada no panel + Artemis + Quality Guild) |
 
 **Nunca pular** delta após mudança em listagem/repo/mapper (N+1).
 
@@ -37,11 +41,11 @@ Skill **agnóstica de repo**: adapta stack via manifests + `AGENTS.md`. Hooks de
 | Flag | Efeito |
 |------|--------|
 | `--delta` | escopo = diff `$BASE...HEAD` + callers |
-| `--full` | corpus inteiro; **Sentinel depth=deep + effort=max**; Artemis deep; Quality Guild deep |
-| `--depth fast\|deep` | override Sentinel + Artemis + Quality Guild multi-pass. Raro: `--full` já implica deep |
+| `--full` | corpus inteiro; **Sentinel depth=deep + effort=max**; bancada de segurança no panel; Artemis deep; Quality Guild deep |
+| `--depth fast\|deep` | override Sentinel, bancada, Artemis e Quality Guild. Raro: `--full` já implica deep |
 | `--only a,b` | subset de agentes (aliases: `caca-bugs`→artemis, `quality`→daedalus+echo+laconic+mentor+forge, `cc`→daedalus, `dup`→echo, `bp`→mentor) |
 | `--effort medium\|high\|max` | override da largura Sentinel deep (só faz sentido com depth=deep) |
-| `--scope dir,dir` | limita Sentinel deep / Artemis / Quality Guild |
+| `--scope dir,dir` | limita Sentinel deep, bancada, Artemis e Quality Guild |
 | `--base origin/main` | base do diff |
 
 ### Defaults de profundidade (não peça flag extra)
@@ -54,7 +58,7 @@ Skill **agnóstica de repo**: adapta stack via manifests + `AGENTS.md`. Hooks de
 | `--full --effort medium` | deep | medium (override explícito) | deep | deep |
 | `--delta --depth deep --effort high` | deep | high | fast* | deep* |
 
-\*Se `--depth deep` global, Artemis + Quality Guild também deep salvo `--only`.
+\*Se `--depth deep` global, Artemis, Quality Guild e a bancada de segurança (panel, 2.E) também deep salvo `--only`. No delta a bancada fica em `verification: specialist`.
 
 **Regra:** `--full` **já é o teto**. Não exigir `--depth deep` nem `--effort max` no full — isso é default. Só passe `--effort` se quiser **baixar** custo (medium/high). Panel 3 lentes × candidate continua obrigatório em todo deep (medium/high/max); `max` adiciona adversarial 2ª pass + matrix mais larga.
 
@@ -127,7 +131,14 @@ Mapeamento rápido domínio → SDD (estender se o repo tiver mais):
 | # | Nome | Arquivo | Domínio | IDs |
 |---|------|---------|---------|-----|
 | 1 | **Atlas** | `agents/atlas-architecture.md` | Layer boundaries / Clean Arch arrows | `ARCH-ATL-*` |
-| 2 | **Sentinel** | `agents/sentinel-security.md` | Security (fast \| **deep pipeline**) | `SEC-SEN-*` |
+| 2 | **Sentinel** | `agents/sentinel-security.md` | Security geral (fast \| **deep pipeline**) | `SEC-SEN-*` |
+| 2d | **Lyra** | `agents/lyra-xss.md` | XSS — dado vira HTML ativo | `SEC-LYR-*` |
+| 2e | **Janus** | `agents/janus-routes.md` | rota montada onde não devia | `SEC-JAN-*` |
+| 2f | **Moira** | `agents/moira-ratelimit.md` | limitador real, chave, vazamento | `SEC-MOI-*` |
+| 2g | **Sigil** | `agents/sigil-secrets.md` | segredo no código rastreado | `SEC-SIG-*` |
+| 2h | **Basilisk** | `agents/basilisk-sqli.md` | SQL (e operador NoSQL) | `SEC-BAS-*` |
+| 2i | **Proteus** | `agents/proteus-prompt.md` | prompt injection com efeito | `SEC-PRO-*` |
+| 2j | **Mirage** | `agents/mirage-deps.md` | import inventado ou sem uso | `IMP-MIR-*` |
 | 2a | Sec Cartographer | `agents/security/cartographer.md` | inventário (deep) | — |
 | 2b | Sec Hunter | `agents/security/hunter.md` | research (deep) | — |
 | 2c | Sec Refuter | `agents/security/refuter.md` | panel 3 lentes (deep) | — |
@@ -251,11 +262,11 @@ node "$SKILL_ROOT/scripts/measure-quality.mjs" \
 
 ### 2. Ondas (paralelo dentro da onda)
 
-**Onda A:** Atlas ‖ **Sentinel** ‖ Nexus ‖ **Mentor**  
+**Onda A:** Atlas ‖ **Sentinel** ‖ **Lyra ‖ Janus ‖ Moira ‖ Sigil ‖ Basilisk ‖ Proteus** ‖ Nexus ‖ **Mentor**  
 **Onda B:** Hermes ‖ Hydra ‖ **Artemis** ‖ **Quality Guild** (Daedalus ‖ Echo ‖ Laconic ‖ Forge)  
-**Onda C:** Prism ‖ Argus  
+**Onda C:** Prism ‖ **Mirage** ‖ Argus  
 
-Respeitar `--only`. Se agente falta no disco, Oracle executa o papel com o mesmo prompt.
+Respeitar `--only`. A bancada (Lyra…Mirage) entra no roster default. `--only sentinel` **não** a inclui: nesse caso o hunter do Sentinel cobre as categorias dela. Se agente falta no disco, Oracle executa o papel com o mesmo prompt — o prompt é o arquivo do agente, inteiro, não um resumo.
 
 Aliases `--only`:
 - `quality` / `guild` → daedalus,echo,laconic,mentor,forge  
@@ -264,6 +275,14 @@ Aliases `--only`:
 - `dup` / `duplication` → echo  
 - `verbosity` / `verbose` → laconic  
 - `bp` / `best-practices` → mentor  
+- `xss` → lyra  
+- `routes` / `rotas` → janus  
+- `ratelimit` / `rate-limit` / `quota` → moira  
+- `secrets` / `keys` / `segredos` → sigil  
+- `sqli` / `sql` → basilisk  
+- `prompt` / `prompt-injection` → proteus  
+- `phantom` / `imports` / `unused-deps` → mirage  
+- `surface` / `bancada` → lyra,janus,moira,sigil,basilisk,proteus,mirage  
 
 #### 2.A Sentinel
 
@@ -290,6 +309,26 @@ Ler `agents/sentinel-security.md`.
      ```
   6. Copiar verified → `$OUT/agent-sentinel.json`
   7. **effort max** (default do `--full`): adversarial re-hunt nos survivors; re-rodar sec-verify com os mesmos gates
+
+#### 2.E Bancada de superfície
+
+Lyra, Janus, Moira, Sigil, Basilisk, Proteus na Onda A. Mirage na Onda C. Cada um lê o próprio arquivo em `agents/` e grava `$OUT/agent-<id>.json` (`agent-lyra.json`, …, `agent-mirage.json`).
+
+- **fast (delta):** `verification: "specialist"`. Não escreva `panel`. `blocks_pr` só se o próprio agente marcou, com as três citações e confidence high.
+- **deep (`--full` ou `--depth deep`):** cada candidato HIGH/CRITICAL dos seis de segurança entra no mesmo panel do Sentinel (refuter REACHABILITY / IMPACT / DEFENSES). `temp_id` com prefixo do agente (`LYR-C1`, `JAN-C1`, `MOI-C1`, `SIG-C1`, `BAS-C1`, `PRO-C1`) para não colidir no `votes/`. Depois:
+
+```bash
+node "$SKILL_ROOT/scripts/sec-verify.mjs" \
+  --candidates "$OUT/sec-deep/lyra-candidates.json" \
+  --votes-dir "$OUT/sec-deep/votes" \
+  --require-vote-files \
+  --agent Lyra --id-prefix SEC-LYR \
+  --out "$OUT/agent-lyra.json"
+```
+
+O mesmo para Janus `SEC-JAN`, Moira `SEC-MOI`, Sigil `SEC-SIG`, Basilisk `SEC-BAS`, Proteus `SEC-PRO`. Sem os vote files, o achado fica `verification: "specialist"` e não conta como panel. Mirage não passa pelo panel.
+
+Hunter do Sentinel, com a bancada ligada, não reemite as categorias dela (`SURFACE_BENCH=on` no dispatch). Hydra não reemite limitador. Prism não reemite import sem uso.
 
 **Nunca** colocar no report um candidate que o script derrubou.  
 `verification.status` vem do coverage do script, não do feeling do modelo.  
@@ -356,7 +395,7 @@ Manual se scripts indisponíveis:
 
 1. Parse todos `agent-*.json`  
 2. Dedupe `(path, line, domain/title)`  
-3. IDs: `SEC-SEN-001`, `BUG-ART-001`, `CC-DAE-001`, `DUP-ECH-001`, `VRB-LAC-001`, `BP-MEN-001`, …  
+3. IDs: `SEC-SEN-001`, `SEC-LYR-001`, `SEC-JAN-001`, `SEC-MOI-001`, `SEC-SIG-001`, `SEC-BAS-001`, `SEC-PRO-001`, `IMP-MIR-001`, `BUG-ART-001`, …  
 4. `blocks_pr`: CRITICAL/HIGH + confidence high; Sentinel panel CRITICAL sempre; HIGH+high panel sempre  
 5. `FINDINGS.json` + `REPORT.md` + `ROADMAP.md`  
 6. Coverage Sec deep: incluir `$OUT/sec-deep/coverage.json` na seção Coverage do REPORT  
@@ -419,7 +458,7 @@ Quando `MODE=full` (ou `DEPTH=deep`):
 |-------------|----------|
 | effort default **max** (salvo `--effort` explícito para baixar) | Tratar full como medium “por ser mais rápido” |
 | 3 refuter **Tasks** por candidate (REACH/IMPACT/DEFENSES) | Oracle escrever `votes.json` na mão |
-| Arquivos em `sec-deep/votes/C*-<LENS>.json` | Pasta `votes/` vazia |
+| Arquivos em `sec-deep/votes/<temp_id>-<LENS>.json` (Sentinel `C1`, bancada `LYR-C1` / `JAN-C1` / …) | Pasta `votes/` vazia |
 | `sec-verify … --votes-dir … --require-vote-files` | Rodar sec-verify só com votes agregados forjados |
 | `panel_source=vote-files` no coverage | Emitir SEC-* com `verification=panel` se require-vote-files falhou |
 | `measure-quality.mjs` se guild no roster | Quality findings só no feeling sem metrics file (quando script rodável) |
@@ -456,7 +495,7 @@ evidence, impact, fix, test_red_green, status, blocks_pr
 ### Extensões Sentinel (deep)
 
 ```
-verification: "panel" | "fast"
+verification: "panel" | "fast" | "specialist"
 panel: { true, false, voters }
 panel_detail, exploit_scenario, preconditions, snippet, symbol,
 category, cwe, source, sink, component
@@ -493,7 +532,14 @@ layer_from, layer_to
 
 | Sintoma | Dono |
 |---------|------|
-| Exploit / IDOR / injection / secret | **Sentinel** |
+| Exploit / IDOR / authz de objeto / tenant | **Sentinel** |
+| XSS (dado vira HTML ativo) | **Lyra** |
+| Rota montada onde não devia | **Janus** |
+| Limitador decorativo, chave errada, estado do limitador sem teto | **Moira** |
+| Segredo literal no código rastreado | **Sigil** |
+| SQL / operador NoSQL na estrutura da query | **Basilisk** |
+| Prompt injection com ferramenta ou efeito | **Proteus** |
+| Import inventado, import sem uso, dependência que ninguém referencia | **Mirage** |
 | Lost update multi-writer / CAS | **Hermes** |
 | Crescimento sem teto / pool | **Hydra** |
 | 1+N queries | **Nexus** |
@@ -512,7 +558,7 @@ layer_from, layer_to
 
 ## Critérios de pronto — auditoria
 
-- [ ] Agentes pedidos executados (roster completo ou `--only`)  
+- [ ] Agentes pedidos executados (roster completo ou `--only`, bancada inclusa no default)  
 - [ ] Se Sentinel deep: `sec-verify.mjs` rodou; coverage no REPORT  
 - [ ] Se Prism no roster: `check-deps-latest.mjs` → `deps-latest.json` + freshness findings (stable only)  
 - [ ] Se Quality Guild no roster: `measure-quality.mjs` → `quality-metrics.json` + agent-daedalus/echo/laconic/mentor/forge conforme `--only`  

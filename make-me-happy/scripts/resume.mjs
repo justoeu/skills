@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { leftoverWorktrees } from './worktrees.mjs';
-import { scorePack } from './score.mjs';
+import { scorePack, axisVerdict } from './score.mjs';
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -29,10 +29,7 @@ function loadJson(file, fallback) {
 }
 
 function verdict(dir, name) {
-  const f = path.join(dir, 'reviews', name);
-  if (!fs.existsSync(f)) return null;
-  const m = fs.readFileSync(f, 'utf8').match(/VERDICT:\s*(APPROVE|REJECT|SKIP)/i);
-  return m ? m[1].toUpperCase() : null;
+  return axisVerdict(dir, name.replace(/\.md$/, ''));
 }
 
 export function inferNextStep(dir, leftover) {

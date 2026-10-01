@@ -57,10 +57,37 @@ test('add + merge + verify-clean on a throwaway repo', () => {
   }
   const clean = spawnSync(process.execPath, [SCRIPT, 'verify-clean', '--root', dir, '--prefix', 'mmh'], { encoding: 'utf8' });
   assert.equal(clean.status, 0, clean.stderr);
+  assert.equal(fs.existsSync(state.slices[0].dir), false);
+  assert.equal(fs.existsSync(path.join(dir, '.worktrees')), false);
+  const branches = spawnSync('git', ['branch', '--list', 'mmh/slice-*'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(branches.stdout.trim(), '');
   const gi = fs.readFileSync(path.join(dir, '.gitignore'), 'utf8');
   assert.match(gi, /\.worktrees\//);
   const head = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dir, encoding: 'utf8' });
   assert.notEqual(head.stdout.trim(), 'main');
+});
+
+test('remove apaga branch órfã, pasta da slice e .worktrees vazio', () => {
+  const dir = gitRepo();
+  const out = path.join(dir, 'out');
+  fs.mkdirSync(out);
+  const add = spawnSync(process.execPath, [
+    SCRIPT, 'add', '--root', dir, '--count', '1', '--prefix', 'mmh', '--into', 'feature/painel-v2', '--out', out,
+  ], { encoding: 'utf8' });
+  assert.equal(add.status, 0, add.stderr || add.stdout);
+  const branch = spawnSync('git', ['branch', 'mmh/slice-9'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(branch.status, 0, branch.stderr);
+  fs.mkdirSync(path.join(dir, '.worktrees', 'mmh-9'), { recursive: true });
+  const dirty = spawnSync(process.execPath, [SCRIPT, 'verify-clean', '--root', dir, '--prefix', 'mmh'], { encoding: 'utf8' });
+  assert.notEqual(dirty.status, 0);
+  assert.match(dirty.stderr, /mmh\/slice-9/);
+  const removed = spawnSync(process.execPath, [SCRIPT, 'remove', '--root', dir, '--prefix', 'mmh'], { encoding: 'utf8' });
+  assert.equal(removed.status, 0, removed.stderr || removed.stdout);
+  const clean = spawnSync(process.execPath, [SCRIPT, 'verify-clean', '--root', dir, '--prefix', 'mmh'], { encoding: 'utf8' });
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.equal(fs.existsSync(path.join(dir, '.worktrees')), false);
+  const left = spawnSync('git', ['branch', '--list', 'mmh/slice-*'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(left.stdout.trim(), '');
 });
 
 test('merge --into main is refused', () => {

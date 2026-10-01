@@ -51,6 +51,21 @@ function baseModel(flowExtra) {
   };
 }
 
+test('card da aplicação separa os fatos e o texto do know-how ocupa o card', () => {
+  assert.match(template, /class="s-app-facts"/);
+  assert.match(template, /function appFact\(label, value\)/);
+  assert.match(template, /class="s-app-block"><div class="k">Stack<\/div>/);
+  assert.match(template, /class="s-app-block"><div class="k">Dados<\/div>/);
+  assert.match(template, /class="know-prose"/);
+  assert.doesNotMatch(template, /max-width:\s*74ch/);
+  assert.doesNotMatch(template, /stackSummary \? " · "/);
+  assert.match(template, /function scoreTipHtml\(\)/);
+  assert.match(template, /A a partir de 90, B a partir de 75, C a partir de 60, D a partir de 40, F abaixo de 40/);
+  assert.match(template, /payload 25, arquivo:linha 20, chamadas 15, erros 15/);
+  assert.match(template, /reescalado para somar 100%/);
+  assert.match(template, /onmouseenter="A\.scoreShow\(this\)"/);
+});
+
 test('página de fluxo chama o card de brief no topo (rich e chain)', () => {
   assert.match(template, /function rRich\(f\) \{\n    var html = flowBriefCard\(f\);/);
   assert.match(template, /function rChain\(f\) \{[\s\S]*?var html = flowBriefCard\(f\);/);

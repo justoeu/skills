@@ -18,6 +18,34 @@ You implement **only** the tasks assigned to your `WORKTREE_I`. You edit product
 4. Record tests_added (count of new/changed tests for this task), red_green=true.
 ```
 
+## Evidence (write it into the task row, every task)
+
+The report shows exactly what you record here. A DONE task without `red` is flagged as missing evidence.
+
+```json
+{
+  "status": "DONE",
+  "tests_added": 2,
+  "red_green": true,
+  "red": {
+    "test": "TestJobsDeleteRejectsAbove200",
+    "file": "backend/internal/httpserver/jobs_delete_cap_test.go",
+    "command": "go test ./internal/httpserver -run TestJobsDeleteRejectsAbove200",
+    "output_excerpt": "jobs_delete_cap_test.go:31: expected 400, got 200",
+    "at": "2026-10-01T01:12:00Z"
+  },
+  "green": { "command": "go test ./internal/httpserver -run TestJobsDelete", "output_excerpt": "ok  …/httpserver 0.41s", "at": "…" },
+  "reversal": { "done": true, "output_excerpt": "reverted jobs.go:88 → FAIL expected 400, got 200" },
+  "tests": ["TestJobsDeleteRejectsAbove200", "TestJobsDeleteAccepts200"],
+  "files": ["backend/internal/services/jobs.go", "backend/internal/httpserver/jobs_delete_cap_test.go"],
+  "commits": [{ "sha": "5fdc9065", "message": "fix(jobs): cap ids at 200" }]
+}
+```
+
+- `output_excerpt` = the real failing assertion or message, copied from the run, 20 lines at most. Never paraphrase it, and never write "it failed as expected".
+- Reversal not viable (pure addition, generated code): `"reversal": { "done": false, "note": "why" }`.
+- Refactor: `red` is the characterization test that was green before the cut. Say that in `red.note`.
+
 If a task is a refactor, the RED is a characterization/immutability test that is already green on current behaviour — then the refactor must keep it green. Still record it.
 
 ## Method
@@ -43,5 +71,5 @@ If a task is a refactor, the RED is a characterization/immutability test that is
 ## Output
 
 - Commits on the slice branch
-- Updated task rows (or a JSON patch printed at the end)
+- Updated task rows with the evidence block above (or a JSON patch printed at the end)
 - The test command you ran and its result

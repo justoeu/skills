@@ -172,6 +172,9 @@ const highOpen = highAll.filter((f) => !isClosed(f));
 const prism = findings.filter(
   (f) => f.agent === 'Prism' || String(f.id || '').startsWith('DEP-PRI') || String(f.domain || '').includes('dep'),
 );
+const mirage = findings.filter(
+  (f) => f.agent === 'Mirage' || String(f.id || '').startsWith('IMP-MIR'),
+);
 
 // preserve manual notes
 function extractNotes(filePath) {
@@ -331,6 +334,17 @@ if (!deps) {
   }
 }
 
+if (mirage.length) {
+  report.push('### Imports (Mirage)');
+  report.push('');
+  for (const f of mirage.sort((a, b) => a.id.localeCompare(b.id))) {
+    report.push(
+      `- **${f.id}** [${f.severity}] status=${f.status || 'OPEN'} — ${f.title}`,
+    );
+  }
+  report.push('');
+}
+
 // P0 / blocks
 const p0list = findings.filter(
   (f) =>
@@ -395,9 +409,15 @@ roadmap.push('## Wave 1 — Security + Race (`blocks_pr`)');
 roadmap.push('');
 const w1 = findings.filter(
   (f) =>
-    String(f.id).startsWith('SEC-SEN') ||
+    String(f.id).startsWith('SEC-') ||
     String(f.id).startsWith('RACE-HER') ||
     f.agent === 'Sentinel' ||
+    f.agent === 'Lyra' ||
+    f.agent === 'Janus' ||
+    f.agent === 'Moira' ||
+    f.agent === 'Sigil' ||
+    f.agent === 'Basilisk' ||
+    f.agent === 'Proteus' ||
     f.agent === 'Hermes',
 );
 for (const f of w1.filter((x) => x.severity === 'HIGH' || x.severity === 'CRITICAL' || x.blocks_pr)) {
@@ -506,6 +526,16 @@ if (!deps) {
     }
     roadmap.push('');
   }
+}
+
+if (mirage.length) {
+  roadmap.push('### Imports (Mirage)');
+  roadmap.push('');
+  for (const f of mirage.sort((a, b) => a.id.localeCompare(b.id))) {
+    const box = isClosed(f) ? '[x]' : '[ ]';
+    roadmap.push(`- ${box} **${f.id}** [${f.severity}] — ${f.title}`);
+  }
+  roadmap.push('');
 }
 
 const remainingOpen = open.filter(

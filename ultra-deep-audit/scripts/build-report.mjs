@@ -180,6 +180,13 @@ const runMeta = {
 const agents = {
   Atlas: { emoji: '🏛️', color: '#6366f1', blurb: 'Architecture / layer boundaries' },
   Sentinel: { emoji: '🛡️', color: '#ef4444', blurb: 'Security / Authz (fast|deep panel)' },
+  Lyra: { emoji: '🎭', color: '#fb7185', blurb: 'XSS — untrusted data becomes active HTML' },
+  Janus: { emoji: '🚪', color: '#e11d48', blurb: 'Routes mounted where they should not be' },
+  Moira: { emoji: '⏱️', color: '#0ea5e9', blurb: 'Rate limit: real control, client key, state leak' },
+  Sigil: { emoji: '🔑', color: '#facc15', blurb: 'Secrets committed in source' },
+  Basilisk: { emoji: '🐍', color: '#65a30d', blurb: 'SQL / NoSQL operator injection' },
+  Proteus: { emoji: '🫧', color: '#a78bfa', blurb: 'Prompt injection with a side effect' },
+  Mirage: { emoji: '🌫️', color: '#94a3b8', blurb: 'Invented or unused imports and dependencies' },
   Nexus: { emoji: '⚡', color: '#f59e0b', blurb: 'N+1 / Performance' },
   Hermes: { emoji: '⚔️', color: '#8b5cf6', blurb: 'Race / PBT' },
   Hydra: { emoji: '🐉', color: '#06b6d4', blurb: 'Leak / Backpressure' },
@@ -416,7 +423,7 @@ const html = `<!DOCTYPE html>
   <div class="meta">
     Generated: ${generatedAt} ·
     SDD-17 · Skill <code>ultra-deep-audit</code> ·
-    Agents: Atlas · Sentinel · Nexus · Hermes · Hydra · Daedalus · Echo · Laconic · Mentor · Forge · Prism · Argus · Artemis · Oracle
+    Agents: ${Object.keys(agents).join(' · ')}
   </div>
 </header>
 <div class="layout">
@@ -702,9 +709,9 @@ function renderFlow() {
       <pre style="margin:0;white-space:pre-wrap;font-size:.85rem;line-height:1.55">Implement
   → Tests (0 failures)
   → Oracle inicia modo delta|full
-  → Onda A: Atlas ‖ Sentinel ‖ Nexus ‖ Mentor
+  → Onda A: Atlas ‖ Sentinel ‖ Lyra ‖ Janus ‖ Moira ‖ Sigil ‖ Basilisk ‖ Proteus ‖ Nexus ‖ Mentor
   → Onda B: Hermes ‖ Hydra ‖ Artemis ‖ Quality Guild (Daedalus ‖ Echo ‖ Laconic ‖ Forge)
-  → Onda C: Prism (check-deps-latest) ‖ Argus
+  → Onda C: Prism (check-deps-latest) ‖ Mirage ‖ Argus
   → measure-quality.mjs → quality-metrics.json (CC / clones / verbosity hotspots)
   → Sentinel deep?: cartographer → hunters → panel → sec-verify.mjs
   → merge-findings + sync-progress → HTML/TASKS (aba Libs/Updates)
@@ -725,8 +732,8 @@ function renderFlow() {
         detect-stack → classic-bugs catalog by language → failure_scenario → BUG-ART-* + red→green.
       </div>
       <div class="box">
-        <h4>Deps / latest stable (Prism)</h4>
-        detect-stack (Java/Spring/Kotlin/Node/React/Vite/Swift/…) → check-deps-latest → update_map + suggestions no HTML. Só releases stable.
+        <h4>Deps / latest stable (Prism) + imports (Mirage)</h4>
+        Prism: detect-stack → check-deps-latest → update_map. Só releases stable. Mirage: import inventado, import sem uso, dependência que ninguém referencia.
       </div>
       <div class="box">
         <h4>N+1 / Race / Leak</h4>
