@@ -49,9 +49,28 @@
   .s-label { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6b7689; padding-left:9px; margin-bottom:7px; }
   .s-app { background:#22304a; border-radius:9px; padding:11px 12px; }
   .s-app-hd { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .s-app-name { font-size:13.5px; font-weight:600; color:#fff; }
-  .s-app-score { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8fd6da; }
-  .s-app-meta { font-family:"JetBrains Mono",monospace; font-size:10px; color:#93a0b4; line-height:1.7; margin-top:6px; }
+  .s-app-name { font-size:13.5px; font-weight:600; color:#fff; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .s-app-score { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8fd6da; flex:0 0 auto; background:none; border:none; padding:1px 0 1px 8px; cursor:help; border-bottom:1px dotted rgba(143,214,218,.55); }
+  .s-app-score:hover, .s-app-score:focus-visible { color:#fff; outline:none; }
+  .score-tip { position:fixed; z-index:80; width:min(340px, calc(100vw - 16px)); background:#161f2e; color:#cfd6e2; border:1px solid #33405c; border-radius:12px; padding:14px 14px 12px; box-shadow:0 16px 40px rgba(7,12,20,.45); font-size:12px; line-height:1.5; }
+  .score-tip .h { font-size:13px; font-weight:600; color:#fff; }
+  .score-tip .sub { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8fd6da; margin-top:2px; }
+  .score-tip p { margin:8px 0 0; }
+  .score-tip .rows { margin-top:10px; border-top:1px solid #2c3a54; }
+  .score-tip .row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:6px 0; border-bottom:1px solid #2c3a54; align-items:baseline; }
+  .score-tip .row .w { font-family:"JetBrains Mono",monospace; font-size:10px; color:#8fd6da; text-align:right; }
+  .score-tip .miss { color:#8a857d; }
+  .score-tip ul { margin:6px 0 0; padding-left:16px; }
+  .score-tip li { margin-top:4px; }
+  .score-tip .note { color:#93a0b4; font-size:11.5px; }
+  .s-app-facts { margin:10px 0 0; display:flex; flex-direction:column; border-top:1px solid #33405c; }
+  .s-fact { display:grid; grid-template-columns:64px minmax(0,1fr); gap:8px; align-items:baseline; padding:6px 0; border-bottom:1px solid #2c3a54; }
+  .s-fact dt { margin:0; font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:#6b7689; }
+  .s-fact dd { margin:0; font-family:"JetBrains Mono",monospace; font-size:10.5px; color:#d7e0ee; line-height:1.4; overflow-wrap:anywhere; }
+  .s-app-block { margin-top:10px; }
+  .s-app-block + .s-app-block { margin-top:8px; padding-top:8px; border-top:1px solid #33405c; }
+  .s-app-block .k { font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:#6b7689; margin-bottom:4px; }
+  .s-app-block .v { font-size:12px; color:#cfd6e2; line-height:1.5; overflow-wrap:anywhere; }
   .nav-sec { display:flex; flex-direction:column; gap:2px; }
   .nav-row { position:relative; padding:8px 10px; border-radius:8px; font-size:13px; color:#cfd6e2; cursor:pointer; display:flex; align-items:center; gap:10px; background:none; border:none; text-align:left; width:100%; font-family:inherit; }
   .nav-row:hover { background:#1d2739; color:#fff; }
@@ -192,6 +211,8 @@
   .foot-note { font-family:"JetBrains Mono",monospace; font-size:10px; color:#a8a39a; }
   .note-src { font-family:"JetBrains Mono",monospace; font-size:10.5px; color:#a8a39a; margin-top:5px; }
   .legend-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:11px; font-family:"JetBrains Mono",monospace; font-size:10px; color:#5d6470; }
+  .know-prose { font-size:14px; line-height:1.65; color:#2b3342; margin-top:10px; }
+  .know-prose.next { font-size:13.5px; color:#5d6470; margin-top:12px; }
 
   /* ---------- flow brief (card do topo) ---------- */
   .brief-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
@@ -300,6 +321,7 @@
 
   /* ---------------- render root ---------------- */
   function render() {
+    dropScoreTip();
     var app = document.getElementById("app");
     app.innerHTML = shell();
     var h = location.hash || "";
@@ -339,12 +361,20 @@
     html += "</div>";
     if (nav) {
       html += '<div><div class="s-label">Aplicação analisada</div><div class="s-app">';
-      html += '<div class="s-app-hd"><div class="s-app-name">' + E(a.name || "—") + '</div><div class="s-app-score">' + E(score.overall != null ? score.overall + (score.grade ? " · " + score.grade : "") : "—") + "</div></div>";
-      html += '<div class="s-app-meta">';
-      html += "<div>" + E(a.repo || "—") + " · " + E(a.branch || "—") + "</div>";
-      html += "<div>" + E(a.commit || "—") + " · " + E(a.filesCount != null ? a.filesCount + " arquivos" : "—") + "</div>";
-      html += "<div>" + E(a.stackSummary || "") + (a.stackSummary ? " · " : "") + flows.length + " fluxos · " + E((MODEL.data && MODEL.data.engine) || "—") + "</div>";
-      html += "</div></div></div>";
+      html += '<div class="s-app-hd"><div class="s-app-name">' + E(a.name || "—") + '</div>';
+      html += '<button type="button" class="s-app-score" aria-label="Como o score Atlas é calculado" onmouseenter="A.scoreShow(this)" onmouseleave="A.scoreHide()" onfocus="A.scoreShow(this)" onblur="A.scoreHide()">';
+      html += E(score.overall != null ? score.overall + (score.grade ? " · " + score.grade : "") : "—");
+      html += "</button></div>";
+      html += '<dl class="s-app-facts">';
+      html += appFact("repo", a.repo || "—");
+      html += appFact("branch", a.branch || "—");
+      html += appFact("commit", a.commit || "—");
+      html += appFact("arquivos", a.filesCount != null ? String(a.filesCount) : "—");
+      html += appFact("fluxos", String(flows.length));
+      html += "</dl>";
+      if (a.stackSummary) html += '<div class="s-app-block"><div class="k">Stack</div><div class="v">' + E(a.stackSummary) + "</div></div>";
+      if (MODEL.data && MODEL.data.engine) html += '<div class="s-app-block"><div class="k">Dados</div><div class="v">' + E(MODEL.data.engine) + "</div></div>";
+      html += "</div></div>";
     }
     html += '<div class="nav-sec">';
     if (nav) html += '<div class="s-label" style="margin-bottom:6px">Documentação</div>';
@@ -371,6 +401,71 @@
     }
     html += "</aside>";
     return html;
+  }
+
+  function appFact(label, value) {
+    return '<div class="s-fact"><dt>' + E(label) + "</dt><dd>" + E(value) + "</dd></div>";
+  }
+
+  function scoreTipHtml() {
+    var sc = MODEL.score || {};
+    var parts = arr(sc.breakdown);
+    var counted = parts.filter(function (b) { return b.v != null; });
+    var dropped = parts.filter(function (b) { return b.v == null; });
+    var html = '<div class="h">Score Atlas</div>';
+    html += '<div class="sub">' + E(sc.overall != null ? sc.overall + (sc.grade ? " · " + sc.grade : "") : "sem nota ainda") + "</div>";
+    html += "<p>Nota de 0 a 100 calculada por <span class=\"mono\">atlas_build.py</span> no momento do build. Mede o quanto esta documentação está completa. Não mede produção, tráfego nem a qualidade do produto.</p>";
+    html += "<p>A letra acompanha a nota: A a partir de 90, B a partir de 75, C a partir de 60, D a partir de 40, F abaixo de 40.</p>";
+    if (parts.length) {
+      html += '<div class="rows">';
+      parts.forEach(function (b) {
+        var missing = b.v == null;
+        html += '<div class="row"><div class="' + (missing ? "miss" : "") + '">' + E(b.k) + "</div>";
+        html += '<div class="w">' + E(missing ? "fora · " + (b.weight || "") : b.v + " · " + (b.weight || "")) + "</div></div>";
+      });
+      html += "</div>";
+    }
+    html += "<p>Como cada parte entra na conta:</p><ul>";
+    html += "<li><strong>Cobertura dos fluxos</strong>, peso 45%. Média entre os fluxos. Cada fluxo é a média dos passos. Um passo soma, até 100: payload 25, arquivo:linha 20, chamadas 15, erros 15, o que o passo faz 15, o que ele toca 10.</li>";
+    html += "<li><strong>Modelo e contratos</strong>, peso 20%. 40 se há tabelas no modelo, 30 se há DDL, 30 se há endpoints.</li>";
+    html += "<li><strong>Variáveis de ambiente</strong>, peso 10%. Percentual das variáveis que têm descrição e, junto, um fluxo ou o arquivo onde são lidas.</li>";
+    html += "<li><strong>Quality gates</strong>, peso 25%. Média dos gates declarados. Pass vale 100, warn 60, fail 0.</li>";
+    html += "</ul>";
+    if (dropped.length) {
+      html += '<p class="note">Nesta varredura, ' + dropped.map(function (b) { return E(b.k); }).join(" e ") + (dropped.length > 1 ? " ficam" : " fica") + " fora. A nota usa só " + (counted.length ? "as partes com número" : "o que houver") + ", e o peso delas é reescalado para somar 100%. Ausência não entra como zero.</p>";
+    } else if (counted.length) {
+      html += '<p class="note">As quatro partes têm número. A nota é a média com esses pesos.</p>';
+    }
+    return html;
+  }
+
+  var scoreTipTimer = null;
+  function placeScoreTip(anchor) {
+    clearTimeout(scoreTipTimer);
+    var tip = document.getElementById("atlas-score-tip");
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.id = "atlas-score-tip";
+      tip.className = "score-tip";
+      tip.setAttribute("role", "tooltip");
+      tip.innerHTML = scoreTipHtml();
+      tip.addEventListener("mouseenter", function () { clearTimeout(scoreTipTimer); });
+      tip.addEventListener("mouseleave", function () { A.scoreHide(); });
+      document.body.appendChild(tip);
+    }
+    var r = anchor.getBoundingClientRect();
+    var left = r.right + 12;
+    var top = Math.max(8, r.top - 6);
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+    if (left + tip.offsetWidth > window.innerWidth - 8) {
+      tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - tip.offsetWidth - 8)) + "px";
+      tip.style.top = (r.bottom + 8) + "px";
+    }
+  }
+  function dropScoreTip() {
+    var tip = document.getElementById("atlas-score-tip");
+    if (tip) tip.remove();
   }
 
   function navRow(n, nav) {
@@ -452,8 +547,8 @@
     var html = "";
     html += '<section class="card">';
     html += '<div class="kv-label">' + E("O que é o " + (MODEL.app.name || "app")) + "</div>";
-    if (id.what) html += '<div style="font-size:14px;line-height:1.65;color:#2b3342;margin-top:9px;max-width:74ch">' + E(id.what) + "</div>";
-    if (id.firstRead) html += '<div style="font-size:13.5px;line-height:1.65;color:#5d6470;margin-top:11px;max-width:74ch">' + E(id.firstRead) + "</div>";
+    if (id.what) html += '<div class="know-prose">' + E(id.what) + "</div>";
+    if (id.firstRead) html += '<div class="know-prose next">' + E(id.firstRead) + "</div>";
     if (arr(id.stats).length) {
       html += '<div class="grid-auto" style="margin-top:16px">';
       arr(id.stats).forEach(function (s) {
@@ -1508,7 +1603,9 @@
       var el = document.getElementById("env-list");
       if (el) { el.outerHTML = '<div id="env-list" style="margin-top:10px">' + envList() + "</div>"; }
     },
-    tgl: function (k) { S.acc[k] = !S.acc[k]; render(); }
+    tgl: function (k) { S.acc[k] = !S.acc[k]; render(); },
+    scoreShow: function (el) { placeScoreTip(el); },
+    scoreHide: function () { clearTimeout(scoreTipTimer); scoreTipTimer = setTimeout(dropScoreTip, 140); }
   };
 
   /* ---------------- boot: hash router ---------------- */

@@ -27,6 +27,25 @@ You receive **one component** and **one category lens**. Report only complete at
 | `exposure` | info disclosure, loose file perms on secret paths, verbose errors to clients, mass assignment, debug endpoints in prod |
 | `memory-unsafe` | buffer OOB, UAF, integer overflow on size, unsafe FFI, unchecked `unsafe` — only where the language makes it real |
 
+## Owned by the surface bench
+
+The dispatch sets `SURFACE_BENCH`. Default roster: `on`. `--only sentinel`: `off`.
+
+When `SURFACE_BENCH=on`, do **not** emit these categories. A specialist file already hunts them, and a second copy fails dedupe by category only when the line matches — it still doubles the panel.
+
+| category | owner |
+|----------|--------|
+| `xss` | Lyra |
+| `exposed-route` | Janus |
+| `rate-limit-missing`, `rate-limit-key`, `rate-limit-leak` | Moira |
+| `hardcoded-secret` | Sigil |
+| `sql-injection`, `nosql-injection` | Basilisk |
+| `prompt-injection` | Proteus |
+
+When `SURFACE_BENCH=off`, those categories are in your lens and you hunt them with the bar in the matching `agents/*.md` (source, missing guard, sink).
+
+Keep the rest of the lens: command and code injection, XXE, SSTI, CSRF, SSRF, IDOR, weak crypto that is not a literal secret, info disclosure that is not a route and not a credential.
+
 ## Method
 
 1. Read `hot_paths` in full.  

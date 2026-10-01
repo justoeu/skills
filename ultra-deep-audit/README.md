@@ -1,13 +1,13 @@
 # Skill: ultra-deep-audit
 
-Bateria de detecção depois que o código já existe. 14 lentes em paralelo, apuração por script, pack HTML + TASKS. Não implementa feature e não substitui o `make-me-happy`.
+Bateria de detecção depois que o código já existe. Lentes em paralelo, apuração por script, pack HTML + TASKS. Não implementa feature e não substitui o `make-me-happy`.
 
 O workflow, as flags e o schema de finding estão no [`SKILL.md`](SKILL.md).
 
 | | |
 |---|---|
 | **Quando** | Fim de feature (`--delta`), release (`--full`), ou uma lente (`--only`) |
-| **Comando** | `/ultra-deep-audit` · `--full` · `--only n1\|quality\|sentinel\|…` |
+| **Comando** | `/ultra-deep-audit` · `--full` · `--only n1\|quality\|sentinel\|lyra\|surface\|…` |
 | **Pack** | `Docs/audit/ultra-deep/<data>/` (o `SKILL.md` é a fonte do path) |
 
 ## Agentes
@@ -15,7 +15,14 @@ O workflow, as flags e o schema de finding estão no [`SKILL.md`](SKILL.md).
 | Agente | Arquivo | Caça |
 |--------|---------|------|
 | Atlas | `agents/atlas-architecture.md` | seta ilegal entre camadas |
-| Sentinel | `agents/sentinel-security.md` | exploit / IDOR / injection; deep = panel de 3 votos |
+| Sentinel | `agents/sentinel-security.md` | exploit / IDOR / authz de objeto; deep = panel de 3 votos |
+| Lyra | `agents/lyra-xss.md` | XSS: dado não confiável vira HTML ativo |
+| Janus | `agents/janus-routes.md` | rota montada no listener errado |
+| Moira | `agents/moira-ratelimit.md` | limitador real, chave do cliente, estado que vaza |
+| Sigil | `agents/sigil-secrets.md` | segredo no código que o Git rastreia |
+| Basilisk | `agents/basilisk-sqli.md` | SQL, e operador NoSQL na estrutura da query |
+| Proteus | `agents/proteus-prompt.md` | prompt injection com ferramenta ou efeito |
+| Mirage | `agents/mirage-deps.md` | import inventado, import sem uso, dependência órfã |
 | Nexus | `agents/nexus-n1-perf.md` | 1+N queries/requests |
 | Hermes | `agents/hermes-race.md` | lost update / CAS |
 | Hydra | `agents/hydra-resources.md` | crescimento sem teto, pool |
@@ -29,13 +36,14 @@ O workflow, as flags e o schema de finding estão no [`SKILL.md`](SKILL.md).
 | Artemis | `agents/artemis-caca-bugs.md` | bug clássico por linguagem |
 | Oracle | `SKILL.md` | merge, HTML, TASKS |
 
-Sentinel deep usa `agents/security/` (cartographer, hunter, refuter). `--only quality` = Daedalus + Echo + Laconic + Mentor + Forge.
+Sentinel deep usa `agents/security/` (cartographer, hunter, refuter). A bancada (Lyra até Mirage) entra em toda run default. `--only sentinel` não a inclui — aí o hunter cobre as categorias dela. No `--full`, os seis de segurança passam pelo mesmo panel de 3 votos. `--only quality` = Daedalus + Echo + Laconic + Mentor + Forge. `--only surface` = as sete lentes da bancada.
 
 ## Uso
 
 ```
-/ultra-deep-audit                 # delta
-/ultra-deep-audit --full          # corpus; Sentinel deep + effort max
+/ultra-deep-audit                 # delta; bancada em specialist
+/ultra-deep-audit --full          # corpus; Sentinel deep + bancada no panel
+/ultra-deep-audit --only surface  # xss, rotas, limitador, segredo, sqli, prompt, imports
 /ultra-deep-audit --only quality
 ```
 

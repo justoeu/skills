@@ -25,7 +25,8 @@ Fonte canônica: este repo. Hosts consomem por **symlink**.
 4. Red → green em cada task + testes de imutabilidade. Só o que o SDD pediu; dúvida entre caminhos → pergunta, não infere.
 5. Review **Standards** (Fowler + repo) ‖ **Spec** ‖ **Correctness**. Consenso 3/3; REJECT → corrige.
 6. `score.mjs` (5 gates × 2). Fecha o **pack** só com **10 e cobertura ≥ 90%** (`--cobertura N` só sobe o piso). Não é o done do repo.
-7. `report.html`. Se `add` anexou `.worktrees/` no `.gitignore`, isso é alteração visível do PR (`NOTE:` + `gitignore_appended`).
+7. `report.html` — arquivo único, offline: KPIs, linha do tempo, SDD, tasks com evidência red→green, fluxo, payloads, testes/cobertura, review por eixo, score, gates do projeto. Schemas do pack em `references/pack-schemas.md`. Se `add` anexou `.worktrees/` no `.gitignore`, isso é alteração visível do PR (`NOTE:` + `gitignore_appended`).
+8. Depois que os merges desta run terminaram: `worktrees.mjs remove` e `verify-clean`. Some worktree, branch `mmh/slice-*` e pasta `.worktrees/mmh-*`. `clean` é obrigatório para fechar. Parar no meio, com slice ainda sem merge, não dispara esse `remove`.
 
 ## Pack
 
@@ -56,8 +57,11 @@ make-me-happy/
     ├── resume.mjs
     ├── worktrees.mjs
     ├── score.mjs
+    ├── run-meta.mjs     # carimbo de cada passo (linha do tempo)
     ├── build-report.mjs
+    ├── report/          # load-pack (normaliza + valida) · render · markdown
     └── tests/
+references/pack-schemas.md
 ```
 
 `node --test scripts/tests/*.test.mjs`

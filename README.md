@@ -57,7 +57,7 @@ Nunca instala o plugin em servidor compartilhado: ele usa o classloader do Sonar
 
 ### [`ultra-deep-audit`](ultra-deep-audit/SKILL.md) · [README da skill](ultra-deep-audit/README.md)
 
-Bateria **de detecção** depois que código já existe. 14 lentes em paralelo, apuração por script (não pelo modelo), pack HTML + TASKS.
+Bateria **de detecção** depois que código já existe. Lentes em paralelo, apuração por script (não pelo modelo), pack HTML + TASKS.
 
 Não implementa feature. Não substitui o `make-me-happy`.
 
@@ -72,7 +72,14 @@ Não implementa feature. Não substitui o `make-me-happy`.
 | Agente | Termo `--only` | Caça |
 |--------|----------------|------|
 | Atlas | `arch` | seta ilegal entre camadas |
-| Sentinel | `sec` `security` | exploit / IDOR / injection; deep = panel 3 votos |
+| Sentinel | `sec` `security` | exploit / IDOR / authz de objeto; deep = panel 3 votos |
+| Lyra | `lyra` `xss` | XSS: dado vira HTML ativo |
+| Janus | `janus` `rotas` | rota montada onde não devia |
+| Moira | `moira` `ratelimit` | limitador real, IP/chave, vazamento do controle |
+| Sigil | `sigil` `segredos` | chave ou segredo no código rastreado |
+| Basilisk | `basilisk` `sqli` | SQL injection (estrutura da query) |
+| Proteus | `proteus` `prompt` | prompt injection com efeito |
+| Mirage | `mirage` `imports` | pacote inventado ou importado à toa |
 | Nexus | `n1` `nplus1` | 1+N queries/requests (ORM, SQL, FE, workers) |
 | Hermes | `race` | lost update / CAS |
 | Hydra | `leak` `backpressure` | crescimento sem teto, pool |
@@ -109,7 +116,7 @@ O que a run faz:
 3. Git worktrees (default **3**, `--worktree N`) numa **feature branch** (`--into`; recusa merge em `main`; recusa baseline vermelha).
 4. Testes de imutabilidade (contrato que não pode andar). Só o SDD; dúvida entre caminhos → pergunta.
 5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**. Score 10 **e cobertura ≥ 90%** (`--cobertura` só sobe) fecham o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
-6. HTML interativo. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR.
+6. HTML interativo, arquivo único e offline (KPIs, linha do tempo, tasks com evidência red→green, fluxo, payloads, cobertura por módulo, review por eixo com rodadas, score, gates do projeto). Os schemas do pack estão em `make-me-happy/references/pack-schemas.md`. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR. No fim, com os merges feitos, apaga worktrees, branches `mmh/slice-*` e pastas `.worktrees/mmh-*` desta run.
 
 `--fresh` abandona slices abertas e começa do zero.
 
@@ -141,8 +148,8 @@ e cada scan novo faz upsert + changelog (`NOVO`/`BREAK`/`DDL`/`DOC`).
 
 ```
 SDD validado  →  /mmh  (implementa; score 10 = pack, não done do repo)
-código na branch  →  /ultra-deep-audit --delta  (caça regressão)
-rota pública / cota  →  /abuse-audit
+código na branch  →  /ultra-deep-audit --delta  (caça regressão; inclui XSS, rota, limitador, segredo, SQLi, prompt, import)
+rota pública / cota  →  /abuse-audit   (fan-out, leitura sem teto, timeout; o limitador em si também está na Moira do ultra-deep)
 release  →  /ultra-deep-audit --full
 app existe / mudou  →  /atlas-docs  (documenta; incrementa o dashboard a cada scan;
                       quality gates puxem do CI e do pack do ultra-deep-audit)

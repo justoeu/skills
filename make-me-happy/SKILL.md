@@ -160,9 +160,20 @@ N=${WORKTREE_N:-3}
 # clamp 1..8
 ```
 
-`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `coverage_floor`, `status` (`in_progress` | `closed`). Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ piso + worktrees limpos. `coverage_floor` = `max(90, --cobertura)`.
+`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `coverage_floor`, `status` (`in_progress` | `closed`), `started_at`, `steps`. Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ piso + worktrees limpos. `coverage_floor` = `max(90, --cobertura)`.
 
 **Spec.** Se `--spec` veio, use. Senão procure arquivo sob `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/` cujo nome case a branch ou o feature. Achou → `run-meta.spec`, pule §0z. **Não achou → §0z. Não pule para o Planner e não marque Spec SKIP.**
+
+**Timeline.** Ao entrar e ao sair de cada passo (§0z…§8), grave o carimbo. O HTML monta a linha do tempo a partir disso:
+
+```bash
+node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step planner --status in_progress
+node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step planner --status done --note "24 tasks"
+```
+
+Passos: `explore planner worktrees implement immutability review score clean project-gates`. Status: `in_progress` | `done` | `failed` | `skipped`.
+
+**Schemas do pack:** `references/pack-schemas.md`, a fonte de todo arquivo em `$OUT/`. O `build-report.mjs` imprime `WARN` para cada desvio. Warning = escritor errado, não leitor.
 
 Stack: `package.json` / `go.mod` / `pom.xml` / `*.csproj` / `Cargo.toml` / `pyproject.toml` — grave o comando de teste do repo em `run-meta.json.test_cmd`.
 
@@ -178,7 +189,7 @@ Subagente `agents/explorer.md` (ou o Oracle no mesmo papel): perguntas em sequê
 
 ### 1. Planner
 
-Subagente `agents/planner.md`. Produz `TASKS.json` + `TASKS.md` + `flow.mmd` + `payloads.json` + `spec-summary.md`.
+Subagente `agents/planner.md`. Produz `TASKS.json` + `TASKS.md` + `flow.mmd` + `payloads.json` (schema canônico; `[]` só se o spec não define contrato) + `spec-summary.md` e, opcionalmente, `diagrams/<T-xxx>.mmd`.
 
 Ajuste `N` para `min(N, count(worktree ids distintos))`. Zero tasks → pare.
 
@@ -208,7 +219,7 @@ Se `git worktree` falhar: `N=1`, implementar na feature branch (ainda assim **n�
 Para cada worktree `i` em paralelo (subagente `agents/implementer.md`, `cwd` = dir da worktree se o host permitir):
 
 - só tasks com `"worktree": i`
-- red→green
+- red→green, com evidência por task no `TASKS.json`: `red{test, output_excerpt}`, `green`, `reversal`, `tests`, `files`, `commits`
 - commits na slice branch
 
 **Loop `task`:** após cada task, pergunte se continua. Não = merge do que já está verde, score, HTML parcial, pare.
@@ -225,7 +236,9 @@ O script faz checkout de `into` e recusa `main`/`master`/`trunk`. Merge **só** 
 
 ### 4. Imutabilidade
 
-Subagente `agents/immutability.md` no working tree **já mergeado** (e, em refactor, também *antes* do corte se a slice ainda não mergeou). Grava `$OUT/immutability.json`. Tasks cobertas: `immutability: true`.
+Subagente `agents/immutability.md` no working tree **já mergeado** (e, em refactor, também *antes* do corte se a slice ainda não mergeou). Grava `$OUT/immutability.json` com `tests[]` estruturado (nome, task, arquivo). Tasks cobertas: `immutability: true`.
+
+Depois do merge final, rode o `test_cmd` inteiro e grave `$OUT/tests.json`: `{cmd, ok, total, passed, failed, skipped, duration_s, suites[], log}`. O `log` leva as últimas 40 linhas.
 
 ### 5. Code review — 3 eixos em paralelo
 
@@ -240,6 +253,8 @@ Spawn **ao mesmo tempo**:
 | **Standards** | `agents/standards-reviewer.md` | lista de arquivos de standard **+** `catalogs/fowler-smells.md` colado **inteiro** |
 | **Spec** | `agents/spec-reviewer.md` | path/conteúdo do spec (o achado **ou** o escrito na Etapa Zero). `SKIP` só se o usuário recusou explicitamente gravar qualquer spec depois da Zero |
 | **Correctness** | `agents/correctness-reviewer.md` | `TASKS.json` + `immutability.json` + resultado do test-cmd |
+
+Cada revisor grava `reviews/<eixo>.md` (prosa + `VERDICT:`) **e** `reviews/<eixo>.json` (veredito, achados com severidade/arquivo:linha/status e `rounds[]`). Em re-rodada, o revisor lê o JSON anterior, marca o que fechou como `fixed` e anexa uma rodada. O histórico não se apaga.
 
 **Não** juntar nem rerankear achados. Apresentar ao usuário:
 
@@ -264,15 +279,20 @@ node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 open "$OUT/report.html" 2>/dev/null || xdg-open "$OUT/report.html" 2>/dev/null || true
 ```
 
-HTML: SDD, o que foi implementado, fluxo (mermaid), impacto, payloads de teste, resultados, score. Mostrar path absoluto. No closeout, citar: branch `into`, se `.gitignore` ganhou `.worktrees/`, e que score 10 ≠ done do repo.
+HTML (arquivo único, abre offline; o mermaid vem do CDN e, sem rede, mostra a fonte): visão geral com KPIs e linha do tempo, SDD com sumário, tasks filtráveis com evidência red→green, fluxo com zoom, payloads com cópia, testes e cobertura por módulo, review por eixo com rodadas, score com gauges, gates do projeto. Arquivo ausente vira um estado vazio que diz qual agente deveria tê-lo escrito. `--out PATH` grava em outro lugar. Mostrar path absoluto. No closeout, citar: branch `into`, se `.gitignore` ganhou `.worktrees/`, e que score 10 ≠ done do repo.
 
-### 7. Limpar worktrees
+### 7. Limpar — depois do merge, nada fica
+
+Quando **todos** os merges desta run terminaram (closeout). O `merge` de cada slice já apaga a worktree e a branch daquela slice. Mesmo assim, rode a varredura. Ela pega o que o merge não levou: branch `mmh/slice-*` órfã, pasta `.worktrees/mmh-*`, diretório `.worktrees` vazio, registro velho no `git worktree`.
 
 ```bash
+node "$SKILL_ROOT/scripts/worktrees.mjs" remove --root . --prefix mmh
 node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root . --prefix mmh
 ```
 
-Falhou → `remove --prefix mmh` e conferir de novo. Closeout com worktree órfã = score < 10.
+`verify-clean` tem de imprimir `clean`. Sobra = pack não fecha. Não apague worktree de outro prefixo.
+
+Pare no meio do loop `task`, com slice **ainda sem merge**: não rode `remove`. Esse comando apaga também o que ainda não entrou na branch. Conflito de merge: pare; o script não remove a slice cujo merge não aconteceu.
 
 ### 8. Gates do projeto (depois do pack)
 
@@ -280,6 +300,7 @@ Leia `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md`. Extraia o que o repo exige *
 
 - Rode o que o host conseguir (skills/plugins citados).
 - O que não rodar → lista **OPEN** no REPORT/HTML, não silêncio.
+- Grave `$OUT/project-gates.json` (`{gates: [{name, source, status: DONE|OPEN|FAILED|N/A, evidence}]}`) e re-rode `build-report.mjs`.
 - PR sai da branch `into`, nunca de `main`.
 
 Este passo **não** entra no score 10.
@@ -303,7 +324,7 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Começar implementação sem as duas perguntas (salvo flags `--loop` + pedido explícito, **ou resume**)
 - Pular a Etapa Zero e marcar Spec `SKIP` só porque não havia SDD no repo
 - Abrir um segundo pack enquanto há worktree `mmh/slice-*` ou pack `in_progress` (use `--fresh`)
-- Worktree de enfeite (criar e não mergear / não apagar)
+- Fechar a run com worktree, branch `mmh/slice-*` ou pasta `.worktrees/mmh-*` desta run ainda no disco
 - Score 10 no feeling
 - Tratar score 10 como “done” do repo / substituto do trio de review do `CLAUDE.md`
 - Mergear slices em `main`/`master`/`trunk`
