@@ -1,11 +1,11 @@
 ---
 name: atlas-docs
-description: "Gera documentação interativa ultra completa e DEEP da aplicação: lê o código, levanta TODOS os fluxos do sistema (inventário de entrypoints como régua — rota, consumer, cron, webhook, worker), mapeia cada um end-to-end clicável com payload por passo, diagrama de componentes, arquitetura (C4), contratos de API, DDL das tabelas, variáveis de ambiente (o que é, quando e em qual fluxo é usada), eventos & filas, terceiros, dependências, operação e Score (cobertura + Quality Gateway). Produz dashboard HTML navegável em docs/atlas/ e é incremental a cada scan. Use quando o pedido for 'documenta este app', 'gera dashboard/documentação interativa', 'atlas', 'doc interativa', 'atualiza a documentação', 'quais são os fluxos desta aplicação', 'como funciona este serviço', 'quais env vars esta app usa'."
+description: "Gera documentação interativa ultra completa e DEEP da aplicação: lê o código, levanta TODOS os fluxos do sistema (inventário de entrypoints como régua — rota, consumer, cron, webhook, worker), mapeia cada um end-to-end clicável com payload por passo e diagrama de classes do fluxo (qual classe, qual método e o que é chamado), monta a página C4 com níveis C1 (contexto: atores e sistemas externos) e C2 (containers e suas ligações), além de diagrama de componentes, contratos de API, DDL das tabelas, variáveis de ambiente (o que é, quando e em qual fluxo é usada), eventos & filas, terceiros, dependências, operação e Score (cobertura + Quality Gateway). Produz dashboard HTML navegável em docs/atlas/ e é incremental a cada scan. Use quando o pedido for 'documenta este app', 'gera dashboard/documentação interativa', 'atlas', 'doc interativa', 'atualiza a documentação', 'quais são os fluxos desta aplicação', 'como funciona este serviço', 'quais env vars esta app usa', 'diagrama de classes', 'c4'."
 ---
 
 # /atlas-docs
 
-Lê o código da aplicação, entende o que ela faz e devolve **um dashboard HTML interativo** — o **Atlas Docs** — em `docs/atlas/index.html`, com fluxos clicáveis passo a passo, payload de cada hop, diagrama de componentes, arquitetura, contratos, DDL, variáveis de ambiente, eventos, terceiros, operação e score.
+Lê o código da aplicação, entende o que ela faz e devolve **um dashboard HTML interativo** — o **Atlas Docs** — em `docs/atlas/index.html`, com fluxos clicáveis passo a passo, payload de cada hop, **diagrama de classes por fluxo** (classe · método · chamadas), **página C4** com C1 Contexto e C2 Containers, diagrama de componentes, arquitetura, contratos, DDL, variáveis de ambiente, eventos, terceiros, operação e score.
 
 É **incremental**: cada novo scan faz merge com o modelo anterior, preserva o histórico de varreduras e registra o changelog (`NOVO` / `BREAK` / `DDL` / `DOC`).
 
@@ -81,6 +81,8 @@ Sem Python no host? Os dois scripts são opcionais: o merge pode ser feito por v
 | webhooks de entrada | rotas POST públicas com validação de assinatura |
 | persistência | migrações (`db/migrate`, `migrations/`, flyway, alembic, prisma), ORM models, schema.sql |
 | clientes externos | `http.Client`/`fetch`/`axios`/`requests`/`RestTemplate`, gRPC stubs, SDKs (S3, SES, Stripe) |
+| camadas & classes | injeção e receivers: handler/controller → service/use case → repository/DAO → client; construtores e fields injetados (para `flows[].classes`) |
+| limites para o C4 | quem chama a app (atores) e a quem ela chama (sistemas externos); manifests (compose, k8s) e processos deployáveis (para `c4`) |
 | config/ambientes | `.env.example`, `config/*.yaml`, `values.yaml`, ConfigMap, `Dockerfile ENV`, blocos `environment:` do compose |
 | variáveis lidas no código | `os.Getenv` (Go) · `process.env.X` (JS/TS) · `os.getenv`/`os.environ` (PY) · `ENV[...]`/`ENV.fetch` (Ruby) · `System.getenv` (Java) · `std::env::var` (Rust) |
 | qualidade | CI (`.github/workflows`), test runner, `Docs/audit/ultra-deep/` (pack mais recente) |
@@ -114,12 +116,29 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
   "architecture": {
     "style": "ex: Saga orquestrada + CQRS na leitura", "consistency": "…", "idempotency": "…",
     "risks": [ { "k": "Risco", "v": "…" } ],
-    "containers": [ { "group": "borda|dominio|dados|externos", "name", "sub", "prov": "code" } ],
+    "containers": [ { "group": "borda|dominio|dados|externos", "name", "sub", "prov": "code" } ],  // legado; prefira c4.containers
     "libs":  [ { "group": "Runtime · Go 1.23 (go.mod)",
                  "items": [ { "name", "ver", "use", "note", "state": "ok|warn|bad" } ] } ],
     "compose": [ { "name", "file", "sub", "yaml": "…segredos já mascarados…" } ],
     "adrs":  [ { "id": "ADR-012", "title", "body", "status" } ],
     "cross": [ { "k": "AUTENTICAÇÃO", "body": "…" } ]     // gap: true → card vermelho
+  },
+  // c4 → página C4 (C1 Contexto · C2 Containers); containers alimentam também a página Arquitetura
+  "c4": {
+    "context": {                        // C1 — o sistema no mundo
+      "self": { "desc": "este sistema em 1 frase", "src": "README.md" },
+      "actors":  [ { "id": "shopper", "name": "Cliente final", "kind": "person", "desc": "…", "src": "…" } ],
+      "systems": [ { "id": "psp", "name": "PSP Adquirência", "kind": "externo", "desc": "…",
+                     "prov": "code", "flows": ["imediata"], "src": "internal/psp/client.go" } ],
+      "edges":   [ { "from": "shopper", "to": "system", "label": "POST /v1/charges · HTTPS" },
+                   { "from": "system", "to": "psp", "label": "autorização · REST" } ]   // "system" = id reservado do hub
+    },
+    "containers": [ {                  // C2 — dentro do limite do sistema
+      "id": "api", "name": "billing-api", "group": "borda|dominio|dados|externos",
+      "tech": "Go 1.23 · chi", "desc": "…", "prov": "code", "src": "cmd/api/main.go",
+      "flows": ["imediata"],
+      "calls": [ { "to": "postgres", "label": "SQL · TCP", "kind": "db" } ]   // to = id de outro container
+    } ]
   },
   // flows → página Fluxos; o 1º flow COM "diagram" vira o diagrama rico clicável
   "flows": [ {
@@ -143,6 +162,19 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
                              "ddl": "CREATE TABLE …", "code": [ { "file", "what" } ] } } ],
       "edges": [ { "from": "n1", "to": "n2", "label": "POST /v1/charges", "path": "M …" } ]
     },                                 // path é opcional: sem ele, âncora automática
+    "classes": [ {                     // → card "Diagrama de classes do fluxo" (arestas apuradas do template)
+      "id": "charge-service", "name": "ChargeService",
+      "stereo": "controller|service|repository|domain|client|worker|util|externo",
+      "pkg": "internal/charge", "desc": "…", "src": "internal/charge/service.go:42",
+      "fields": [ "repo *ChargeRepo", "psp psp.Client" ],       // dependências injetadas
+      "methods": [ {                                             // só os acionados NESTE fluxo, em ordem de execução
+        "sig": "Authorize(ctx context.Context, in AuthInput) (*Charge, error)",
+        "what": "guarda idempotência, autoriza no PSP, persiste a charge",
+        "calls": [ { "to": "PSPClient.Authorize", "how": "HTTP · timeout 4s",
+                     "kind": "sync|async|http|db|event|queue" } ],   // to = Classe.metodo (alvo pelo último ponto)
+        "src": "internal/charge/service.go:58"
+      } ]
+    } ],
     "seq": [ { "name": "…", "note": "…", "mode": "bloqueante|fail-open|compensável|transacional|assíncrono",
                "kind": "block|warn|info|ok" } ],
     "steps": [ {
@@ -248,6 +280,29 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
 - **Payload: o exemplo que o código produziria** — monte a partir do schema de validação, DTO, proto, serializer, fixture. Campos reais, tipos reais, tamanhes reais.
 - **`src` sempre `arquivo:linha`.** É o que torna o dashboard auditável.
 - **Variáveis de ambiente: cruze as duas listas.** Toda var **declarada** (.env.example, compose, values, Dockerfile) e toda var **lida** no código (`os.Getenv`, `process.env`, `os.getenv`, `ENV[`, `System.getenv`, `std::env::var`). O cruzamento é o achado: lida e não declarada → fica sem `sources` e ganha badge **NÃO DECLARADA** no dashboard (drift que o deploy sente). Declare para cada var: o que faz, `required`, `secret` (nome de credencial = segredo, o build mascara o `value` de qualquer forma), e em quais `flows` ela entra. Valor só como exemplo não-sensível (`"8080"`, `"postgres://…"` sem credencial) — valor real nunca.
+- **Diagrama de classes: todo fluxo que roda código de aplicação.** Siga a chamada real — handler/controller → service/use case → repository/client — e registre em `flows[].classes` (regras completas na seção abaixo).
+- **C4: uma passada dedicada no primeiro scan.** Extraia `c4` (C1 contexto + C2 containers) olhando atores, clientes externos e manifests de deploy. No `--delta`, só quando entrypoints/manifests mudarem.
+
+---
+
+## Diagrama de classes por fluxo (`flows[].classes`)
+
+Todo fluxo leva o card **"Diagrama de classes do fluxo — qual classe, qual método, o que é chamado"**. O diagrama (caixas UML com estereótipo, dependências e métodos + arestas) é **apurado pelo template** a partir de `methods[].calls` — você não desenha nada, só declara:
+
+1. **Classes de todas as camadas tocadas pelo fluxo**: handler/controller, service/use case, repository/DAO, client externo, worker, domain. Cliente/SDK de terceiro entra como classe com `stereo: "externo"` (caixa tracejada no diagrama).
+2. **`methods` = só os métodos acionados neste fluxo**, na ordem de execução — não é o inventário da classe inteira. Cada método com `sig` (assinatura real do código), `what` e `src` `arquivo:linha`.
+3. **`calls[].to` no formato `Classe.metodo`** (ou `pacote.Classe.metodo` — o alvo é resolvido pelo **último ponto**, e o prefixo precisa bater com o `name`/`id` de uma classe do diagrama). `kind` `async|event|queue` desenha seta tracejada; `how` descreve o meio (HTTP, SQL, gRPC…).
+4. **`fields` = dependências injetadas** — vira a lista de atributos da caixa e expõe o acoplamento da classe.
+5. **Chamada apontando para classe fora do diagrama → aviso no build**: ou a classe entra no diagrama (mesmo como `externo`), ou o alvo está errado. Fluxo sem código de aplicação (proxy puro, redirect de infra) pode omitir `classes` — o card simplesmente não aparece.
+
+## C4 — níveis C1 e C2 (`c4`)
+
+Página dedicada **C4 · contexto & containers**, com abas C1/C2 e diagramas clicáveis:
+
+1. **C1 Contexto (`c4.context`)**: quem usa o sistema (`actors` — pessoas/times), o próprio sistema (hub com o **id reservado `"system"`**, nome vem de `app.name`, descrição de `context.self.desc`) e os **sistemas externos** (`systems`). As interações vivem em `edges` com `from`/`to` em ids declarados + `"system"`. Edge apontando id inexistente **quebra o build** — mesma régua de `diagram.edges`.
+2. **C2 Containers (`c4.containers`)**: cada processo deployável e cada datastore/broker **dentro do limite do sistema** — api, worker, consumer, frontend, postgres, redis, kafka. `group` em `borda|dominio|dados|externos` define a coluna do diagrama; `tech`, `desc`, `src`, `flows` (link para a página do fluxo) e `calls` (aresta para outro container por `id`) completam a caixa. `calls.to` inexistente **quebra o build**; id duplicado também.
+3. **Uma fonte, duas páginas**: `c4.containers` também alimenta o card "Mapa de containers" da página Arquitetura. `architecture.containers` (legado) continua renderizando quando `c4.containers` não existe.
+4. **Sem `c4` no modelo** a página mostra a lacuna em cards tracejados; o build avisa quando C2 existe sem C1.
 
 ---
 
@@ -264,6 +319,8 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
 
 **Bucket ausente → excluído do peso e os demais renormalizam.** Gates ou env ausentes **não** derrubam o score — ficam visíveis como lacuna (`NÃO CONECTADO`).
 
+**Diagrama de classes e C4 ainda não têm peso no score** — a completude deles é cobrada por aviso/erro no build e pela apuração impressa (`classes: K/N fluxos · c4: C1 ok · C2 N containers`), não por nota.
+
 Grade: `A ≥ 90` · `B ≥ 75` · `C ≥ 60` · `D ≥ 40` · `F < 40`.
 
 ### Quality Gateway — de onde puxar
@@ -279,7 +336,7 @@ Grade: `A ≥ 90` · `B ≥ 75` · `C ≥ 60` · `D ≥ 40` · `F < 40`.
 
 `atlas_merge.py` (ou você, manualmente, seguindo as mesmas regras):
 
-- **Listas com chave natural** fazem upsert: `flows` por `id` · `contracts.endpoints` por `m+path` · `thirdParty`/`deps` por `name` · `data.model`/`data.tables`/`env.vars` por `name` · `events.topics` por `topic+group` · `architecture.libs[].items` por `name` · `adrs` por `id` · `ops.*` por `name`/`area`.
+- **Listas com chave natural** fazem upsert: `flows` por `id` (o flow inteiro é substituído, incluindo `classes`) · `contracts.endpoints` por `m+path` · `thirdParty`/`deps` por `name` · `data.model`/`data.tables`/`env.vars` por `name` · `events.topics` por `topic+group` · `c4.context.actors`/`c4.context.systems` por `id` · `c4.context.edges` por `from+to` · `c4.containers` por `id` · `architecture.libs[].items` por `name` · `adrs` por `id` · `ops.*` por `name`/`area`.
 - **Modo `--mode delta`**: itens não mencionados no scan permanecem (você só extraiu o que mudou). **`--mode full`**: a lista nova substitui a antiga inteira.
 - **Seções escalares** (`identity`, `architecture` menos listas, `data.engine`, …): campo presente no scan ganha; ausente mantém o antigo.
 - **Sempre**: `app.commitPrev` = commit anterior · nova entrada no topo de `history.scans` com `delta` = score novo − anterior · `history.coverage` ganha o ponto de hoje · changelog do scan (`__changelog` no scan-model) vai para o topo de `history.changelog`.

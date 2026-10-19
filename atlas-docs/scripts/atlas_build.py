@@ -189,6 +189,95 @@ def validate_entrypoints(model):
     return errors, warnings
 
 
+def validate_classes(model):
+    """Diagrama de classes por fluxo: alvo de methods[].calls fora do diagrama vira aviso."""
+    warnings = []
+    for f in model.get("flows") or []:
+        classes = f.get("classes") or []
+        if not classes:
+            continue
+        known = set()
+        for c in classes:
+            if not isinstance(c, dict):
+                continue
+            for k in ("id", "name"):
+                if c.get(k):
+                    known.add(str(c[k]))
+        missing = []
+        for c in classes:
+            if not isinstance(c, dict):
+                continue
+            for m in c.get("methods") or []:
+                if not isinstance(m, dict):
+                    continue
+                for call in m.get("calls") or []:
+                    to = call.get("to") if isinstance(call, dict) else call
+                    to = str(to or "")
+                    cls = to.rsplit(".", 1)[0] if "." in to else to
+                    if cls and cls not in known:
+                        missing.append(to)
+        if missing:
+            uniq = sorted(set(missing))
+            warnings.append(
+                f"fluxo '{f.get('id')}': {len(missing)} chamada(s) de método apontam para classe fora do diagrama "
+                f"(ex: {', '.join(uniq[:3])}) — inclua a classe (stereo 'externo' se for SDK/lib) ou corrija o alvo"
+            )
+    return warnings
+
+
+def validate_c4(model):
+    """Página C4: edges/calls precisam referenciar ids declarados; 'system' é o hub reservado do C1."""
+    errors, warnings = [], []
+    c4 = model.get("c4") or {}
+    ctx = c4.get("context") or {}
+    ids = {"system"}
+    for listkey in ("actors", "systems"):
+        for i, n in enumerate(ctx.get(listkey) or []):
+            if not isinstance(n, dict):
+                continue
+            nid = str(n.get("id") or n.get("name") or "")
+            if not nid:
+                errors.append(f"c4.context.{listkey}[{i}] sem id")
+            elif nid in ids:
+                errors.append(f"c4.context: id duplicado '{nid}'")
+            else:
+                ids.add(nid)
+    for i, e in enumerate(ctx.get("edges") or []):
+        if not isinstance(e, dict):
+            continue
+        for side in ("from", "to"):
+            if e.get(side) not in ids:
+                errors.append(
+                    f"c4.context.edges[{i}] referencia '{e.get(side)}' inexistente "
+                    "(ids válidos: actors, systems e o hub reservado 'system')"
+                )
+    conts = c4.get("containers") or []
+    cids = set()
+    for i, c in enumerate(conts):
+        if not isinstance(c, dict):
+            continue
+        cid = str(c.get("id") or c.get("name") or "")
+        if not cid:
+            errors.append(f"c4.containers[{i}] sem id")
+        elif cid in cids:
+            errors.append(f"c4.containers: id duplicado '{cid}'")
+        else:
+            cids.add(cid)
+    if conts and not (ctx.get("actors") or ctx.get("systems") or ctx.get("edges")):
+        warnings.append("c4.containers presente sem c4.context — extraia também o nível C1 para a página C4 fechar")
+    for i, c in enumerate(conts):
+        if not isinstance(c, dict):
+            continue
+        for j, call in enumerate(c.get("calls") or []):
+            to = call.get("to") if isinstance(call, dict) else None
+            if to not in cids:
+                errors.append(
+                    f"c4.containers[{i}]('{c.get('id') or c.get('name')}').calls[{j}] "
+                    f"aponta para container inexistente '{to}'"
+                )
+    return errors, warnings
+
+
 def validate(model):
     errors, warnings = [], []
     if not isinstance(model, dict):
@@ -282,6 +371,10 @@ def main():
     ep_errors, ep_warnings = validate_entrypoints(model)
     errors += ep_errors
     warnings += ep_warnings
+    warnings += validate_classes(model)
+    c4_errors, c4_warnings = validate_c4(model)
+    errors += c4_errors
+    warnings += c4_warnings
     for w in warnings:
         warn(w)
     if errors:
@@ -320,6 +413,19 @@ def main():
     print(f"score {model['score']['overall']} ({model['score']['grade']}) · "
           f"{len(model.get('flows') or [])} fluxos{ep_summary} · cov: "
           + ", ".join(f"{f['id']}={f['cov']}%" for f in model.get("flows") or []))
+
+    all_flows = model.get("flows") or []
+    cls_flows = sum(1 for f in all_flows if (f.get("classes") or []))
+    extra = ""
+    if all_flows:
+        extra += f" · classes: {cls_flows}/{len(all_flows)} fluxos"
+    c4 = model.get("c4") or {}
+    if c4:
+        ctx = c4.get("context") or {}
+        has_c1 = bool(ctx.get("actors") or ctx.get("systems") or ctx.get("edges"))
+        extra += f" · c4: C1 {'ok' if has_c1 else '—'} · C2 {len(c4.get('containers') or [])} containers"
+        if extra:
+            print(extra.strip(" ·"))
 
     if args.check_only:
         return

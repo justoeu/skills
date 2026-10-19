@@ -25,6 +25,10 @@ MASK = "****"
 LIST_KEYS = {
     ("flows",): "id",
     ("entrypoints",): ("kind", "ref"),
+    ("c4", "context", "actors"): "id",
+    ("c4", "context", "systems"): "id",
+    ("c4", "context", "edges"): ("from", "to"),
+    ("c4", "containers"): "id",
     ("contracts", "endpoints"): ("m", "path"),
     ("thirdParty",): "name",
     ("deps",): "name",
