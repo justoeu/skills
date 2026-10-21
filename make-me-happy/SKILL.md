@@ -15,7 +15,7 @@ description: >
   worktree, --loop full|task, --worktree, --cobertura, make me happy.
 compatibility: Requires git and Node.js for scripts. Any coding agent that can read this SKILL.md, run bash/node, and spawn subagents (or run slices inline).
 metadata:
-  version: 1.1.0
+  version: 1.3.0
   aliases: mmh
 ---
 
@@ -39,7 +39,7 @@ Não é auditoria. **Não exige SDD na entrada.** Sem spec (feature nova ou refa
 | `--fresh` | ignora pack/worktrees abertos e começa uma run nova |
 | `--into feature/<name>` | branch-base das slices e alvo do merge. **Nunca** `main`/`master`/`trunk` |
 | `--cobertura N` | piso de cobertura. Default **90**. Só sobe (`--cobertura 95` ou `95%`). N < 90 → fica 90 |
-| `--ui-drive fast\|guided` | aceitação de UI (§4z): `fast` = spec direto do código + driver headless (default); `guided` = Playwright MCP explora a tela antes de destilar o spec. Sem a flag, o Oracle pergunta (1× por run, só se `ui_touched`). Re-execução sempre pelo driver |
+| `--ui-drive fast\|guided\|off` | aceitação de UI: `fast` = spec direto do código + driver headless; `guided` = Playwright MCP explora a tela antes de destilar o spec; **`off` = bypass do usuário** (não testa telas nesta run — SKIP registrado). Sem a flag e com telas no SDD, o Oracle pergunta **uma vez no setup**. Re-execução sempre pelo driver |
 
 `--mode` não existe nesta skill. `/mmh` = `/make-me-happy`. Worktree **não** é opcional: sempre tenta git worktree; se o repo não for git, implementa no working tree (`N=1`) e diz isso no REPORT.
 
@@ -57,7 +57,7 @@ node "$SKILL_ROOT/scripts/resume.mjs" --root . --prefix mmh
 
 Se `resumable: true` e **não** veio `--fresh`:
 
-1. Diga ao usuário **qual pack** e **qual passo** (`next_step`) está sendo retomado. Não pergunte loop/seguir — reuse `loop`/`spec`/`worktree_n` do `run-meta.json`.
+1. Diga ao usuário **qual pack** e **qual passo** (`next_step`) está sendo retomado. Não pergunte loop/seguir — reuse `loop`/`spec`/`worktree_n`/`ui_drive` do `run-meta.json`.
 2. `OUT` = `pack`. **Não** crie worktrees novos se `leftover_worktrees` não estiver vazio.
 3. Salte para o passo correspondente:
 
@@ -84,6 +84,7 @@ Obrigatório se flags omitidas **e** não está retomando:
 
 1. **Loop:** implementação completa (`full`) ou parar para confirmar **a cada task** (`task`)?
 2. **Seguir agora?** (sim / não). Não = gravar `$OUT/` com o plano e parar.
+3. **Vai testar as telas? (condicional — só se o spec envolve UI).** Pergunte logo no setup, não no fim: o SDD (achado, `--spec`, ou recém-escrito na Etapa Zero) cria/altera telas → *"aceitação de UI em runtime: `sim fast` (driver headless), `sim guided` (MCP explora 1×), ou `não` (bypass)?"*. Resposta vira `ui_drive` (`fast|guided|off`) no `run-meta.json`; resume não pergunta de novo. `--ui-drive` responde pela flag. `off` = §4z SKIP registrado (bypass explícito, nunca silêncio). Spec sem UI = sem pergunta, SKIP automático.
 
 Se o host tem pergunta estruturada, use. Senão, pergunte em texto e espere.
 
@@ -267,9 +268,11 @@ Depois do merge final, rode o `test_cmd` inteiro e grave `$OUT/tests.json`: `{cm
 node "$SKILL_ROOT/scripts/ui-acceptance.mjs" scope --root . --dir "$OUT" [--base "$BASE"]
 ```
 
-`hooks/ui-scope.json` diz `ui_touched` (arquivos de frontend no diff e/ou contratos `kind:"ui"`), as telas declaradas e se o repo tem runner e2e. **`ui_touched: false`** → o Motorista grava `hooks/ui-acceptance.json` com `verdict: "SKIP"` (gate pago, pack de backend não dirige nada).
+`hooks/ui-scope.json` diz `ui_touched` (arquivos de frontend no diff e/ou contratos `kind:"ui"`), as telas declaradas e se o repo tem runner e2e. Três desfechos:
 
-`ui_touched: true` → subagente `agents/ui-acceptance.md` (o **Motorista**), no working tree **já mergeado**:
+- **`ui_touched: false`** → o Motorista grava `hooks/ui-acceptance.json` com `verdict: "SKIP"` (gate pago, pack de backend não dirige nada).
+- **`bypass: true`** (`ui_drive: "off"` — decisão sua no setup) → `ui-acceptance.mjs scope` marca o bypass e o verdict sai **SKIP automático** com o motivo; nada sobe, nada dirige. Bypass é explícito e registrado, nunca silêncio.
+- **`ui_touched: true` + sem bypass** → subagente `agents/ui-acceptance.md` (o **Motorista**), no working tree **já mergeado**, no modo que você escolheu no setup (`fast`/`guided`).
 
 1. **Boot pelo jeito do repo** (`ui-acceptance.mjs boot --cmd "<cmd do repo>" --port N`): dev server/compose do README/Makefile — nunca inventar comando, nunca produção, só localhost. Login com credencial de **teste** do repo; sem cred de teste → perguntar ao usuário (nunca inventar).
 2. **Modo e2e** quando o repo tem runner (Playwright/Cypress/Maestro/Detox): specs das jornadas rodam headless (`run-e2e`) e ficam no repo como regressão. **Modo drive** senão — **Playwright AI Agents**: o Motorista explora via **Playwright MCP** (`npx -y @playwright/mcp@latest`, snapshot por acessibilidade, console/rede/screenshot) e depois **prova** rodando o driver headless (`ui-acceptance.mjs drive --spec <jornada>.spec.json`) — evidência capturada por código, não por memória do agente. Sem MCP → spec direto do código; sem npx → browser tools do host; sem nada → hook `OPEN`.

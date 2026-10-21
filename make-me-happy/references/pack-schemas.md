@@ -258,6 +258,8 @@ para pack sem UI e `OPEN` para host sem browser). Extras:
 { "ui_touched": true, "how": "3 arquivo(s) de frontend no diff",
   "frontend_files": ["src/Checkout.tsx"], "screens": [{ "name": "checkout", "spec_ref": "§4.2" }],
   "frameworks": ["react"], "e2e_runner": null, "at": "…" }
+// run-meta.ui_drive="off" → scope acrescenta { "bypass": true, "bypass_reason": "…" }:
+// decisão do usuário no setup; o verdict do hook sai SKIP automático com o motivo.
 
 // ui/boot.json — ui-acceptance.mjs boot
 { "cmd": "npm run dev", "pid": 1234, "url": "http://localhost:3000/", "port": 3000,

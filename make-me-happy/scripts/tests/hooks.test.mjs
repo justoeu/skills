@@ -252,3 +252,24 @@ test('ui-acceptance sem UI no pack paga como SKIP automático', () => {
   assert.equal(ui.verdict, 'SKIP');
   assert.equal(ui.blocking, false);
 });
+
+test('bypass do setup paga SKIP mesmo com UI tocada; scope registra a decisão', async () => {
+  const { buildUiScope } = await import('../ui-acceptance.mjs');
+  const repo = makePack({ 'package.json': { dependencies: { react: '19.0.0' } } });
+  const out = makePack({
+    'run-meta.json': { ui_drive: 'off' },
+    'hooks/diff-facts.json': { files: [{ status: 'M', file: 'src/Checkout.tsx' }] },
+    'payloads.json': [{ name: 'checkout', kind: 'ui' }],
+  });
+  const scope = buildUiScope(repo, out, {});
+  assert.equal(scope.ui_touched, true); // tem UI — o bypass é decisão do usuário, não detector
+  assert.equal(scope.bypass, true);
+  assert.match(scope.bypass_reason, /ui_drive=off/);
+
+  const withScope = makePack({ 'hooks/ui-scope.json': { ui_touched: true, bypass: true, bypass_reason: 'usuário optou por não testar telas no setup (ui_drive=off)' } });
+  const v = aggregateVerdict(withScope);
+  const ui = v.hooks.find((h) => h.hook === 'ui-acceptance');
+  assert.equal(ui.verdict, 'SKIP');
+  assert.equal(ui.blocking, false);
+  assert.match(ui.note, /bypass do usuário/);
+});
