@@ -2,7 +2,7 @@
 name: deep-audit
 description: Bateria ultra-deep, multi-agente e adversarial de detecção de problemas — arquitetura, dirty code, complexidade ciclomática/cognitiva, código duplicado, verbosidade/cerimônia, boas práticas por linguagem (idiomas, design patterns, Clean Code/Arch efetivos), segurança com painel adversarial de 3 lentes, performance, N+1, race conditions, memory leaks, backpressure, qualidade de testes, dependências/CVE/latest-stable e bugs clássicos por linguagem. Apuração feita por código (não pelo modelo), report HTML + task tracker, e correção test-first (falha antes, passa depois). Invoque com /deep-audit, /deep-audit --full ou /deep-audit seguido do nome da lente (architecture, quality, security, performance, tests, deps, classic_bugs, ...).
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Deep Audit — bateria ultra-deep de detecção de problemas
@@ -68,10 +68,13 @@ vira verde. Nunca um teste vazio para inflar cobertura.
 
 ## Roster — uma etapa, um agente
 
-Despache via `Task` com `subagent_type` = o id do agente. Detectores, Cartógrafo, Caçador,
-Refutador e Cético são **read-only**; só o **Ferreiro** edita código de produto; só o
-**Escriba** escreve relatório. Se um agente não estiver instalado, conduza a lente você
-mesmo com o mesmo foco e as mesmas regras.
+Os prompts vivem em `agents/<id>.md` **dentro desta skill** (fonte única: o harness).
+Despacho: no host com `Task`/`subagent_type`, use o id do agente (no Claude Code eles
+estão registrados em `~/.claude/agents/` como symlinks do harness). Sem registro de
+agente, despache o subagente **colando o conteúdo de `agents/<id>.md`** como prompt.
+Detectores, Cartógrafo, Caçador, Refutador e Cético são **read-only**; só o **Ferreiro**
+edita código de produto; só o **Escriba** escreve relatório. Se não houver subagente de
+jeito nenhum, conduza a lente você mesmo com o mesmo foco e as mesmas regras.
 
 | Lente | Agente | `subagent_type` |
 |---|---|---|
