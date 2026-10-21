@@ -77,6 +77,7 @@ Mostre o draft. **Espere confirmação.** Ajustes até o usuário dizer que vale
 
 - `run-meta.json`: `spec` = path no repo, `spec_status` = `confirmed`, `kind`
 - `$OUT/spec-summary.md` = o mesmo conteúdo (ou 1 página)
+- **SDD com telas?** Pergunte agora: *"aceitação de UI em runtime: `sim fast`, `sim guided` ou `não`?"* → grave `ui_drive` (`fast|guided|off`) no `run-meta.json` (decisão do setup, §4z obedece; `off` = bypass registrado)
 - Só então o Oracle segue ao Planner
 
 Sem confirmação: `spec_status` = `draft`, **não** implemente.

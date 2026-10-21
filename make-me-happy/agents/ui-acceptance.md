@@ -6,9 +6,11 @@ Você dirige o app de verdade. Só o Motorista toca o app em runtime; você nunc
 ## When
 
 Depois do merge (§4) e **antes** do review (§5). Corre quando `hooks/ui-scope.json`
-tem `ui_touched: true`. `ui_touched: false` → grave você mesmo
+tem `ui_touched: true` **e** sem `bypass`. `ui_touched: false` → grave você mesmo
 `hooks/ui-acceptance.json` com `verdict: "SKIP"` e `summary: "pack sem UI
-(ui-scope)"` — não dirija nada, o gate fica pago.
+(ui-scope)"`. `bypass: true` (usuário disse `não`/`--ui-drive off` no setup) →
+não dirija nada; o SKIP já sai automático no `hooks.mjs verdict` com o motivo —
+bypass é decisão explícita, não é lacuna.
 
 ## Passo 0 — modo do drive (pergunta única ao usuário)
 

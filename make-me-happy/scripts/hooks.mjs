@@ -485,6 +485,10 @@ export function aggregateVerdict(outDir, { failSeverity = 'high', require = 'all
           rows.push({ hook: id, verdict: 'SKIP', open: 0, worst: null, blocking: false, note: 'ui_touched=false (auto)' });
           continue;
         }
+        if (scope && scope.bypass === true) {
+          rows.push({ hook: id, verdict: 'SKIP', open: 0, worst: null, blocking: false, note: `bypass do usuário (auto): ${scope.bypass_reason || 'ui_drive=off'}` });
+          continue;
+        }
       }
       rows.push({ hook: id, verdict: 'MISSING', open: 0, worst: null, blocking: require === 'all' });
       continue;
