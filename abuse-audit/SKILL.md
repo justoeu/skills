@@ -1,6 +1,8 @@
 ---
 name: abuse-audit
 description: "Encontra superfície de abuso: rota que aceita trabalho sem teto, escrita pública sem cota, chave de rate limit que o cliente controla, fan-out e leitura sem limite, limitador que vaza memória. Use quando o pedido for sobre rate limiting, DoS, exaustão de recursos, força bruta, 429, ou 'esta rota está protegida?'."
+metadata:
+  version: 1.0.0
 ---
 
 # /abuse-audit
