@@ -181,6 +181,7 @@ test('verdict: FAIL com achado >= high; waiver do usuário desbloqueia; OPEN nã
     'hooks/arch-alignment.json': { hook: 'arch-alignment', verdict: 'APPROVE', findings: [] },
     'hooks/reinvention.json': { hook: 'reinvention', verdict: 'APPROVE', findings: [] },
     'hooks/overengineering.json': { hook: 'overengineering', verdict: 'APPROVE', findings: [] },
+    'hooks/ui-scope.json': { ui_touched: false },
     'hooks/waivers.json': { waivers: [{ hook: 'security', finding: 'S-1', reason: 'rede interna, sem exposição', at: '2026-10-01T00:00:00Z' }] },
   });
   const pass = aggregateVerdict(waived);
@@ -236,10 +237,18 @@ test('report renderiza a aba Hooks com achados, deps, waivers e verdict', () => 
   assert.match(html, /Hook Não reinventar a roda: 1 achado\(s\) ≥ high aberto\(s\)/);
 });
 
-test('HOOK_IDS cobre os 6 hooks e o verdict lista todos', () => {
-  assert.deepEqual(HOOK_IDS, ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness']);
+test('HOOK_IDS cobre os 7 hooks e o verdict lista todos', () => {
+  assert.deepEqual(HOOK_IDS, ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness', 'ui-acceptance']);
   const empty = makePack({});
   const v = aggregateVerdict(empty);
   assert.equal(v.verdict, 'FAIL'); // require all: hooks não rodaram
-  assert.equal(v.hooks.filter((h) => h.verdict === 'MISSING').length, 6);
+  assert.equal(v.hooks.filter((h) => h.verdict === 'MISSING').length, 7);
+});
+
+test('ui-acceptance sem UI no pack paga como SKIP automático', () => {
+  const dir = makePack({ 'hooks/ui-scope.json': { ui_touched: false } });
+  const v = aggregateVerdict(dir);
+  const ui = v.hooks.find((h) => h.hook === 'ui-acceptance');
+  assert.equal(ui.verdict, 'SKIP');
+  assert.equal(ui.blocking, false);
 });

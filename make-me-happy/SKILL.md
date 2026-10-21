@@ -6,7 +6,9 @@ description: >
   tarefa, testes de imutabilidade, git worktrees (default 3, --worktree N),
   review em 3 eixos (Standards/Fowler, Spec, Correctness) com consenso 3/3,
   hooks de verificação (arquitetura↔SDD, não reinventar a roda, segurança,
-  performance, overengineering, deps na última ativa),
+  performance, overengineering, deps na última ativa) e aceitação de UI em
+  runtime (sobe o app, loga, dirige as telas tocadas, confere console/rede,
+  contrato do SDD e padrão visual),
   loop full ou por task, HTML interativo com fluxo, payloads e score 10.
   Greenfield, feature ou refactor. Agnóstica de host e de stack.
   Trigger: /make-me-happy, /mmh, mmh, implementar SDD, red to green,
@@ -37,6 +39,7 @@ Não é auditoria. **Não exige SDD na entrada.** Sem spec (feature nova ou refa
 | `--fresh` | ignora pack/worktrees abertos e começa uma run nova |
 | `--into feature/<name>` | branch-base das slices e alvo do merge. **Nunca** `main`/`master`/`trunk` |
 | `--cobertura N` | piso de cobertura. Default **90**. Só sobe (`--cobertura 95` ou `95%`). N < 90 → fica 90 |
+| `--ui-drive fast\|guided` | aceitação de UI (§4z): `fast` = spec direto do código + driver headless (default); `guided` = Playwright MCP explora a tela antes de destilar o spec. Sem a flag, o Oracle pergunta (1× por run, só se `ui_touched`). Re-execução sempre pelo driver |
 
 `--mode` não existe nesta skill. `/mmh` = `/make-me-happy`. Worktree **não** é opcional: sempre tenta git worktree; se o repo não for git, implementa no working tree (`N=1`) e diz isso no REPORT.
 
@@ -65,6 +68,7 @@ Se `resumable: true` e **não** veio `--fresh`:
 | `worktrees-add` | §2 |
 | `implement` | §3 |
 | `immutability` | §4 |
+| `ui-acceptance` | §4z |
 | `review` | §5 |
 | `score` | §6 |
 | `clean` | §7 |
@@ -255,6 +259,26 @@ Subagente `agents/immutability.md` no working tree **já mergeado** (e, em refac
 
 Depois do merge final, rode o `test_cmd` inteiro e grave `$OUT/tests.json`: `{cmd, ok, total, passed, failed, skipped, duration_s, suites[], log}`. O `log` leva as últimas 40 linhas.
 
+### 4z. Aceitação de UI (runtime)
+
+**Só quando o pack toca UI.** Gere o escopo (determinístico):
+
+```bash
+node "$SKILL_ROOT/scripts/ui-acceptance.mjs" scope --root . --dir "$OUT" [--base "$BASE"]
+```
+
+`hooks/ui-scope.json` diz `ui_touched` (arquivos de frontend no diff e/ou contratos `kind:"ui"`), as telas declaradas e se o repo tem runner e2e. **`ui_touched: false`** → o Motorista grava `hooks/ui-acceptance.json` com `verdict: "SKIP"` (gate pago, pack de backend não dirige nada).
+
+`ui_touched: true` → subagente `agents/ui-acceptance.md` (o **Motorista**), no working tree **já mergeado**:
+
+1. **Boot pelo jeito do repo** (`ui-acceptance.mjs boot --cmd "<cmd do repo>" --port N`): dev server/compose do README/Makefile — nunca inventar comando, nunca produção, só localhost. Login com credencial de **teste** do repo; sem cred de teste → perguntar ao usuário (nunca inventar).
+2. **Modo e2e** quando o repo tem runner (Playwright/Cypress/Maestro/Detox): specs das jornadas rodam headless (`run-e2e`) e ficam no repo como regressão. **Modo drive** senão — **Playwright AI Agents**: o Motorista explora via **Playwright MCP** (`npx -y @playwright/mcp@latest`, snapshot por acessibilidade, console/rede/screenshot) e depois **prova** rodando o driver headless (`ui-acceptance.mjs drive --spec <jornada>.spec.json`) — evidência capturada por código, não por memória do agente. Sem MCP → spec direto do código; sem npx → browser tools do host; sem nada → hook `OPEN`.
+3. Por tela: jornada do SDD (feliz + estados), **cada componente interativo exercitado**, exceptions de console, 4xx/5xx das chamadas, contrato do payload `kind:"ui"`, e **padrão** — design system documentado (violado = high) e telas irmãs de referência (divergência = medium). Screenshot por passo em `ui/screenshots/` (cap 20/jornada).
+4. `hooks/ui-acceptance.json` com verdict/findings (schema dos hooks) + `ui/journeys/<tela>.json`. REJECT = achado ≥ high (app não sobe, crash, console em tela tocada, fora do SDD, padrão documentado violado). Achado real corrige no pack e **re-dirige** (rounds) até secar.
+5. **Sempre** `ui-acceptance.mjs teardown --dir "$OUT"` no fim (mata pelo pid do boot, nunca em massa). Sem browser/runner no host → hook `OPEN` (lacuna visível, não bloqueia, não silencia).
+
+O verdict entra no `hooks.mjs verdict` como o **7º hook** — mesma régua de bloqueio e waiver.
+
 ### 5. Code review + hooks — 3 eixos e 6 hooks em paralelo
 
 Diff: `git log --oneline $BASE..HEAD` e `git diff $BASE...HEAD` (`$BASE` = commit de início gravado no meta).
@@ -412,3 +436,8 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Bumpar dependência pré-existente dentro do pack porque "estava atrasada" — vira follow-up, o usuário decide
 - Rodar os hooks em vez dos 3 eixos, ou os 3 eixos em vez dos hooks — são complementares: eixos votam o consenso, hooks bloqueiam por severidade
 - SDD escrito sem arch-map (Etapa Zero produz os dois; greenfield registra `source: "greenfield"`)
+- Fechar pack com UI em escopo (`ui-scope.ui_touched=true`) sem `hooks/ui-acceptance.json` — nem SKIP, nem OPEN, nem verdict
+- Dirigir tela "de memória": evidência de runtime (console, rede, screenshot) vem do driver Playwright headless ou das tools do MCP/browser — o relato do agente não é evidência
+- Credencial de login inventada ou real em spec/arquivo — cred de teste do repo, via flag/env, nunca no JSON
+- Apontar o boot/aceitação para URL de produção — só localhost/compose
+- Re-executar jornada por MCP/browser após correção — re-run é sempre o driver headless (segundos, sem LLM no loop); MCP é só a primeira passada, e só no modo `guided`

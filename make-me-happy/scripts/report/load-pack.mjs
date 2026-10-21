@@ -12,7 +12,7 @@ import { scorePack, verdictOf, immutabilityTests } from '../score.mjs';
 import { STEPS } from '../run-meta.mjs';
 
 export const AXES = ['standards', 'spec', 'correctness'];
-export const HOOKS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness'];
+export const HOOKS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness', 'ui-acceptance'];
 export const HOOK_LABELS = {
   'arch-alignment': 'Arquitetura ↔ SDD',
   reinvention: 'Não reinventar a roda',
@@ -20,6 +20,7 @@ export const HOOK_LABELS = {
   performance: 'Performance do diff',
   overengineering: 'Sem overengineering',
   'deps-freshness': 'Deps na última ativa',
+  'ui-acceptance': 'Aceitação de UI (runtime)',
 };
 const TASK_STATUS = new Set(['OPEN', 'IN_PROGRESS', 'DONE', 'BLOCKED']);
 const SEVERITIES = ['critical', 'high', 'medium', 'low', 'info'];
@@ -93,7 +94,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
   validateMeta(meta, exists('run-meta.json'), warn);
   if (tasksDoc && !Array.isArray(tasksDoc.tasks) && !Array.isArray(tasksDoc)) warn('TASKS.json', 'falta o array "tasks"');
 
-  const steps = buildSteps({ meta, tasks, worktrees, immutability, reviews, score, coverage, projectGates, files, tasksDoc });
+  const steps = buildSteps({ meta, tasks, worktrees, immutability, reviews, score, coverage, projectGates, files, tasksDoc, hooksPack });
   const times = runTimes(meta, steps);
 
   return {
@@ -618,6 +619,52 @@ function loadHooks(dir, readJson, warn) {
       routes: arr(diffFacts.routes).length,
       migrations: arr(diffFacts.migrations).length,
     } : { present: false },
+    ui: loadUi(dir, readJson, warn),
+  };
+}
+
+function loadUi(dir, readJson, warn) {
+  const scope = readJson('hooks/ui-scope.json');
+  const boot = readJson('ui/boot.json');
+  const e2e = readJson('ui/e2e.json');
+  const journeysDir = path.join(dir, 'ui', 'journeys');
+  const journeys = [];
+  if (fs.existsSync(journeysDir)) {
+    for (const f of fs.readdirSync(journeysDir).filter((x) => x.endsWith('.json')).sort()) {
+      const j = readJson(`ui/journeys/${f}`);
+      if (!isObj(j)) continue;
+      if (j.screen == null && j.verdict == null) warn(`ui/journeys/${f}`, 'jornada sem screen/verdict');
+      journeys.push({
+        screen: j.screen || f.replace('.json', ''),
+        mode: j.mode || null,
+        verdict: j.verdict || null,
+        steps_ok: isObj(j.assertions) ? num(j.assertions.ok) : null,
+        steps_total: isObj(j.assertions) ? num(j.assertions.total) : null,
+        console: arr(j.console_errors).length,
+        network: arr(j.network_errors).length,
+        screenshots: arr(j.screenshots).length,
+      });
+    }
+  }
+  // galeria: embute até 12 screenshots pequenos (≤ 300 KB cada)
+  const gallery = [];
+  const shotDir = path.join(dir, 'ui', 'screenshots');
+  if (fs.existsSync(shotDir)) {
+    for (const f of fs.readdirSync(shotDir).filter((x) => /\.png$/i.test(x)).sort()) {
+      if (gallery.length >= 12) break;
+      try {
+        const p = path.join(shotDir, f);
+        if (fs.statSync(p).size > 300_000) continue;
+        gallery.push({ name: f, data: `data:image/png;base64,${fs.readFileSync(p).toString('base64')}` });
+      } catch { /* ignora */ }
+    }
+  }
+  return {
+    scope: scope && isObj(scope) ? { present: true, touched: scope.ui_touched === true, how: scope.how || null, screens: arr(scope.screens).length } : { present: false, touched: false },
+    boot: boot && isObj(boot) ? { present: true, cmd: boot.cmd || null, url: boot.url || null, ok: isObj(boot.health) ? boot.health.ok === true : null } : { present: false },
+    e2e: e2e && isObj(e2e) ? { present: true, cmd: e2e.cmd || null, ok: e2e.ok === true } : { present: false },
+    journeys,
+    gallery,
   };
 }
 
@@ -718,20 +765,22 @@ function loadDiagrams(dir, tasks) {
 
 const STEP_LABEL = {
   explore: 'Etapa Zero', planner: 'Planner', worktrees: 'Worktrees', implement: 'Implementação',
-  immutability: 'Imutabilidade', review: 'Review 3 eixos', score: 'Score', clean: 'Limpeza', 'project-gates': 'Gates do projeto',
+  immutability: 'Imutabilidade', 'ui-acceptance': 'Aceitação de UI', review: 'Review 3 eixos', score: 'Score', clean: 'Limpeza', 'project-gates': 'Gates do projeto',
 };
 export { STEP_LABEL };
 
-function buildSteps({ meta, tasks, worktrees, immutability, reviews, score, coverage, projectGates, files, tasksDoc }) {
+function buildSteps({ meta, tasks, worktrees, immutability, reviews, score, coverage, projectGates, files, tasksDoc, hooksPack }) {
   const recorded = isObj(meta.steps) ? meta.steps : {};
   const slices = worktrees?.slices || [];
   const verdicts = AXES.map((a) => reviews[a].verdict);
+  const uiAcceptance = hooksPack?.hooks?.['ui-acceptance'] || null;
   const infer = {
     explore: () => (meta.spec_status === 'draft' ? 'in_progress' : meta.spec || tasksDoc?.spec ? 'done' : files.includes('spec-draft.md') ? 'in_progress' : 'pending'),
     planner: () => (tasks.length ? 'done' : 'pending'),
     worktrees: () => (worktrees ? (worktrees.skipped ? 'skipped' : slices.length ? 'done' : 'pending') : 'pending'),
     implement: () => (!tasks.length ? 'pending' : tasks.every((t) => t.status === 'DONE') ? 'done' : tasks.some((t) => t.status !== 'OPEN') ? 'in_progress' : 'pending'),
     immutability: () => (!immutability ? 'pending' : immutability.green ? 'done' : 'failed'),
+    'ui-acceptance': () => (!uiAcceptance ? 'pending' : uiAcceptance.verdict === 'SKIP' ? 'skipped' : uiAcceptance.verdict === 'APPROVE' ? 'done' : uiAcceptance.verdict === 'OPEN' ? 'in_progress' : 'failed'),
     review: () => (verdicts.every((v) => v == null) ? 'pending' : verdicts.includes('REJECT') ? 'failed' : verdicts.every((v) => v === 'APPROVE' || v === 'SKIP') ? 'done' : 'in_progress'),
     score: () => (!score ? 'pending' : score.closable ? 'done' : 'failed'),
     clean: () => (worktrees?.skipped ? 'skipped' : slices.length && slices.every((s) => s.removed) ? 'done' : slices.length ? 'in_progress' : 'pending'),

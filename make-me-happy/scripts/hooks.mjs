@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-export const HOOK_IDS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness'];
+export const HOOK_IDS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness', 'ui-acceptance'];
 export const HOOK_LABEL = {
   'arch-alignment': 'Arquitetura ↔ SDD',
   reinvention: 'Não reinventar a roda',
@@ -27,6 +27,7 @@ export const HOOK_LABEL = {
   performance: 'Performance do diff',
   overengineering: 'Sem overengineering',
   'deps-freshness': 'Deps na última ativa',
+  'ui-acceptance': 'Aceitação de UI (runtime)',
 };
 const SEVERITY_ORDER = ['info', 'low', 'medium', 'high', 'critical'];
 const SEVERITIES = new Set(SEVERITY_ORDER);
@@ -477,6 +478,14 @@ export function aggregateVerdict(outDir, { failSeverity = 'high', require = 'all
   for (const id of HOOK_IDS) {
     const doc = loadJson(path.join(hooksDir, `${id}.json`), null);
     if (!doc) {
+      // ui-acceptance: pack sem UI não paga a fase — SKIP derivado do escopo
+      if (id === 'ui-acceptance') {
+        const scope = loadJson(path.join(hooksDir, 'ui-scope.json'), null);
+        if (scope && scope.ui_touched === false) {
+          rows.push({ hook: id, verdict: 'SKIP', open: 0, worst: null, blocking: false, note: 'ui_touched=false (auto)' });
+          continue;
+        }
+      }
       rows.push({ hook: id, verdict: 'MISSING', open: 0, worst: null, blocking: require === 'all' });
       continue;
     }
