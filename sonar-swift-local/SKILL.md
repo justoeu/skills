@@ -1,6 +1,8 @@
 ---
 name: sonar-swift-local
 description: "Analisa projetos Swift/Objective-C no SonarQube, que a Community Build não suporta nativamente, subindo uma instância local com o plugin sonar-apple. Use quando o pedido for analisar qualidade, lint, segurança ou cobertura de código Swift/ObjC no SonarQube, quando um projeto Apple precisar entrar num painel Sonar, ou quando um scan de Swift retornar zero linha analisada."
+metadata:
+  version: 1.0.0
 ---
 
 # /sonar-swift-local
