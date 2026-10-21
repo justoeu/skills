@@ -1,6 +1,6 @@
 # Skill: make-me-happy
 
-Implementa feature, refactor ou greenfield. Sem SDD: **Etapa Zero** (perguntas + escrever o spec). Com spec: tasks, red→green, imutabilidade, git worktrees, review em 3 eixos, HTML com score 10.
+Implementa feature, refactor ou greenfield. Sem SDD: **Etapa Zero** (perguntas + escrever o spec + arch-map). Com spec: tasks, red→green, imutabilidade, git worktrees, review em 3 eixos + **hooks de verificação**, HTML com score 10.
 
 Fonte canônica: este repo. Hosts consomem por **symlink**.
 
@@ -23,10 +23,11 @@ Fonte canônica: este repo. Hosts consomem por **symlink**.
 2. Planner → `TASKS.json` / `TASKS.md` (cada task leva a qtd de testes).
 3. Cria **3** worktrees (ou `--worktree N`) numa **feature branch** (`--into`; se HEAD é `main`/`master`/`trunk`, cria `feature/mmh-YYYYMMDD`). Merge recusa a default branch. Recusa `add` se a suite em `into` já está vermelha (não empilha trabalho sobre baseline vermelha).
 4. Red → green em cada task + testes de imutabilidade. Só o que o SDD pediu; dúvida entre caminhos → pergunta, não infere.
-5. Review **Standards** (Fowler + repo) ‖ **Spec** ‖ **Correctness**. Consenso 3/3; REJECT → corrige.
-6. `score.mjs` (5 gates × 2). Fecha o **pack** só com **10 e cobertura ≥ 90%** (`--cobertura N` só sobe o piso). Não é o done do repo.
-7. `report.html` — arquivo único, offline: KPIs, linha do tempo, SDD, tasks com evidência red→green, fluxo, payloads, testes/cobertura, review por eixo, score, gates do projeto. Schemas do pack em `references/pack-schemas.md`. Se `add` anexou `.worktrees/` no `.gitignore`, isso é alteração visível do PR (`NOTE:` + `gitignore_appended`).
+5. Review **Standards** (Fowler + repo) ‖ **Spec** ‖ **Correctness** — e, no mesmo lote, os **hooks**: `arch-alignment` (implementação ↔ SDD ↔ arquitetura), `reinvention` (não reescrever o que stdlib/lib entrega), `security`, `performance` (N+1, sem teto, índice), `overengineering` e `deps-freshness` (dep nova resolve para a última ativa). Consenso 3/3 nos eixos; hooks bloqueiam por severidade (≥ high sem waiver = pack não fecha, régua da cobertura).
+6. `score.mjs` (5 gates × 2). Fecha o **pack** só com **10, cobertura ≥ 90% e `hooks.mjs verdict` PASS** (`--cobertura N` só sobe o piso). Não é o done do repo.
+7. `report.html` — arquivo único, offline: KPIs, linha do tempo, SDD, tasks com evidência red→green, fluxo, payloads, testes/cobertura, review por eixo, **aba Hooks** (achados, deps vs última ativa, waivers), score, gates do projeto. Schemas do pack em `references/pack-schemas.md`. Se `add` anexou `.worktrees/` no `.gitignore`, isso é alteração visível do PR (`NOTE:` + `gitignore_appended`).
 8. Depois que os merges desta run terminaram: `worktrees.mjs remove` e `verify-clean`. Some worktree, branch `mmh/slice-*` e pasta `.worktrees/mmh-*`. `clean` é obrigatório para fechar. Parar no meio, com slice ainda sem merge, não dispara esse `remove`.
+9. **Bateria cross-skill pós-implementação** (§8): `/atlas-docs --delta` (doc em dia + arch-map das próximas runs) → `/nplus1-check` → `/abuse-audit` → `/ssrf-csrf-sqli-check --full`; achado real se corrige **dentro do pack** (red→green), re-rodando até secar.
 
 ## Pack
 
@@ -36,13 +37,18 @@ Fonte canônica: este repo. Hosts consomem por **symlink**.
 
 | id | papel |
 |----|--------|
-| `explorer` | Etapa Zero: pergunta e escreve o SDD. Não implementa |
-| `planner` | `TASKS.json` / `TASKS.md` a partir do spec confirmado |
+| `explorer` | Etapa Zero: arch-map (atlas-docs ou manual) + pergunta e escreve o SDD. Não implementa |
+| `planner` | `TASKS.json` / `TASKS.md` a partir do spec confirmado; tasks respeitam o arch-map, peça estrutural exige `refs` |
 | `implementer` | red→green na slice |
 | imutabilidade | `agents/immutability.md` — contrato que não pode andar |
 | `standards-reviewer` | Fowler + standards do repo |
 | `spec-reviewer` | o SDD (achado ou escrito na Zero) |
 | `correctness-reviewer` | comportamento, testes e piso de cobertura |
+| `hook-arch-alignment` | implementação ↔ SDD ↔ arch-map; conflito com ADR = REJECT |
+| `hook-reinvention` | reescrita de capacidade canônica (zip, crypto, parsing…): nomeia a fonte canônica |
+| `hook-security` | superfície que o diff abre: input, authz, segredo, SSRF, abuso; incorpora runners e skills |
+| `hook-performance` | N+1, sem teto, índice faltando, hot path; incorpora o `nplus1-check` |
+| `hook-overengineering` | peça estrutural sem requisito que a pague (catálogo próprio) |
 
 Sem spec, o Oracle não pula para o Planner: despacha o `explorer`, espera confirmação, e só então segue.
 
@@ -51,16 +57,17 @@ Sem spec, o Oracle não pula para o Planner: despacha o `explorer`, espera confi
 ```
 make-me-happy/
 ├── SKILL.md
-├── agents/          # explorer, planner, implementer, reviewers
-├── catalogs/fowler-smells.md
-└── scripts/
-    ├── resume.mjs
-    ├── worktrees.mjs
-    ├── score.mjs
-    ├── run-meta.mjs     # carimbo de cada passo (linha do tempo)
-    ├── build-report.mjs
-    ├── report/          # load-pack (normaliza + valida) · render · markdown
-    └── tests/
+├── agents/          # explorer, planner, implementer, reviewers, hooks (hook-*.md)
+├── catalogs/        # fowler-smells · reinvention-checklist · overengineering
+├── scripts/
+│   ├── resume.mjs
+│   ├── worktrees.mjs
+│   ├── score.mjs
+│   ├── hooks.mjs        # diff-facts · deps-freshness · arch-map · verdict · waive
+│   ├── run-meta.mjs     # carimbo de cada passo (linha do tempo)
+│   ├── build-report.mjs
+│   ├── report/          # load-pack (normaliza + valida) · render · markdown
+│   └── tests/
 references/pack-schemas.md
 ```
 

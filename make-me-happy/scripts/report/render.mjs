@@ -5,7 +5,7 @@
  * network fetch (CDN, lazy); offline it falls back to the raw source.
  */
 import { esc, renderMarkdown, inline } from './markdown.mjs';
-import { AXES } from './load-pack.mjs';
+import { AXES, HOOKS, HOOK_LABELS } from './load-pack.mjs';
 
 const TABS = [
   ['overview', 'Visão geral'],
@@ -15,9 +15,19 @@ const TABS = [
   ['payloads', 'Payloads'],
   ['testes', 'Testes'],
   ['review', 'Review'],
+  ['hooks', 'Hooks'],
   ['score', 'Score'],
   ['gates', 'Gates do projeto'],
 ];
+
+const HOOK_DESC = {
+  'arch-alignment': 'Implementação ↔ SDD ↔ arquitetura da app (arch-map: atlas-docs ou explorer).',
+  reinvention: 'O diff reescreve o que stdlib / lib do manifest / lib madura entrega?',
+  security: 'Superfície que o diff abre: input, authz, segredo, desserialização, SSRF, abuso.',
+  performance: 'N+1, query sem teto, índice faltando, hot path — nos fluxos que o diff toca.',
+  overengineering: 'Peça estrutural sem requisito que a pague (diff + SDD + arch-map).',
+  'deps-freshness': 'Dep nova resolve para a última ativa; dep velha vira proposta de follow-up.',
+};
 
 const AXIS_LABEL = { standards: 'Standards', spec: 'Spec', correctness: 'Correctness' };
 const AXIS_DESC = {
@@ -257,6 +267,19 @@ function openItems(p) {
     if (r.verdict === 'REJECT') items.push({ t: 'bad', text: `${AXIS_LABEL[a]} votou REJECT.` });
   }
   for (const g of p.projectGates.gates) if (g.status === 'OPEN' || g.status === 'FAILED') items.push({ t: g.status === 'FAILED' ? 'bad' : 'warn', text: `Gate do projeto ${g.status}: ${g.name}` });
+  if (p.hooksPack) {
+    for (const id of HOOKS) {
+      const h = p.hooksPack.hooks[id];
+      if (!h || !h.present) continue;
+      const blocking = h.findings.filter((f) => f.status === 'open' && ['critical', 'high'].includes(f.severity));
+      if (h.verdict === 'REJECT' && blocking.length) items.push({ t: 'bad', text: `Hook ${HOOK_LABELS[id]}: ${blocking.length} achado(s) ≥ high aberto(s) — ${blocking[0].title}` });
+    }
+    const missing = HOOKS.filter((id) => !p.hooksPack.hooks[id]?.present);
+    if (missing.length && (p.reviews.standards.present || p.reviews.correctness.present)) {
+      items.push({ t: 'warn', text: `Hooks ainda não rodaram: ${missing.map((id) => HOOK_LABELS[id]).join(', ')}.` });
+    }
+    if (p.hooksPack.verdict?.verdict === 'FAIL') items.push({ t: 'bad', text: 'Hooks verdict FAIL — o pack não fecha até corrigir (ou waiver do usuário).' });
+  }
   if (p.meta.blocked_on) items.push({ t: 'warn', text: `Bloqueado em: ${typeof p.meta.blocked_on === 'string' ? p.meta.blocked_on : JSON.stringify(p.meta.blocked_on)}` });
   if (p.meta.next_step && p.meta.status !== 'closed') items.push({ t: 'warn', text: `Próximo passo registrado: ${p.meta.next_step}` });
   return items;
@@ -578,6 +601,57 @@ function review(p) {
     <div class="axes">${cols.join('')}</div>`;
 }
 
+function hookFindingItem(f) {
+  const meta = [
+    f.canonical ? `fonte canônica: ${f.canonical}` : null,
+    f.owasp ? f.owasp : null,
+    f.catalog ? f.catalog : null,
+    f.kind_problem ? f.kind_problem : null,
+    f.source ? `fonte: ${f.source}` : null,
+    f.spec_ref ? `spec ${f.spec_ref}` : null,
+    f.arch_ref ? f.arch_ref : null,
+    f.count ? f.count : null,
+    f.followup ? 'follow-up proposto (não bloqueia)' : null,
+  ].filter(Boolean).join(' · ');
+  return `<li class="finding">
+    <div class="f-head">${chip(f.severity, f.severity === 'critical' || f.severity === 'high' ? 'bad' : f.severity === 'medium' ? 'warn' : 'neutral')} ${chip(f.status, f.status === 'fixed' ? 'ok' : f.status === 'open' ? 'bad' : 'warn')} <strong>${esc(f.title)}</strong></div>
+    ${f.file ? `<div class="small"><code>${esc(f.file)}${f.line != null ? `:${esc(f.line)}` : ''}</code></div>` : ''}
+    ${f.description ? `<div class="small">${inline(f.description)}</div>` : ''}
+    ${meta ? `<div class="small muted">${esc(meta)}</div>` : ''}
+  </li>`;
+}
+
+function hooksPanel(p) {
+  const hp = p.hooksPack;
+  const intro = '<p class="muted">Hooks de verificação — rodam no passo 5 junto com os 3 eixos. Achado aberto com severidade ≥ high e sem waiver bloqueia o fechamento do pack, igual à cobertura. OPEN (sem rede, hook não aplicável) nunca derruba.</p>';
+  const head = `<div class="card"><h2>Hooks <span class="muted">· ${hp.verdict?.verdict ? chip(hp.verdict.verdict, hp.verdict.verdict === 'PASS' ? 'ok' : 'bad') : 'sem verdict'}</span></h2>${intro}
+    <div class="facts">
+      ${hp.archMap.present ? `<div><dt>arch-map</dt><dd>${esc(hp.archMap.source)} · ${hp.archMap.libs} libs · ${hp.archMap.adrs} ADRs · ${hp.archMap.containers} containers</dd></div>` : '<div><dt>arch-map</dt><dd class="muted">ausente (greenfield ou explorer não escreveu)</dd></div>'}
+      ${hp.diffFacts.present ? `<div><dt>diff-facts</dt><dd>${hp.diffFacts.files} arquivos · ${hp.diffFacts.depsNew} deps novas · ${hp.diffFacts.routes} rotas · ${hp.diffFacts.migrations} migrações</dd></div>` : '<div><dt>diff-facts</dt><dd class="muted">ausente</dd></div>'}
+      ${hp.waivers.length ? `<div><dt>waivers</dt><dd>${hp.waivers.length} achado(s) dispensado(s) pelo usuário</dd></div>` : ''}
+    </div>
+  </div>`;
+  const cols = HOOKS.map((id) => {
+    const h = hp.hooks[id];
+    const counts = ['critical', 'high', 'medium', 'low', 'info'].map((s) => [s, h.findings.filter((f) => f.severity === s).length]).filter(([, n]) => n);
+    const body = !h.present
+      ? emptyState(`Hook ${HOOK_LABELS[id]}`, { file: `hooks/${id}.json`, agent: `hook ${id} (agente) ou scripts/hooks.mjs` })
+      : `${h.summary ? `<p>${inline(h.summary)}</p>` : ''}
+        ${h.deps.length ? `<div class="table-wrap"><table><thead><tr><th>Dep</th><th>Declarada</th><th>Última ativa</th><th>Estado</th></tr></thead><tbody>${h.deps.map((d) => `<tr><th scope="row"><code>${esc(d.name)}</code>${d.ecosystem ? ` <span class="muted small">${esc(d.ecosystem)}</span>` : ''}</th><td><code>${esc(d.current || '—')}</code></td><td><code>${esc(d.latest || '—')}</code></td><td>${chip(d.state, d.state === 'ok' || d.state === 'range' ? 'ok' : d.state === 'unknown' || d.state === 'registry-error' ? 'neutral' : 'warn')}</td></tr>`).join('')}</tbody></table></div>` : ''}
+        ${h.findings.length ? `<ul class="findings">${h.findings.map(hookFindingItem).join('')}</ul>` : '<p class="okline small">Sem achados.</p>'}`;
+    return `<article class="card axis ${h.verdict === 'REJECT' ? 'bad' : h.verdict === 'OPEN' ? 'warn' : tone(h.verdict || 'PENDING')}">
+      <header class="axis-head"><h2>${esc(HOOK_LABELS[id])}</h2>${chip(h.verdict || 'não rodou')}${h.round ? chip(`rodada ${h.round}`, 'neutral') : ''}</header>
+      <p class="muted small">${esc(HOOK_DESC[id])}</p>
+      ${counts.length ? `<div class="sevbar">${counts.map(([s, n]) => `<span class="chip ${s === 'critical' || s === 'high' ? 'bad' : s === 'medium' ? 'warn' : 'neutral'}">${n} ${esc(s)}</span>`).join(' ')}</div>` : ''}
+      ${body}
+    </article>`;
+  });
+  const waivers = hp.waivers.length
+    ? `<div class="card"><h2>Waivers</h2><ul class="findings">${hp.waivers.map((w) => `<li class="finding"><div class="f-head">${chip('WAIVED', 'warn')} <strong>${esc(w.hook)}#${esc(w.finding)}</strong></div>${w.reason ? `<div class="small">${inline(w.reason)}</div>` : ''}${w.at ? `<div class="small muted">${esc(w.at)}</div>` : ''}</li>`).join('')}</ul></div>`
+    : '';
+  return `${head}<div class="axes">${cols.join('')}</div>${waivers}`;
+}
+
 function score(p) {
   const s = p.score;
   if (!s) return `<div class="card"><h2>Score</h2>${emptyState('Score', { file: 'score.json', agent: 'scripts/score.mjs' })}</div>`;
@@ -873,6 +947,7 @@ export function renderReport(p) {
     payloads: payloads(p),
     testes: testes(p),
     review: review(p),
+    hooks: hooksPanel(p),
     score: score(p),
     gates: gates(p),
   };

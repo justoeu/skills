@@ -112,11 +112,12 @@ Fix de finding = red→green + `sync-progress --done`.
 O que a run faz:
 
 1. Resume se a sessão anterior crashou (pack aberto ou worktree `mmh/slice-*`).
-2. Planner → `TASKS.json` (qtd de testes por task).
+2. **Arch-map** (atlas-docs ou manual) antes do SDD — a Etapa Zero conhece a arquitetura que existe. Planner → `TASKS.json` (qtd de testes por task; peça estrutural exige `refs` do SDD).
 3. Git worktrees (default **3**, `--worktree N`) numa **feature branch** (`--into`; recusa merge em `main`; recusa baseline vermelha).
 4. Testes de imutabilidade (contrato que não pode andar). Só o SDD; dúvida entre caminhos → pergunta.
-5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness**. Score 10 **e cobertura ≥ 90%** (`--cobertura` só sobe) fecham o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
-6. HTML interativo, arquivo único e offline (KPIs, linha do tempo, tasks com evidência red→green, fluxo, payloads, cobertura por módulo, review por eixo com rodadas, score, gates do projeto). Os schemas do pack estão em `make-me-happy/references/pack-schemas.md`. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR. No fim, com os merges feitos, apaga worktrees, branches `mmh/slice-*` e pastas `.worktrees/mmh-*` desta run.
+5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness** — e, no mesmo lote, os **hooks de verificação**: `arch-alignment` (implementação ↔ SDD ↔ arquitetura), `reinvention` (não reescrever o que stdlib/lib entrega), `security`, `performance`, `overengineering` e `deps-freshness` (dep nova na última ativa). Achado ≥ high sem waiver do usuário bloqueia o fechamento — régua da cobertura. Score 10 **e** cobertura ≥ 90% **e** hooks `PASS` fecham o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
+6. HTML interativo, arquivo único e offline (KPIs, linha do tempo, tasks com evidência red→green, fluxo, payloads, cobertura por módulo, review por eixo com rodadas, **aba Hooks** com achados/deps/waivers, score, gates do projeto). Os schemas do pack estão em `make-me-happy/references/pack-schemas.md`. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR. No fim, com os merges feitos, apaga worktrees, branches `mmh/slice-*` e pastas `.worktrees/mmh-*` desta run.
+7. **Bateria cross-skill pós-implementação** (rodadas até secar): `/atlas-docs --delta` (doc em dia + arch-map das próximas runs) → `/nplus1-check` → `/abuse-audit` → `/ssrf-csrf-sqli-check --full`. Achado real se corrige dentro do pack (red→green).
 
 `--fresh` abandona slices abertas e começa do zero.
 

@@ -75,5 +75,7 @@ Status values: `OPEN` | `IN_PROGRESS` | `DONE` | `BLOCKED`. You only emit `OPEN`
 - Implement **exactly** the spec. Do not invent requirements (Speculative Generality).
 - If the spec leaves more than one valid way (lib, schema, API, flow) and you would have to choose: **stop and list the question**. Do not pick “the reasonable default”.
 - Out of scope from the spec stays out.
+- **Arch-map é contexto, não sugestão.** Leia `$OUT/hooks/arch-map.json` (atlas ou manual): tasks respeitam as camadas/padrões/libs de lá. Task que precise **quebrar** o padrão ou introduzir peça estrutural nova (fila, serviço, camada, lib de infra) → não é task, é pergunta ao usuário.
+- **Gate estrutural:** toda task que introduz peça estrutural (camada nova, interface/abstração nova, fila/broker, cache, worker, framework, feature flag) leva `"structural": true` **e** `refs` apontando o requisito do SDD que a paga. Sem ref → a task sai da lista e vira pergunta. O hook `overengineering` (§5) cobra o que escapar.
 
 If the spec is missing: **do not invent tasks**. Tell Oracle to run Etapa Zero (`agents/explorer.md`). Empty `TASKS.json` is not a substitute for a spec.
