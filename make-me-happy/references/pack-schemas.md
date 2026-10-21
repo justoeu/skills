@@ -19,6 +19,13 @@
 | `hooks/diff-facts.json` | `hooks.mjs diff-facts` | yes |
 | `hooks/<hook>.json` (5 semânticos) | each hook agent (`agents/hook-*.md`) | yes |
 | `hooks/deps-freshness.json` | `hooks.mjs deps-freshness` | yes |
+| `hooks/ui-scope.json` | `ui-acceptance.mjs scope` | yes |
+| `hooks/ui-acceptance.json` | Motorista (`agents/ui-acceptance.md`) — `SKIP` when `ui_touched=false` | yes |
+| `ui/boot.json` (+`boot.log`) | `ui-acceptance.mjs boot` | UI packs |
+| `ui/journeys/<tela>.json` | Motorista / driver headless | UI packs |
+| `ui/drive/<tela>.spec.json` (+`.driver.cjs`) | Motorista escreve; driver gerado | UI packs |
+| `ui/e2e.json` | `ui-acceptance.mjs run-e2e` | com runner no repo |
+| `ui/screenshots/*.png` | driver headless (cap 20/jornada; report embute ≤12) | UI packs |
 | `hooks/waivers.json` | `hooks.mjs waive` (user decision) | no |
 | `hooks/verdict.json` | `hooks.mjs verdict` | yes |
 | `score.json` | `scripts/score.mjs` | yes |
@@ -240,3 +247,47 @@ Semântica de bloqueio: achado `open` com severity ≥ high (default; `hooks.mjs
   "hooks": [{ "hook": "security", "verdict": "APPROVE", "open": 0, "worst": null, "blocking": false }],
   "waivers": 1 }
 ```
+
+### ui/ (§4z aceitação de UI em runtime)
+
+7º hook: `hooks/ui-acceptance.json` segue o schema dos hooks (`verdict` inclui `SKIP`
+para pack sem UI e `OPEN` para host sem browser). Extras:
+
+```json
+// hooks/ui-scope.json — ui-acceptance.mjs scope
+{ "ui_touched": true, "how": "3 arquivo(s) de frontend no diff",
+  "frontend_files": ["src/Checkout.tsx"], "screens": [{ "name": "checkout", "spec_ref": "§4.2" }],
+  "frameworks": ["react"], "e2e_runner": null, "at": "…" }
+
+// ui/boot.json — ui-acceptance.mjs boot
+{ "cmd": "npm run dev", "pid": 1234, "url": "http://localhost:3000/", "port": 3000,
+  "healthcheck": "/", "health": { "ok": true, "status": 200 }, "started_ms": 3120, "at": "…" }
+
+// ui/drive/<tela>.spec.json — o Motorista escreve (credenciais NUNCA aqui: --user/--pass ou env)
+{ "screen": "checkout", "spec_ref": "§4.2", "base_url": "http://localhost:3000",
+  "auth": { "url": "/login", "fields": { "user": "#email", "pass": "#password" }, "submit": "button[type=submit]" },
+  "steps": [
+    { "action": "goto", "path": "/checkout" },
+    { "action": "assert_visible", "selector": "h1", "text": "Checkout" },
+    { "action": "click", "selector": "#pay" },
+    { "action": "assert_text", "selector": ".toast", "text": "Pedido confirmado" },
+    { "action": "screenshot", "name": "pos-submit" }
+  ] }
+// ações: goto · click · fill · assert_visible · assert_text · wait · screenshot
+// block_external (default true): aborta requests fora de localhost — mais rápido, menos ruído
+
+// ui/journeys/<tela>.json — produzido pelo driver headless (ou preenchido à mão em mode browser-host)
+{ "screen": "checkout", "spec_ref": "§4.2", "mode": "drive", "base_url": "…",
+  "steps": [{ "n": 1, "action": "goto", "ok": true, "url": "/checkout" }],
+  "console_errors": [], "network_errors": [],
+  "screenshots": ["ui/screenshots/checkout-05-pos-submit.png"],
+  "assertions": { "ok": 5, "total": 5, "failed": [] }, "verdict": "APPROVE", "at": "…" }
+
+// ui/e2e.json — run-e2e (runner do repo)
+{ "cmd": "npx playwright test", "ok": true, "exit": 0, "duration_s": 41.2, "log": "últimas 40 linhas", "at": "…" }
+```
+
+Modos do drive (flag `--ui-drive fast|guided`, ou pergunta do Oracle): **fast** =
+spec direto do código → driver headless (segundos); **guided** = Playwright MCP
+(`npx -y @playwright/mcp@latest`) explora a tela viva 1× e destila o spec.
+Re-execução pós-correção é **sempre** pelo driver headless.
