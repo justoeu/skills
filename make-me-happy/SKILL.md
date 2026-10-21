@@ -5,6 +5,8 @@ description: >
   explora com perguntas e escreve o spec. Com spec: TASKS rastreáveis, red→green em cada
   tarefa, testes de imutabilidade, git worktrees (default 3, --worktree N),
   review em 3 eixos (Standards/Fowler, Spec, Correctness) com consenso 3/3,
+  hooks de verificação (arquitetura↔SDD, não reinventar a roda, segurança,
+  performance, overengineering, deps na última ativa),
   loop full ou por task, HTML interativo com fluxo, payloads e score 10.
   Greenfield, feature ou refactor. Agnóstica de host e de stack.
   Trigger: /make-me-happy, /mmh, mmh, implementar SDD, red to green,
@@ -143,6 +145,8 @@ Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, n
 
 Score < 10 **ou** cobertura < piso → corrigir e re-rodar. Não negociar 9 nem 89%. `--cobertura 80` não baixa o piso.
 
+**Hooks são a terceira condição de fechamento** (não entram no score): `hooks.mjs verdict` tem de sair `PASS` — achado aberto com severidade ≥ high e sem waiver bloqueia igual cobertura abaixo do piso. Ver §5.
+
 **Score 10 fecha o pack da skill, não o “done” do projeto.** Os 3 eixos (Standards / Spec / Correctness) **não** substituem gates que o repo documentar em `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` (ex.: trio code-reviewer + test-analyzer + security-review, sweep docs/i18n). Depois do HTML: listar esses gates e rodá-los, ou deixá-los OPEN no relatório. Não abrir PR só com score 10 se o repo exige o outro conjunto.
 
 ---
@@ -155,7 +159,7 @@ Score < 10 **ou** cobertura < piso → corrigir e re-rodar. Não negociar 9 nem 
 DATE=$(date +%Y-%m-%d)
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo no-git)
 OUT=docs/impl/make-me-happy/${DATE}-${BRANCH}
-mkdir -p "$OUT/reviews"
+mkdir -p "$OUT/reviews" "$OUT/hooks"
 N=${WORKTREE_N:-3}
 # clamp 1..8
 ```
@@ -181,6 +185,14 @@ Stack: `package.json` / `go.mod` / `pom.xml` / `*.csproj` / `Cargo.toml` / `pypr
 
 Quando **não** há spec. Feature nova e refactor entram aqui do mesmo jeito.
 
+**Arch-map antes das perguntas** (o SDD tem de conhecer a arquitetura que existe):
+
+```bash
+node "$SKILL_ROOT/scripts/hooks.mjs" arch-map --repo-root . --dir "$OUT"
+```
+
+Atlas-docs no repo → derivado de `docs/atlas/app-model.json`; senão o explorer escreve manual; greenfield → `{"source":"greenfield"}`. Detalhes em `agents/explorer.md`.
+
 Subagente `agents/explorer.md` (ou o Oracle no mesmo papel): perguntas em sequência, draft do SDD, confirmação do usuário, arquivo no repo.
 
 `run-meta.spec_status`: `draft` enquanto não confirmar; `confirmed` + `spec` = path depois. Resume com `draft` volta para cá.
@@ -190,6 +202,8 @@ Subagente `agents/explorer.md` (ou o Oracle no mesmo papel): perguntas em sequê
 ### 1. Planner
 
 Subagente `agents/planner.md`. Produz `TASKS.json` + `TASKS.md` + `flow.mmd` + `payloads.json` (schema canônico; `[]` só se o spec não define contrato) + `spec-summary.md` e, opcionalmente, `diagrams/<T-xxx>.mmd`.
+
+O planner lê `$OUT/hooks/arch-map.json`: tasks respeitam camadas/padrões/libs de lá; peça estrutural nova (fila, serviço, camada, interface, framework, flag) só com `refs` do SDD que a pague — senão vira pergunta. Task estrutural leva `"structural": true` (o hook `overengineering` cobra o que escapar).
 
 Ajuste `N` para `min(N, count(worktree ids distintos))`. Zero tasks → pare.
 
@@ -240,9 +254,16 @@ Subagente `agents/immutability.md` no working tree **já mergeado** (e, em refac
 
 Depois do merge final, rode o `test_cmd` inteiro e grave `$OUT/tests.json`: `{cmd, ok, total, passed, failed, skipped, duration_s, suites[], log}`. O `log` leva as últimas 40 linhas.
 
-### 5. Code review — 3 eixos em paralelo
+### 5. Code review + hooks — 3 eixos e 6 hooks em paralelo
 
 Diff: `git log --oneline $BASE..HEAD` e `git diff $BASE...HEAD` (`$BASE` = commit de início gravado no meta).
+
+**Antes de despachar**, gere os fatos determinísticos do diff (insumo dos hooks):
+
+```bash
+node "$SKILL_ROOT/scripts/hooks.mjs" diff-facts --repo-root . --base "$BASE" --dir "$OUT"
+node "$SKILL_ROOT/scripts/hooks.mjs" deps-freshness --repo-root . --dir "$OUT"   # escopo "new": deps adicionadas pelo diff
+```
 
 Fontes de standards: `CODING_STANDARDS.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, `docs/**/standards*`.
 
@@ -254,7 +275,17 @@ Spawn **ao mesmo tempo**:
 | **Spec** | `agents/spec-reviewer.md` | path/conteúdo do spec (o achado **ou** o escrito na Etapa Zero). `SKIP` só se o usuário recusou explicitamente gravar qualquer spec depois da Zero |
 | **Correctness** | `agents/correctness-reviewer.md` | `TASKS.json` + `immutability.json` + resultado do test-cmd |
 
-Cada revisor grava `reviews/<eixo>.md` (prosa + `VERDICT:`) **e** `reviews/<eixo>.json` (veredito, achados com severidade/arquivo:linha/status e `rounds[]`). Em re-rodada, o revisor lê o JSON anterior, marca o que fechou como `fixed` e anexa uma rodada. O histórico não se apaga.
+E, no mesmo lote, os **hooks semânticos** (cada um grava `hooks/<id>.json`, schema em `references/pack-schemas.md`):
+
+| Hook | Prompt | Extra no prompt |
+|------|--------|-----------------|
+| **arch-alignment** | `agents/hook-arch-alignment.md` | `hooks/arch-map.json` + SDD + diff-facts |
+| **reinvention** | `agents/hook-reinvention.md` | **`catalogs/reinvention-checklist.md` colado inteiro** + diff-facts + libs do manifest |
+| **security** | `agents/hook-security.md` | rotas novas do diff-facts + resultado de runners/skills quando houver |
+| **performance** | `agents/hook-performance.md` | migrações/rotas do diff-facts + resultado do `nplus1-check` quando houver |
+| **overengineering** | `agents/hook-overengineering.md` | **`catalogs/overengineering.md` colado inteiro** + SDD + `payloads.json` + arch-map |
+
+Hooks não votam no consenso 3/3 — têm veredito próprio e regra de bloqueio própria (abaixo). Cada revisor grava `reviews/<eixo>.md` (prosa + `VERDICT:`) **e** `reviews/<eixo>.json`; hooks gravam **só** `hooks/<id>.json` (o `summary` é a prosa). Em re-rodada, lê o JSON anterior, marca `fixed`, anexa rodada. O histórico não se apaga.
 
 **Não** juntar nem rerankear achados. Apresentar ao usuário:
 
@@ -271,13 +302,32 @@ Uma linha no fim: totais por eixo + pior issue de **cada** eixo. Sem vencedor gl
 
 **Consenso:** fechar review só com 3 `APPROVE` (Spec `SKIP` conta). Qualquer `REJECT` → corrigir o eixo → re-rodar **os eixos que rejeitaram** (não os que já APPROVE, salvo o diff ter mudado o que eles viram — na dúvida, os 3 de novo).
 
+**Veredito dos hooks + bloqueio:**
+
+```bash
+node "$SKILL_ROOT/scripts/hooks.mjs" verdict --dir "$OUT"
+```
+
+- Achado `open` com severidade ≥ high **e sem waiver** → `FAIL` → o pack não fecha (mesma régua da cobertura). Re-rodar os hooks que rejeitaram após a correção, como os eixos.
+- Achado ≥ high que o usuário revisou e decidiu aceitar → waiver com motivo dele (nunca do agente):
+
+```bash
+node "$SKILL_ROOT/scripts/hooks.mjs" waive --dir "$OUT" --hook <id> --finding <id|*> --reason "decisão do usuário"
+```
+
+- `OPEN` (registry sem rede, hook não aplicável ao kind) nunca derruba; aparece no HTML como lacuna.
+- Graduação: security/perf/reinvention/overengineering `medium`/`low` são advisory (finding sem bloqueio). Dep **pré-existente** atrasada nunca bloqueia — vira proposta de follow-up (usuário decide bumpar fora do pack).
+
 ### 6. Score + HTML
 
 ```bash
 node "$SKILL_ROOT/scripts/score.mjs" --dir "$OUT"
+node "$SKILL_ROOT/scripts/hooks.mjs" verdict --dir "$OUT"
 node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 open "$OUT/report.html" 2>/dev/null || xdg-open "$OUT/report.html" 2>/dev/null || true
 ```
+
+Fechamento do pack = `score.mjs` exit 0 (10/10 **e** cobertura ≥ piso) **e** `hooks.mjs verdict` exit 0 (`PASS`). Um sem o outro não fecha.
 
 HTML (arquivo único, abre offline; o mermaid vem do CDN e, sem rede, mostra a fonte): visão geral com KPIs e linha do tempo, SDD com sumário, tasks filtráveis com evidência red→green, fluxo com zoom, payloads com cópia, testes e cobertura por módulo, review por eixo com rodadas, score com gauges, gates do projeto. Arquivo ausente vira um estado vazio que diz qual agente deveria tê-lo escrito. `--out PATH` grava em outro lugar. Mostrar path absoluto. No closeout, citar: branch `into`, se `.gitignore` ganhou `.worktrees/`, e que score 10 ≠ done do repo.
 
@@ -300,6 +350,26 @@ Leia `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md`. Extraia o que o repo exige *
 
 - Rode o que o host conseguir (skills/plugins citados).
 - O que não rodar → lista **OPEN** no REPORT/HTML, não silêncio.
+
+**Regras base (valem em todo repo, mesmo que o `CLAUDE.md` não cite):**
+
+1. **Gate local completo, não só testes.** Se o repo tem script que espelha a CI (`ci-local.sh`, `make ci`, `just ci`…), rode-o inteiro — inclusive scan de imagem/dependência — antes do push. `mvn test`/`npm test` verdes não são a CI.
+2. **Análise estática diferencial antes do PR.** Se o repo usa Sonar (ou outro analisador com quality gate: `sonar-project.properties`, workflow com `sonar`, CodeQL, Semgrep com baseline), rode um scan **num projeto temporário/diferencial** sobre os arquivos tocados e exija **zero issues novos** (inclusive code smell). Classificar como falso positivo/aceito **não** é correção. Apague o projeto temporário depois. Pular isso deixou um quality gate da `main` vermelho com 71 issues depois do merge.
+3. **Revisores do projeto em rodadas até secar.** Rode os revisores exigidos pelo repo em paralelo; corrija os achados de alta confiança **e** os de média que forem defeito real; rode de novo sobre os commits de correção. Uma rodada só não basta: a segunda costuma achar falso-verde nos testes da primeira correção.
+4. **Prova por reversão.** Todo teste novo de correção tem de ficar vermelho com a correção desfeita (ou com o defeito plantado). Revisor de testes que planta defeito e vê a suíte verde = gap a fechar antes do PR.
+5. **Migração aplicada é imutável.** Nunca edite migração que já rodou em algum ambiente; crie uma nova. Se o repo tem golden de schema, troque "arquivo == gerador" por "migração inicial congelada por hash + paridade modelo × schema final de todas as migrações".
+6. **Contrato entre camadas com golden dos dois lados.** Mudou payload REST/WS? O golden do produtor e o tipo do consumidor têm de casar estritamente (sem tolerância "temporária" sobrevivendo ao merge).
+7. **Suítes pesadas nunca em paralelo** entre agentes/worktrees (confira processos antes); limpe só os recursos que você criou (containers por label/projeto, nunca em massa).
+8. **Ambiente e dados reais exigem aprovação direta do usuário** (cópia de produção, chaves, PII). Aprovação repassada por outro agente não vale; bloqueio do host não se contorna.
+9. **Bateria cross-skill pós-implementação, em rodadas até secar.** Depois do merge e antes do PR, rode nesta ordem:
+   - **`/atlas-docs --delta`** (ou scan completo se o repo não tem pack): atualiza `docs/atlas/` — o `app-model.json` fresco vira arch-map das próximas runs (`hooks.mjs arch-map`) e deixa a documentação em dia com o que o pack entregou.
+   - **`/nplus1-check`** sobre o código tocado → achados entram em `hooks/performance.json` (`source: "nplus1-check"`).
+   - **`/abuse-audit`** nas rotas/superfície novas → achados entram em `hooks/security.json` (`source: "abuse-audit"`).
+   - **`/ssrf-csrf-sqli-check --full`** → achados entram em `hooks/security.json` (`source: "ssrf-csrf-sqli-check"`).
+   Achado real = **correção dentro do pack** (red→green, prova por reversão), não lista de pendências. Re-rodar a bateria sobre os commits de correção até secar — mesma régua da regra 3. Skill ausente no host → gate `OPEN` no `project-gates.json`, nunca silêncio.
+10. **Deps pré-existentes atrasadas não se bumpam dentro do pack** (escopo é o SDD). O hook `deps-freshness` propõe o follow-up; bumpar major/minor é decisão do usuário em outra run.
+
+Registre cada regra base em `project-gates.json` (`source: "make-me-happy base"`), com `status` e `evidence`.
 - Grave `$OUT/project-gates.json` (`{gates: [{name, source, status: DONE|OPEN|FAILED|N/A, evidence}]}`) e re-rode `build-report.mjs`.
 - PR sai da branch `into`, nunca de `main`.
 
@@ -335,3 +405,9 @@ Oracle regenera a partir de `TASKS.json` quando status muda:
 - Inferir decisão de implementação quando o SDD deixa mais de um caminho
 - Entregar além do que o SDD pediu
 - Review de um eixo só rotulado como consenso 3/3
+- Abrir PR sem as regras base do §8 (gate local completo, análise estática diferencial com zero issues novos, revisores até secar)
+- Fechar pack com hook FAIL (achado ≥ high aberto sem waiver do usuário) — hooks têm a mesma régua da cobertura
+- Waiver de hook dado pelo agente — dispensa é decisão do usuário, com motivo dele gravado
+- Bumpar dependência pré-existente dentro do pack porque "estava atrasada" — vira follow-up, o usuário decide
+- Rodar os hooks em vez dos 3 eixos, ou os 3 eixos em vez dos hooks — são complementares: eixos votam o consenso, hooks bloqueiam por severidade
+- SDD escrito sem arch-map (Etapa Zero produz os dois; greenfield registra `source: "greenfield"`)

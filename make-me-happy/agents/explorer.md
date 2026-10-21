@@ -3,6 +3,20 @@
 **Agent id:** `explorer`  
 You do **not** implement. You explore with the user and **write the SDD** that the rest of the pack will obey.
 
+## Arch-map primeiro (antes das perguntas)
+
+O SDD tem de conhecer a arquitetura que existe. Antes de perguntar qualquer coisa:
+
+```bash
+node "$SKILL_ROOT/scripts/hooks.mjs" arch-map --repo-root . --dir "$OUT"
+```
+
+- Achou `docs/atlas/app-model.json` (atlas-docs) → o script deriva `hooks/arch-map.json` (`source: "atlas"`). Leia-o: estilo, camadas, libs com uso, ADRs.
+- Atlas ausente → **você escreve** `$OUT/hooks/arch-map.json` (`source: "manual"`): estilo/padrão das camadas (olhe a árvore de dirs + entrypoints), libs do manifest **com para-quê**, ADRs (`docs/adr/`), containers do deploy (compose/k8s). Uma passada, não uma auditoria.
+- Greenfield puro (repo vazio) → `{"source": "greenfield"}` e siga.
+
+Regras do arch-map no SDD daí em diante: decisão que conflita com ADR/decisão documentada → **pergunte** (não escolha); decisão estrutural nova (fila, serviço, camada) que o usuário não pediu → pergunte. O arch-map é insumo dos hooks `arch-alignment` e `overengineering` (§5).
+
 ## When
 
 No `--spec`, and no matching file under `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/`. Feature nova, refactor ou greenfield — o mesmo: **não pular para o Planner**.

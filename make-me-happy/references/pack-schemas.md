@@ -15,6 +15,12 @@
 | `tests.json` | Oracle, after the final merge | yes |
 | `coverage.json` | implementer / Oracle | yes |
 | `reviews/<axis>.json` + `reviews/<axis>.md` | each reviewer | yes |
+| `hooks/arch-map.json` | `hooks.mjs arch-map` (atlas) or explorer (manual) | yes (`{"source":"greenfield"}` counts) |
+| `hooks/diff-facts.json` | `hooks.mjs diff-facts` | yes |
+| `hooks/<hook>.json` (5 semânticos) | each hook agent (`agents/hook-*.md`) | yes |
+| `hooks/deps-freshness.json` | `hooks.mjs deps-freshness` | yes |
+| `hooks/waivers.json` | `hooks.mjs waive` (user decision) | no |
+| `hooks/verdict.json` | `hooks.mjs verdict` | yes |
 | `score.json` | `scripts/score.mjs` | yes |
 | `project-gates.json` | Oracle (§8) | yes |
 
@@ -171,3 +177,66 @@ Without `steps`, the report infers the timeline from which files exist and label
 ```
 
 `status`: `DONE` | `OPEN` | `FAILED` | `N/A`. Without this file, the report lists extra `reviews/*.md` as inferred gates.
+
+## hooks/ (§5 hooks de verificação)
+
+Semântica de bloqueio: achado `open` com severity ≥ high (default; `hooks.mjs verdict --fail-severity`) e **sem waiver** → pack não fecha — mesma régua da cobertura. `verdict: "OPEN"` (registry sem rede, hook não aplicável) nunca derruba.
+
+### hooks/arch-map.json — mapa da arquitetura da app
+
+```json
+{ "source": "atlas | manual | greenfield", "style": "hexagonal + saga",
+  "layers": [{ "name": "api", "group": "borda", "sub": "Go · chi" }],
+  "libs": [{ "name": "chi", "ver": "5.0", "use": "router" }],
+  "adrs": [{ "id": "ADR-004", "title": "Sem ORM", "status": "aceito" }],
+  "containers": [{ "id": "api", "name": "billing-api", "group": "borda", "tech": "Go 1.23" }],
+  "notes": "…", "at": "…" }
+```
+
+`source: "atlas"` = derivado de `docs/atlas/app-model.json` pelo `hooks.mjs arch-map`. `greenfield` = sem arquitetura prévia.
+
+### hooks/diff-facts.json — fatos determinísticos do diff (`hooks.mjs diff-facts --base <sha>`)
+
+```json
+{ "base": "5fdc906", "head": "360eb8d", "commits": ["…"],
+  "files": [{ "status": "A", "file": "internal/pack/zip.go" }],
+  "manifests": [{ "file": "package.json", "ecosystem": "npm",
+    "added": [{ "name": "undici", "version": "7.1.0", "dev": false }],
+    "removed": [], "changed": [] }],
+  "migrations": ["db/migrations/0001.sql"],
+  "suspicious_files": ["internal/pack/zip.go"],
+  "routes": [{ "file": "routes.go", "line": 12, "snippet": "router.GET(\"/v1/jobs\", h.list)" }],
+  "at": "…" }
+```
+
+`suspicious_files` = nomes que denunciam reescrita de capacidade canônica (zip/crypto/jwt/base64/…) — insumo do hook `reinvention`, não achado por si.
+
+### hooks/<hook>.json — os 5 semânticos + deps-freshness
+
+`<hook>`: `arch-alignment` | `reinvention` | `security` | `performance` | `overengineering` | `deps-freshness`. Mesmo shape dos `reviews/<axis>.json`, sem md:
+
+```json
+{ "hook": "reinvention", "verdict": "REJECT", "round": 1, "summary": "one paragraph",
+  "findings": [
+    { "id": "R-1", "severity": "high", "title": "…", "description": "…",
+      "file": "internal/pack/zip.go", "line": 88, "canonical": "stdlib archive/zip",
+      "spec_ref": null, "status": "open", "round": 1 }
+  ],
+  "rounds": [{ "round": 1, "verdict": "REJECT", "at": "…", "summary": "…", "findings": [] }] }
+```
+
+- `verdict`: `APPROVE` | `REJECT` | `SKIP` | `OPEN`. Campos extras por hook (`canonical`, `owasp`, `catalog`, `kind`, `source`, `spec_ref`, `arch_ref`, `count`) são renderizados como contexto do achado.
+- `deps-freshness` acrescenta `scope: "new"|"all"`, `registry: "live"|"fake"|"not-needed"` e `deps[]: [{name, current, latest, state, ecosystem, dev, isNew}]` — `state`: `ok | range | range-behind | minor-behind | major-behind | deprecated | unknown | registry-error`. Achados com `followup: true` (dep pré-existente) **não** bloqueiam: viram proposta de task.
+- Re-run: leia o JSON anterior, marque `fixed`, anexe rodada. Histórico não se apaga.
+
+### hooks/waivers.json e hooks/verdict.json
+
+```json
+{ "waivers": [{ "hook": "deps-freshness", "finding": "D-1", "reason": "usuário aprovou o pin", "at": "…" }] }
+```
+
+```json
+{ "verdict": "PASS|FAIL", "at": "…",
+  "hooks": [{ "hook": "security", "verdict": "APPROVE", "open": 0, "worst": null, "blocking": false }],
+  "waivers": 1 }
+```

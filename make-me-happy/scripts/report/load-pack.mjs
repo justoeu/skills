@@ -12,6 +12,15 @@ import { scorePack, verdictOf, immutabilityTests } from '../score.mjs';
 import { STEPS } from '../run-meta.mjs';
 
 export const AXES = ['standards', 'spec', 'correctness'];
+export const HOOKS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness'];
+export const HOOK_LABELS = {
+  'arch-alignment': 'Arquitetura ↔ SDD',
+  reinvention: 'Não reinventar a roda',
+  security: 'Segurança do diff',
+  performance: 'Performance do diff',
+  overengineering: 'Sem overengineering',
+  'deps-freshness': 'Deps na última ativa',
+};
 const TASK_STATUS = new Set(['OPEN', 'IN_PROGRESS', 'DONE', 'BLOCKED']);
 const SEVERITIES = ['critical', 'high', 'medium', 'low', 'info'];
 const MAX_SPEC_BYTES = 1_500_000;
@@ -75,6 +84,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
   const payloads = normalizePayloads(payloadsRaw, warn);
   const reviews = loadReviews(dir, readText, readJson, warn);
   const extraReviews = loadExtraReviews(dir, readText);
+  const hooksPack = loadHooks(dir, readJson, warn);
   const projectGates = loadProjectGates(readJson('project-gates.json'), extraReviews, meta, warn);
   const spec = loadSpec(meta, tasksDoc, repoRoot, readText);
   const flow = readText('flow.mmd');
@@ -100,6 +110,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
     payloads,
     reviews,
     extraReviews,
+    hooksPack,
     projectGates,
     score,
     spec,
@@ -536,8 +547,81 @@ function loadReviews(dir, readText, readJson, warn) {
   return out;
 }
 
-function guessVerdict(md) {
-  const v = verdictOf(md);
+// ---------- hooks ----------
+
+function loadHookFinding(f, i) {
+  const n = normFinding(f, i);
+  if (!isObj(f)) return n;
+  return {
+    ...n,
+    canonical: f.canonical || null,
+    owasp: f.owasp || null,
+    catalog: f.catalog || null,
+    kind_problem: f.kind || null,
+    source: f.source || null,
+    spec_ref: f.spec_ref || null,
+    arch_ref: f.arch_ref || null,
+    followup: f.followup === true,
+    dep: f.dep || null,
+    count: f.count || null,
+  };
+}
+
+function loadHooks(dir, readJson, warn) {
+  const out = {};
+  for (const id of HOOKS) {
+    const doc = readJson(`hooks/${id}.json`);
+    if (!doc) {
+      out[id] = { present: false, verdict: null, round: null, summary: null, findings: [], deps: [], label: HOOK_LABELS[id] };
+      continue;
+    }
+    const v = String(doc.verdict || '').toUpperCase();
+    const verdict = ['APPROVE', 'REJECT', 'SKIP', 'OPEN'].includes(v) ? v : null;
+    if (!verdict) warn(`hooks/${id}.json`, `verdict "${doc.verdict}" fora do enum APPROVE|REJECT|SKIP|OPEN`);
+    out[id] = {
+      present: true,
+      verdict,
+      round: doc.round ?? null,
+      summary: doc.summary || null,
+      findings: arr(doc.findings).map(loadHookFinding),
+      deps: arr(doc.deps).filter(isObj).map((d) => ({
+        name: d.name || '?', current: d.current ?? null, latest: d.latest ?? null,
+        state: d.state || 'unknown', ecosystem: d.ecosystem || null, dev: d.dev === true,
+      })),
+      scope: doc.scope || null,
+      label: HOOK_LABELS[id],
+    };
+  }
+  const waivers = readJson('hooks/waivers.json');
+  const verdictDoc = readJson('hooks/verdict.json');
+  const archMap = readJson('hooks/arch-map.json');
+  const diffFacts = readJson('hooks/diff-facts.json');
+  return {
+    hooks: out,
+    waivers: arr(waivers?.waivers).filter(isObj).map((w) => ({
+      hook: w.hook || '?', finding: w.finding || '?', reason: w.reason || '', at: w.at || null,
+    })),
+    verdict: verdictDoc && isObj(verdictDoc) ? {
+      verdict: verdictDoc.verdict || null,
+      at: verdictDoc.at || null,
+      rows: arr(verdictDoc.hooks).filter(isObj),
+    } : null,
+    archMap: archMap && isObj(archMap) ? {
+      present: true, source: archMap.source || null, style: archMap.style || null,
+      libs: arr(archMap.libs).length, adrs: arr(archMap.adrs).length, containers: arr(archMap.containers).length,
+    } : { present: false },
+    diffFacts: diffFacts && isObj(diffFacts) ? {
+      present: true,
+      files: arr(diffFacts.files).length,
+      commits: arr(diffFacts.commits).length,
+      depsNew: arr(diffFacts.manifests).reduce((n, m) => n + arr(m.added).length, 0),
+      routes: arr(diffFacts.routes).length,
+      migrations: arr(diffFacts.migrations).length,
+    } : { present: false },
+  };
+}
+
+function guessVerdict(md) {  const v = verdictOf(md);
   if (v) return v;
   if (/\b(Overall|Resultado|Status)\s*:\s*\**\s*(PASS|APROVADO|APPROVED)/i.test(md) || /^\s*\**APROVAD[OA]/im.test(md)) return 'APPROVE';
   if (/\b(Overall|Resultado|Status)\s*:\s*\**\s*(FAIL|REPROVADO|REJECTED)/i.test(md)) return 'REJECT';
