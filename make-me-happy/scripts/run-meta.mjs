@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const STEPS = [
-  'explore', 'planner', 'worktrees', 'implement', 'immutability',
+  'explore', 'planner', 'worktrees', 'implement', 'immutability', 'ui-acceptance',
   'review', 'score', 'clean', 'project-gates',
 ];
 export const STEP_STATUS = ['in_progress', 'done', 'failed', 'skipped'];

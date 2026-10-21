@@ -27,6 +27,7 @@ const HOOK_DESC = {
   performance: 'N+1, query sem teto, índice faltando, hot path — nos fluxos que o diff toca.',
   overengineering: 'Peça estrutural sem requisito que a pague (diff + SDD + arch-map).',
   'deps-freshness': 'Dep nova resolve para a última ativa; dep velha vira proposta de follow-up.',
+  'ui-acceptance': 'Runtime: app sobe, login, jornadas dirigidas (driver headless/MCP), console, rede, contrato e padrão visual.',
 };
 
 const AXIS_LABEL = { standards: 'Standards', spec: 'Spec', correctness: 'Correctness' };
@@ -621,6 +622,28 @@ function hookFindingItem(f) {
   </li>`;
 }
 
+function uiBlock(hp) {
+  const ui = hp.ui;
+  if (!ui.scope.present) return '';
+  const rows = ui.journeys.map((j) => `<tr><th scope="row">${esc(j.screen)}</th><td>${chip(j.verdict || '?', j.verdict === 'APPROVE' ? 'ok' : j.verdict === 'REJECT' ? 'bad' : 'neutral')}</td><td>${j.mode ? esc(j.mode) : '—'}</td><td>${j.steps_ok != null ? `${esc(j.steps_ok)}/${esc(j.steps_total)}` : '—'}</td><td>${j.console ? `<span class="bad-text">${j.console}</span>` : '0'}</td><td>${j.network ? `<span class="warn-text">${j.network}</span>` : '0'}</td><td>${j.screenshots || 0}</td></tr>`).join('');
+  const boot = ui.boot.present
+    ? `<div><dt>boot</dt><dd><code>${esc(ui.boot.cmd || '—')}</code> ${ui.boot.url ? `→ <code>${esc(ui.boot.url)}</code>` : ''} ${ui.boot.ok === true ? chip('ok') : ui.boot.ok === false ? chip('fail') : ''}</dd></div>`
+    : '';
+  const e2e = ui.e2e.present
+    ? `<div><dt>e2e do repo</dt><dd><code>${esc(ui.e2e.cmd || '—')}</code> ${chip(ui.e2e.ok ? 'ok' : 'fail')}</dd></div>`
+    : '';
+  const gallery = ui.gallery.length
+    ? `<details class="card"><summary><strong>Galeria</strong> <span class="muted small">${ui.gallery.length} screenshot(s) da jornada</span></summary><div class="ui-gallery">${ui.gallery.map((g) => `<figure><img src="${g.data}" alt="${esc(g.name)}" loading="lazy"/><figcaption>${esc(g.name)}</figcaption></figure>`).join('')}</div></details>`
+    : '';
+  return `<div class="card"><h2>Aceitação de UI <span class="muted">· ${ui.scope.touched ? 'em escopo' : 'sem UI no pack'}</span></h2>
+    <p class="muted small">Passo 4z: boot pelo jeito do repo, login de teste, jornadas dirigidas com evidência por código (console/rede/screenshots). Modo fast: spec direto + driver headless; guided: Playwright MCP explora 1× e destila o spec. Re-run sempre headless.</p>
+    ${ui.scope.how ? `<p class="small">${esc(ui.scope.how)} · ${ui.scope.screens} tela(s) declarada(s)</p>` : ''}
+    <div class="facts">${boot}${e2e}</div>
+    ${rows ? `<div class="table-wrap"><table><thead><tr><th scope="col">Tela</th><th scope="col">Veredito</th><th scope="col">Modo</th><th scope="col">Passos</th><th scope="col">Console</th><th scope="col">Rede ≥400</th><th scope="col">Shots</th></tr></thead><tbody>${rows}</tbody></table></div>` : ''}
+    ${gallery}
+  </div>`;
+}
+
 function hooksPanel(p) {
   const hp = p.hooksPack;
   const intro = '<p class="muted">Hooks de verificação — rodam no passo 5 junto com os 3 eixos. Achado aberto com severidade ≥ high e sem waiver bloqueia o fechamento do pack, igual à cobertura. OPEN (sem rede, hook não aplicável) nunca derruba.</p>';
@@ -649,7 +672,7 @@ function hooksPanel(p) {
   const waivers = hp.waivers.length
     ? `<div class="card"><h2>Waivers</h2><ul class="findings">${hp.waivers.map((w) => `<li class="finding"><div class="f-head">${chip('WAIVED', 'warn')} <strong>${esc(w.hook)}#${esc(w.finding)}</strong></div>${w.reason ? `<div class="small">${inline(w.reason)}</div>` : ''}${w.at ? `<div class="small muted">${esc(w.at)}</div>` : ''}</li>`).join('')}</ul></div>`
     : '';
-  return `${head}<div class="axes">${cols.join('')}</div>${waivers}`;
+  return `${head}<div class="axes">${cols.join('')}</div>${uiBlock(hp)}${waivers}`;
 }
 
 function score(p) {
@@ -736,6 +759,10 @@ details.card>summary{cursor:pointer}
 .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid-2>.card{margin:0}.grid-2{margin-bottom:14px}
 .muted{color:var(--muted)}.small{font-size:.85rem}.note{margin:0 0 12px}.okline{color:var(--ok);font-weight:600}.bad-text{color:var(--bad)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ui-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.ui-gallery figure{margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--panel-2)}
+.ui-gallery img{display:block;width:100%;height:auto;border-bottom:1px solid var(--border)}
+.ui-gallery figcaption{font-size:.72rem;color:var(--muted);padding:4px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.75rem;font-weight:700;letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
 .chip.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
 .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}.chip.neutral{background:var(--neutral-soft);color:var(--muted);border-color:var(--border)}

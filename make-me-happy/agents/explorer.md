@@ -34,6 +34,9 @@ Depois, só o que o kind precisa. Uma pergunta de cada vez. Não invente a respo
 - O que passa a existir que hoje não existe?
 - Quem usa (ator / sistema)?
 - Contrato visível (API, UI, CLI, evento): entrada e saída, se houver
+- **Tela nova ou alterada?** Descreva a **jornada** (passos do usuário), os estados
+  (vazio, erro, carregando) e o **padrão de referência** (design system do repo ou
+  tela irmã) — é isso que o Motorista (§4z) vai dirigir e conferir em runtime
 - Fora de escopo
 - Como sabemos que está pronto
 
