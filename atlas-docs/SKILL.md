@@ -1,6 +1,8 @@
 ---
 name: atlas-docs
 description: "Gera documentação interativa ultra completa e DEEP da aplicação: lê o código, levanta TODOS os fluxos do sistema (inventário de entrypoints como régua — rota, consumer, cron, webhook, worker), mapeia cada um end-to-end clicável com payload por passo e diagrama de classes do fluxo (qual classe, qual método e o que é chamado), monta a página C4 com níveis C1 (contexto: atores e sistemas externos) e C2 (containers e suas ligações), além de diagrama de componentes, contratos de API, DDL das tabelas, variáveis de ambiente (o que é, quando e em qual fluxo é usada), eventos & filas, terceiros, dependências, operação e Score (cobertura + Quality Gateway). Produz dashboard HTML navegável em docs/atlas/ e é incremental a cada scan. Use quando o pedido for 'documenta este app', 'gera dashboard/documentação interativa', 'atlas', 'doc interativa', 'atualiza a documentação', 'quais são os fluxos desta aplicação', 'como funciona este serviço', 'quais env vars esta app usa', 'diagrama de classes', 'c4'."
+metadata:
+  version: 1.1.0
 ---
 
 # /atlas-docs

@@ -12,6 +12,8 @@ description: >
   desatualizadas (latest stable only). Gera FINDINGS.json + REPORT + ROADMAP + TASKS + HTML.
   Sentinel deep: cartographer→hunters→refuter 2/3→sec-verify.mjs. Fix = red→green.
   Trigger: /ultra-deep-audit, --full, --depth deep, --only sentinel|lyra|janus|moira|sigil|basilisk|proteus|mirage|artemis|daedalus|echo|laconic|mentor.
+metadata:
+  version: 1.0.0
 ---
 
 # Ultra-Deep Audit
