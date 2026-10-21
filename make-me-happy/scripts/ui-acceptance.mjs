@@ -89,7 +89,7 @@ export function buildUiScope(repoRoot, outDir, { base } = {}) {
   const hasSwiftUi = fs.existsSync(path.join(repoRoot, 'Package.swift')) || fs.existsSync(path.join(repoRoot, 'ios'));
   const hasRailsViews = fs.existsSync(path.join(repoRoot, 'app', 'views'));
 
-  // telas declaradas no contrato do SDD
+  // telas declaradas no contrato do SDD + decisão do setup (bypass é do usuário)
   const payloads = loadJson(path.join(outDir, 'payloads.json'), []);
   const uiPayloads = (Array.isArray(payloads) ? payloads : []).filter((p) => p && p.kind === 'ui');
   const screens = uiPayloads.map((p) => ({ name: p.name, spec_ref: p.spec_ref || null, payload: p }));
@@ -97,8 +97,12 @@ export function buildUiScope(repoRoot, outDir, { base } = {}) {
   const uiTouched = frontendHits.length > 0 || uiPayloads.length > 0
     || (frameworks.length > 0 && files.length === 0 && false); // sem diff e sem payload: não decide sozinho
 
+  const meta = loadJson(path.join(outDir, 'run-meta.json'), {});
+  const bypass = meta.ui_drive === 'off';
+
   return {
     ui_touched: Boolean(uiTouched),
+    ...(bypass ? { bypass: true, bypass_reason: 'usuário optou por não testar telas no setup (ui_drive=off)' } : {}),
     how: frontendHits.length
       ? `${frontendHits.length} arquivo(s) de frontend no diff`
       : uiPayloads.length
