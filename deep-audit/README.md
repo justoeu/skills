@@ -8,9 +8,14 @@ report HTML + task tracker. Invocada por `/deep-audit`, `/deep-audit --full` ou
 |---|---|
 | Skill (contrato da rodada) | [`SKILL.md`](./SKILL.md) |
 | Scripts determinísticos | [`scripts/`](./scripts/) |
+| Agentes (prompts, 25) | [`agents/`](./agents/) |
 | Catálogo de bugs clássicos | [`catalogs/classic-bugs.md`](./catalogs/classic-bugs.md) |
 | Catálogo de boas práticas por linguagem | [`catalogs/best-practices.md`](./catalogs/best-practices.md) |
-| Agentes | `~/.claude/agents/*.md` |
+
+Fonte única: o harness (`~/Developer/harness/skills/deep-audit`). Os hosts leem por
+symlink (`~/.claude/skills`, `~/.codex/skills`, `~/.agents/skills`, `~/.grok/skills`);
+no Claude Code os `subagent_type`s também são registrados via links em
+`~/.claude/agents/`. Exposição auditada por `scripts/check-links.mjs` na raiz do repo.
 
 ## Roster
 
@@ -55,7 +60,7 @@ report HTML + task tracker. Invocada por `/deep-audit`, `/deep-audit --full` ou
 ## Pipeline
 
 ```bash
-SKILL=~/.claude/skills/deep-audit
+SKILL=~/Developer/harness/skills/deep-audit   # ou o symlink do seu host (~/.claude/skills/deep-audit, …)
 eval "$(node "$SKILL/scripts/init-run.mjs" --root . --full)"   # OUT/APP/VERSION/BRANCH/MODE/DEPTH/EFFORT/BASE/SEC_DIR
 
 node "$SKILL/scripts/detect-stack.mjs" --root . > "$OUT/stack.json"
