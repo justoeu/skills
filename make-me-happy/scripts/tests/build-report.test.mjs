@@ -13,7 +13,7 @@ import { recordStep } from '../run-meta.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, '..', 'build-report.mjs');
 const NOW = new Date('2026-10-01T12:00:00Z');
-const PANELS = ['overview', 'sdd', 'impl', 'fluxo', 'payloads', 'testes', 'review', 'score', 'gates'];
+const PANELS = ['overview', 'sdd', 'impl', 'fluxo', 'payloads', 'testes', 'review', 'hooks', 'score', 'gates'];
 
 function makePack(files = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-report-'));
