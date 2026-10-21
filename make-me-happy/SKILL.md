@@ -13,6 +13,7 @@ description: >
   worktree, --loop full|task, --worktree, --cobertura, make me happy.
 compatibility: Requires git and Node.js for scripts. Any coding agent that can read this SKILL.md, run bash/node, and spawn subagents (or run slices inline).
 metadata:
+  version: 1.1.0
   aliases: mmh
 ---
 

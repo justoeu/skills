@@ -10,14 +10,49 @@ Não copie estas pastas para dentro de um app (`.claude/skills`, `.agents/skills
 skills/
 ├── abuse-audit/          # superfície de abuso (cota, DoS de aplicação)
 ├── ultra-deep-audit/     # auditoria multi-agente + pack HTML
+├── deep-audit/           # bateria de detecção 15 lentes + correção test-first
 ├── make-me-happy/        # implementa SDD; alias de invocação /mmh
 ├── atlas-docs/           # documentação interativa incremental da aplicação
 ├── sonar-swift-local/    # Swift/ObjC no SonarQube via instância local + plugin
+├── scripts/
+│   ├── check-links.mjs   # exposição nos hosts: drift, --fix, --ensure
+│   └── tests/
 ├── AGENTS.md             # gitignored — convenções locais da máquina
 └── README.md
 ```
 
 `/mmh` **não** é uma skill irmã. É o mesmo `make-me-happy`; na instalação o host ganha um segundo link com o nome `mmh` apontando para essa pasta.
+
+## Exposição nos hosts · versionamento · checker
+
+**Skill se expõe por symlink; cópia física é bug.** O repo é a fonte única da
+verdade; mudança aqui aparece na hora em todos os hosts — não existe
+"atualizar skill no host".
+
+| Host | Root de skills |
+|---|---|
+| Claude Code | `~/.claude/skills` |
+| Codex | `~/.codex/skills` |
+| muse · opencode · agy | `~/.agents/skills` (root compartilhado) |
+| grok | `~/.grok/skills` |
+
+Implantar / auditar a exposição:
+
+```bash
+node scripts/check-links.mjs                 # DRIFT (cópia física) · WARN (link fora) · INFO (não exposta)
+node scripts/check-links.mjs --fix           # troca cópia por symlink SÓ se for subconjunto do harness
+node scripts/check-links.mjs --ensure <skill> # cria os symlinks faltantes em todos os hosts
+node --test scripts/tests/*.test.mjs
+```
+
+Rode o checker **no fim de toda mudança** — ele pega o drift antes do host
+servir skill velha (ex.: cópia de 14/09 no lugar de symlink).
+
+**Versionamento**: toda skill carrega `metadata.version` semver no frontmatter do
+`SKILL.md`. **MAJOR** quebra contrato de invocação/pack (flags, arquivos do pack
+que consumidores leem); **MINOR** adiciona comportamento sem quebrar; **PATCH**
+ajusta texto/bug. Bump no mesmo PR da mudança. O checker denuncia cópia física
+mostrando versão da cópia × versão do harness.
 
 ---
 
@@ -54,6 +89,24 @@ A skill sobe uma instância **local** com o plugin `insideapp-fr/sonar-apple`, f
 Nunca instala o plugin em servidor compartilhado: ele usa o classloader do SonarQube, e incompatibilidade impede o servidor inteiro de subir.
 
 ---
+
+### [`deep-audit`](deep-audit/SKILL.md)
+
+Bateria de detecção em **15 lentes** (arquitetura, dirty code, complexidade,
+duplicação, segurança com painel adversarial, performance, N+1, testes, CVE,
+bugs clássicos). **Apuração por código** — o modelo não se auto-aprova — com
+pack navegável (`FINDINGS.json` + HTML + TASKS) e correção **test-first**
+(falha antes, passa depois, provada por reversão). Predecessora temática do
+`ultra-deep-audit`; mantida como entrada mais leve.
+
+| | |
+|---|---|
+| **Quando** | Detecção ampla de problemas com correção incluída |
+| **Comando** | `/deep-audit` · `/deep-audit --full` · `/deep-audit <lente>` |
+| **Pack** | `Docs/audit/deep/<data>/` |
+
+Não implementa feature do zero (para isso, `make-me-happy`). Auditoria
+multi-agente completa → `ultra-deep-audit`.
 
 ### [`ultra-deep-audit`](ultra-deep-audit/SKILL.md) · [README da skill](ultra-deep-audit/README.md)
 
