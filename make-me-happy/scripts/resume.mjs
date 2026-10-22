@@ -34,6 +34,7 @@ function verdict(dir, name) {
 
 export function inferNextStep(dir, leftover) {
   const meta = loadJson(path.join(dir, 'run-meta.json'), {});
+  if (meta.status === 'closed') return 'closed';
   const specReady = Boolean(meta.spec) && meta.spec_status !== 'draft';
   const tasks = loadJson(path.join(dir, 'TASKS.json'), { tasks: [] }).tasks || [];
   const wt = loadJson(path.join(dir, 'worktrees.json'), { slices: [], skipped: false });

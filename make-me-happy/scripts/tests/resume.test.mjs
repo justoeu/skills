@@ -78,3 +78,17 @@ test('findPacks ignores empty dirs', () => {
   fs.mkdirSync(path.join(root, 'docs', 'impl', 'make-me-happy', 'noise'), { recursive: true });
   assert.deepEqual(findPacks(root), []);
 });
+
+test('run-meta status closed is final even when the pack artifacts look unfinished', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-root-'));
+  const dir = path.join(root, 'docs', 'impl', 'make-me-happy', '2026-10-17-fix-x');
+  write(dir, 'run-meta.json', { spec: 'docs/s.md', spec_status: 'confirmed', status: 'closed' });
+  write(dir, 'TASKS.json', { tasks: [{ id: 'T-001', status: 'DONE', tests_added: 1, red_green: true }] });
+  assert.equal(inferNextStep(dir, []), 'closed');
+  const state = resumeState(root, 'mmh');
+  assert.equal(state.resumable, false);
+  assert.deepEqual(state.open_packs, []);
+
+  write(dir, 'run-meta.json', { spec: 'docs/s.md', spec_status: 'confirmed', status: 'in_progress' });
+  assert.equal(inferNextStep(dir, []), 'worktrees-add');
+});
