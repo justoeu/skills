@@ -1,8 +1,8 @@
 ---
 name: atlas-docs
-description: "Gera documentação interativa ultra completa e DEEP da aplicação: lê o código, levanta TODOS os fluxos do sistema (inventário de entrypoints como régua — rota, consumer, cron, webhook, worker), mapeia cada um end-to-end clicável com payload por passo e diagrama de classes do fluxo (qual classe, qual método e o que é chamado), monta a página C4 com níveis C1 (contexto: atores e sistemas externos) e C2 (containers e suas ligações), além de diagrama de componentes, contratos de API, DDL das tabelas, variáveis de ambiente (o que é, quando e em qual fluxo é usada), eventos & filas, terceiros, dependências, operação e Score (cobertura + Quality Gateway). Produz dashboard HTML navegável em docs/atlas/ e é incremental a cada scan. Use quando o pedido for 'documenta este app', 'gera dashboard/documentação interativa', 'atlas', 'doc interativa', 'atualiza a documentação', 'quais são os fluxos desta aplicação', 'como funciona este serviço', 'quais env vars esta app usa', 'diagrama de classes', 'c4'."
+description: "Gera e atualiza documentação interativa de aplicações a partir do código: inventário de entrypoints, fluxos completos, classes, C4, contratos, dados, configuração e proveniência. Produz um pack HTML/JSON incremental em docs/atlas/. Use para documentar uma aplicação, explicar suas jornadas ou atualizar seu Atlas existente."
 metadata:
-  version: 1.1.0
+  version: 2.0.0
 ---
 
 # /atlas-docs
@@ -23,10 +23,10 @@ Lê o código da aplicação, entende o que ela faz e devolve **um dashboard HTM
 ## As cinco regras de ouro
 
 1. **O HTML nunca é editado à mão.** Você só escreve `app-model.json`; `atlas_build.py` injeta no template. Assim o layout é sempre o mesmo padrão em qualquer app e qualquer LLM.
-2. **Borda cheia = derivado do código. Borda tracejada = exige fonte externa.** Todo dado de runtime (linhas de tabela, lag, latência, volume) só entra com fonte real declarada (telemetria, dump, painel). Sem fonte → campo com `prov: "external"`, valor `—` e badge `NÃO CONECTADO`. **Nunca invente número de runtime.**
+2. **Borda cheia = derivado do código. Borda tracejada = exige fonte externa.** Todo dado de runtime (linhas de tabela, lag, latência, volume) só entra com fonte real declarada (telemetria, dump, painel). Declare `source: {ref, observedAt}` com referência ao artefato/painel consultado e timestamp ISO 8601 com fuso da observação. Sem essa fonte → `prov: "external"`, valor `—` e badge `NÃO CONECTADO`. O build remove valores sem fonte dos campos runtime conhecidos; fonte declarada aparece como `FONTE DECLARADA`, nunca como dado derivado do código. **Nunca invente número de runtime.**
 3. **Payload é exemplo derivado do código** (schemas, serializers, DTOs, fixtures), não tráfego capturado. O dashboard diz isso no próprio rodapé da aba. Se existir fixture/log de exemplo real, use e cite a fonte em `src`.
-4. **Segredo vira `****` antes de entrar no JSON.** URL com credencial, password de compose, token de header, chave privada. O build roda um segundo mascaramento por regex, mas o primeiro é seu.
-5. **Histórico nunca é apagado.** Scan novo faz upsert no modelo; `history.scans`, `history.coverage` e `history.changelog` só crescem (prepend).
+4. **Segredo vira `****` antes de entrar no JSON.** URL com credencial, password de compose, token de header, chave privada. O build aplica uma segunda sanitização a campos sensíveis, payload JSON, URLs com userinfo/query sensível, headers e chaves privadas. Isso não identifica todo formato possível: confira os artefatos antes de versionar; a primeira sanitização continua sendo sua.
+5. **Histórico nunca é apagado.** Scan novo faz upsert no modelo; `history.scans` e `history.changelog` recebem entradas no topo; `history.coverage` acrescenta observações ao fim. O scan não é dono de `history`: seus arrays são ignorados pelo merge.
 
 ---
 
@@ -34,8 +34,8 @@ Lê o código da aplicação, entende o que ela faz e devolve **um dashboard HTM
 
 A documentação é **deep por definição**. O scan não fecha enquanto existir jornada da aplicação sem fluxo documentado. Isto não é preferência de estilo: é o produto.
 
-1. **Inventário antes da narração.** Antes de escrever qualquer fluxo, liste TODA a superfície de entrada da aplicação: cada rota HTTP, cada consumer de tópico/fila, cada cron/scheduled job, cada webhook de entrada, cada worker, listener e CLI de backfill. O inventário vira `entrypoints` no modelo — é a régua de fechamento do scan.
-2. **Cada entrypoint termina `mapeado` ou `trivial`.** `mapeado` = vira fluxo (com `flow` apontando o id). `trivial` = não é jornada (healthcheck, readiness, leitura mecânica sem regra de negócio) — mas exige `note` dizendo por quê. `nao-mapeado` = **o build falha**: o scan não está pronto e você volta a extrair.
+1. **Inventário antes da narração.** Antes de escrever qualquer fluxo, liste TODA a superfície de entrada da aplicação: cada rota HTTP, cada consumer de tópico/fila, cada cron/scheduled job, cada webhook de entrada, cada worker, listener e CLI de backfill. O inventário vira `entrypoints` no modelo — é a régua de fechamento do scan. Inclua APIs exportadas de bibliotecas quando forem a superfície pública. Um projeto sem entrypoints pode ter `entrypoints: []` apenas com `flows: []` e `entrypointsNote` explicando a ausência.
+2. **Cada entrypoint termina `mapeado` ou `trivial`.** `mapeado` = vira fluxo (com `flow` apontando o id). `trivial` = não é jornada (healthcheck, readiness, leitura mecânica sem regra de negócio) — mas exige `note` dizendo por quê. `nao-mapeado`, inventário ausente ou `trivial` sem justificativa = **o build falha**: o scan não está pronto e você volta a extrair.
 3. **Agrupar é permitido, omitir não.** O CRUD do mesmo recurso pode ser um fluxo; várias rotas de leitura do mesmo aggregate podem compartilhar um fluxo de consulta. O que não pode é jornada de negócio (muda estado, move dinheiro, dispara evento, fala com terceiro, exporta arquivo) ficar fora.
 4. **Fluxo vai até o fim.** Documentado pela metade é pior que ausente: siga até a persistência, a chamada externa ou o evento final — **inclusive a continuação assíncrona**. Se um fluxo HTTP termina num evento, o consumer desse evento é parte da história: entra como passo, ou vira fluxo irmão apontado no inventário.
 5. **Apps grandes:** mais fluxos, mesma profundidade. Se a superfície tem 30 entrypoints, o dashboard tem ~15–30 fluxos — todos com payload, `src` e erros. Nunca "os 5 principais".
@@ -69,7 +69,7 @@ python3 ~/.claude/skills/atlas-docs/scripts/atlas_build.py \
   -o docs/atlas/index.html
 ```
 
-Sem Python no host? Os dois scripts são opcionais: o merge pode ser feito por você seguindo as regras da seção *Merge incremental*, e o build é substituído por copiar o `template.html` e colar o JSON no lugar do marcador `@@ATLAS_DATA@@` dentro de `<script id="atlas-data">`. Documente no pack que fez manual.
+Se Python não estiver disponível, prepare o scan-model.json e informe que o pack aguarda validação/build. Não substitua os scripts por colagem manual de JSON: a sanitização, os gates e o escaping fazem parte do contrato de publicação.
 
 ---
 
@@ -90,7 +90,9 @@ Sem Python no host? Os dois scripts são opcionais: o merge pode ser feito por v
 | qualidade | CI (`.github/workflows`), test runner, `Docs/audit/ultra-deep/` (pack mais recente) |
 | documentos | `README*`, `docs/adr/`, postmortems, `CODEOWNERS`, runbooks |
 
-`--delta`: liste os arquivos tocados desde `app.commitPrev` (`git diff --name-only $PREV..HEAD`) e restrinja a extração ao que toca os fluxos afetados.
+`--delta`: a base é **`app.commit`**, o snapshot atualmente documentado; `commitPrev` serve apenas ao histórico do pack. Execute `python3 <skill>/scripts/atlas_delta.py docs/atlas/app-model.json --repo .`. O inventário read-only inclui alterações desde a base, staged/worktree e arquivos untracked. Se retornar `mode: "full"`, refaça o scan completo: não há base verificável. Restrinja a extração aos fluxos afetados e às referências consumidoras; uma remoção exige atualizar também os links env/C4/entrypoints. Para deletar itens, envie listas completas afetadas em merge full; delta não trata omissão como remoção.
+
+Use o HEAD retornado no novo `app.commit`. Se documentar mudanças não commitadas, registre essa condição em `app.syncNote`; o hash sozinho não representa a worktree suja. A próxima rodada continua comparando com a base commitada e reinclui essas mudanças.
 
 ---
 
@@ -102,7 +104,7 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
 
 ```jsonc
 {
-  "schema": "atlas-docs/1",
+  "schema": "atlas-docs/2",
   "app": { "name", "repo", "branch", "commit", "generatedAt", "generator",
            "filesCount", "stackSummary", "syncNote" },
   // identity → página Know-how
@@ -145,7 +147,7 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
   // flows → página Fluxos; o 1º flow COM "diagram" vira o diagrama rico clicável
   "flows": [ {
     "id": "imediata", "label": "Cobrança imediata · cartão", "title": "…", "tag": "…",
-    "cov": 98,                       // opcional: o build apura se ausente
+    "cov": 98,                       // saída derivada: não preencher no scan; build SEMPRE recalcula
     "resumo": "…", "stats": [ { "k": "PASSOS", "v": "5 · compensável" } ],
     "brief": {                       // card do topo da página do fluxo
       "what": "o que é: gatilho, o que entra, o que sai — 2–3 frases",
@@ -191,7 +193,7 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
     } ],
     "notes": [ { "tag": "FALHA|ATENÇÃO|NOTA", "body": "…" } ]
   } ],
-  // entrypoints → régua de fechamento (card no Know-how; build FALHA com nao-mapeado)
+  // entrypoints → obrigatório; build falha se ausente, nao-mapeado ou trivial sem note
   "entrypoints": [
     { "kind": "http|consumer|cron|webhook|cli|listener", "ref": "POST /v1/charges",
       "status": "mapeado", "flow": "imediata" },
@@ -211,8 +213,8 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
     "engine": "Postgres 16 · 11 tabelas · 47 migrações",
     "model": [ { "name": "charges", "hl": true, "lines": [ "PK id · text", "FK customer_id",
                "UQ idempotency_key", "amount_value · bigint" ] } ],
-    "tables": [ { "name": "charges", "rows": "48,2 M", "size": "31 GB", "wps": "210",
-                  "keep": "indefinida", "prov": "external" } ],   // prov external sem fonte → "—"
+    "tables": [ { "name": "charges", "rows": "—", "size": "—", "wps": "—",
+                  "keep": "indefinida", "prov": "external" } ],   // com fonte: source: {ref: "dump.json:3", observedAt: "2026-10-22T10:00:00Z"}
     "ddl": { "file": "0047_add_psp_ref.sql", "sql": "BEGIN; …", "meta": [ "reversível" ] }
   },
   // env → página Variáveis de ambiente
@@ -234,7 +236,7 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
   "events": {
     "engine": "Kafka 3.7",
     "topics": [ { "topic": "billing.charge.authorized", "parts": 3, "group": "webhook-dispatcher",
-                  "lag": "12", "lagKind": "ok|warn|bad", "dlq": "0 msg", "prov": "code|external" } ],
+                  "lag": "—", "lagKind": "ok|warn|bad", "dlq": "—", "prov": "external" } ],
     "catalog": [ { "name": "charge.authorized · v3", "schema": "{ … }", "desc": "…" } ],
     "guarantees": [ { "k": "ENTREGA", "v": "ao menos uma vez" } ]
   },
@@ -264,12 +266,12 @@ Produza um `scan-model.json` seguindo o schema abaixo. Campos ausentes são norm
     "tests":    { "framework": "pytest", "coveragePct": 82, "source": "cobertura CI" },
     "findings": [ { "sev": "CRÍTICO|ALTO|MÉDIO|BAIXO", "title", "where", "source": "ultra-deep-audit 14/09" } ]
   },
-  // history → sidebar + página Histórico + card incremental (merge cuida disto)
+  // history → saída dos scripts; OMITIR no scan novo (arrays recebidos são ignorados)
   "history": {
-    "coverage": [ { "day": "14/09", "v": 98 } ],
-    "scans":    [ { "commit": "a91f3c7", "when": "14/09 09:41", "title": "…", "detail": "…",
-                    "delta": "+7%", "deltaKind": "ok|bad" } ],
-    "changelog": [ { "tag": "NOVO|BREAK|DDL|DOC", "body": "…" } ]
+    "coverage": [ { "day": "2026-10-22", "v": 98, "commit": "a91f3c7", "scan": "id-gerado" } ],
+    "scans":    [ { "id": "id-gerado", "commit": "a91f3c7", "when": "2026-10-22T10:00:00Z", "title": "…", "detail": "…",
+                    "score": 98, "previousScore": 91, "delta": "+7%", "deltaKind": "ok|bad" } ],
+    "changelog": [ { "tag": "NOVO|BREAK|DDL|DOC|REMOVE", "body": "…" } ]
   }
 }
 ```
@@ -319,7 +321,7 @@ Página dedicada **C4 · contexto & containers**, com abas C1/C2 e diagramas cli
 | variáveis de ambiente | 10% | % de vars com `desc` **e** (`flows` ou `used`) preenchidos |
 | quality gates | 25% | pass 100 · warn 60 · fail 0 (média) |
 
-**Bucket ausente → excluído do peso e os demais renormalizam.** Gates ou env ausentes **não** derrubam o score — ficam visíveis como lacuna (`NÃO CONECTADO`).
+**Buckets opcionais gates/env ausentes → excluídos do peso e os demais renormalizam.** Fluxos e modelo/contratos são os componentes documentais de base; ausência de evidência nesses componentes vale zero. O score mede preenchimento documental, não prova semântica, exaustividade nem resultado de produção. Gates ou env ausentes ficam visíveis como lacuna (`NÃO CONECTADO`).
 
 **Diagrama de classes e C4 ainda não têm peso no score** — a completude deles é cobrada por aviso/erro no build e pela apuração impressa (`classes: K/N fluxos · c4: C1 ok · C2 N containers`), não por nota.
 
@@ -336,13 +338,13 @@ Grade: `A ≥ 90` · `B ≥ 75` · `C ≥ 60` · `D ≥ 40` · `F < 40`.
 
 ## Merge incremental
 
-`atlas_merge.py` (ou você, manualmente, seguindo as mesmas regras):
+`atlas_merge.py` aplica estas regras antes do build:
 
 - **Listas com chave natural** fazem upsert: `flows` por `id` (o flow inteiro é substituído, incluindo `classes`) · `contracts.endpoints` por `m+path` · `thirdParty`/`deps` por `name` · `data.model`/`data.tables`/`env.vars` por `name` · `events.topics` por `topic+group` · `c4.context.actors`/`c4.context.systems` por `id` · `c4.context.edges` por `from+to` · `c4.containers` por `id` · `architecture.libs[].items` por `name` · `adrs` por `id` · `ops.*` por `name`/`area`.
-- **Modo `--mode delta`**: itens não mencionados no scan permanecem (você só extraiu o que mudou). **`--mode full`**: a lista nova substitui a antiga inteira.
+- **Modo `--mode delta`**: itens não mencionados no scan permanecem (você só extraiu o que mudou). **`--mode full`**: cada lista fornecida substitui a antiga inteira, inclusive grupos/itens de libs; lista presente vazia remove tudo, campo ausente conserva o anterior. Corrija referências a itens removidos antes do build.
 - **Seções escalares** (`identity`, `architecture` menos listas, `data.engine`, …): campo presente no scan ganha; ausente mantém o antigo.
-- **Sempre**: `app.commitPrev` = commit anterior · nova entrada no topo de `history.scans` com `delta` = score novo − anterior · `history.coverage` ganha o ponto de hoje · changelog do scan (`__changelog` no scan-model) vai para o topo de `history.changelog`.
-- **Changelog é semântico e é seu**: compare o modelo antigo com o novo e escreva as entradas — `NOVO` (nó/fluxo/rota detectado), `BREAK` (contrato mudou de forma incompatível), `DDL` (migração nova), `DOC` (ganho/perda de cobertura, dono ausente). Sem entradas reais, changelog vazio — não fabririque.
+- **Sempre**: `app.commitPrev` = commit anterior · nova entrada no topo de `history.scans` com `delta` = score novo − anterior · `history.coverage` ganha um ponto por scan ou mudança de score, inclusive no mesmo dia (rebuild idêntico não duplica) · changelog do scan (`__changelog` no scan-model) vai para o topo de `history.changelog`, também no primeiro scan. `history` recebido no scan é ignorado; apenas o modelo anterior fornece registros duráveis.
+- **Changelog é semântico e é seu**: compare o modelo antigo com o novo e escreva as entradas — `NOVO` (nó/fluxo/rota detectado), `REMOVE` (elemento removido), `BREAK` (contrato mudou de forma incompatível), `DDL` (migração nova), `DOC` (ganho/perda de cobertura, dono ausente). Sem entradas reais, changelog vazio — não fabririque.
 
 ---
 
@@ -358,6 +360,17 @@ cobertura 71% → 86% · 6 gates: 4 pass · 1 warn · 1 fail
 Abra o dashboard se o host permitir. O pack (`index.html` + `app-model.json`) entra no repo da aplicação — é artefato versionado do app, não da skill.
 
 ---
+
+## Contrato 2 e migração
+
+A versão 2.0.0 emite `schema: "atlas-docs/2"`. O build aceita modelos `atlas-docs/1` e os migra somente após validação bem-sucedida; schemas desconhecidos falham. Antes de reconstruir um pack v1:
+
+- Complete o inventário e as justificativas; resolva IDs duplicados e todos os links `flows`/`flow` órfãos, incluindo env e C4.
+- Não reutilize `cov`/`score` como entrada confiável: os valores anteriores são recalculados, e o score pode diminuir.
+- Para runtime, declare `source.ref` (artefato/painel realmente consultado) e `source.observedAt` (ISO 8601 com fuso). Sem fonte, o build troca rows/size/wps, lag/dlq e stats external/observed por `—`. O script valida a declaração, não consulta telemetria nem prova que o artefato existe; a extração precisa citar evidência real. Campos de configuração, como partições declaradas em manifests, continuam derivados do código.
+- Preserve o modelo anterior ao fazer merge. O histórico antigo é mantido; novas observações incluem commit e ID do scan. A série preserva várias observações no mesmo dia, e um rebuild sem mudança não acrescenta ponto.
+
+Não edite `index.html` antigo para migrar: regenere pelo template novo, que usa listeners e atributos de dados. O build atualiza o JSON também em `--check-only` (essa opção apenas omite o HTML). Se houver erro de validação, nenhum dos dois artefatos é publicado pelo build.
 
 ## O que esta skill NÃO faz
 

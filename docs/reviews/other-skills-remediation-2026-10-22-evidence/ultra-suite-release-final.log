@@ -1,0 +1,94 @@
+✔ rejeita line fora do contrato numérico antes de publicar HTML ou metadados (1456.971209ms)
+✔ renderiza linhas válidas e contadores não confiáveis como texto no DOM do relatório (623.601708ms)
+✔ renderiza o schema lowercase do pack e distingue em progresso (619.650916ms)
+✔ sync-progress e write-pack preservam lowercase e contam somente estados abertos (678.69475ms)
+✔ legacy packs cannot acquire trusted resolved state through --done (153.120833ms)
+✔ the old <dependency>-only parser really does miss BOM property pins (2.5985ms)
+✔ property-only pins become inventory rows with real Maven coordinates (0.553333ms)
+✔ the rationale comment above a pin is carried into the record (0.17425ms)
+✔ a pin already backed by a <dependency> is not double-counted (0.097916ms)
+✔ non-dependency properties are not turned into fake packages (4.058917ms)
+✔ an unmappable pin is reported as skipped-with-reason, never dropped (0.211542ms)
+✔ an unresolvable ${property} in a <plugin> is skipped, not compared as a literal (0.127416ms)
+﹣ every BOM-property pin in backend/pom.xml is mapped and justified (0.156167ms) # project integration: set ULTRA_PROJECT_ROOT explicitly
+✔ the coordinate table only holds group:artifact pairs (0.264875ms)
+✔ dependency findings use the lowercase lifecycle schema consumed by report generators (0.76775ms)
+✔ Compose digest pins are immutable without claiming their contents are current (552.357875ms)
+✔ MySQL LTS policy compares only the selected 8.4 release line (5.38575ms)
+✔ MySQL LTS policy still detects a patch inside the selected line (0.1805ms)
+✔ Docker images without a release policy retain global stable-tag comparison (0.072292ms)
+✔ expired Docker release policy fails closed instead of hiding future upgrades (0.257708ms)
+✔ CLI exits nonzero when the release policy is expired (323.995833ms)
+✔ APP_VERSION alone does not authorize skipping a registry image (0.150792ms)
+✔ only explicitly configured runtime builds are release-managed (0.079625ms)
+✔ npm aliases check the actual registry package and preserve the alias in upgrade commands (7.819583ms)
+✔ npm freshness respects the repository min-release-age before opening an update finding (6.480375ms)
+✔ npm maturity selects only stable releases at or before the exact cutoff (0.771375ms)
+✔ npm maturity never selects a stable release above the latest dist-tag (0.178958ms)
+✔ npm maturity excludes stable versions without publication timestamps (0.18675ms)
+✔ the checked-in CLI includes its stack detector instead of silently returning an empty stack (318.59075ms)
+﹣ o glob dos instrumentos inclui o teste do build-report (0.595417ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ o piso nominal do reparo de agenda exige os três métodos do IT (3.662458ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ agenda-mutation preserva o núcleo já medido e acrescenta as correções desta onda (0.116333ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ assinatura-otp-mutation mede o caminho PKCS#12 real e o diff o dispara (0.066333ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ todo perfil extra passa pelo verificador de integridade do mutations.xml (0.068958ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita mutations.xml ausente (0.054667ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita relatório vazio (0.058083ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita todos os RUN_ERROR, inclusive com aspas simples e na mesma linha (0.050041ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita MEMORY_ERROR com aspas duplas (0.111083ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita divergência no total gerado (0.118375ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real rejeita mortos divergentes de KILLED mais TIMED_OUT (0.060541ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ verificador real aceita somente relatório coerente com aspas mistas e múltiplos mutantes por linha (0.048584ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+✔ sees a Java hotspot nested 9 directories deep (real backend layout) (394.752709ms)
+✔ reports truncated directories instead of dropping them in silence (177.8075ms)
+✔ --strict turns an incomplete traversal into a non-zero exit (278.626375ms)
+✔ flags test sources so production hotspots can be ranked apart (161.484916ms)
+✔ skip-list exclusions are recorded, not invisible (170.018625ms)
+✔ panel rejects UNKNOWN, INCONCLUSIVE and wrong lens without replacing valid output (3482.033625ms)
+✔ legitimate zero candidates completes audit; missing hunter never does (3262.408083ms)
+✔ votes cannot validate a changed candidate, snapshot, or new run (4177.775417ms)
+✔ merge enforces roster bindings and ignores leftover foreign agents (1480.809708ms)
+✔ duplicate IDs and unknown task IDs fail before mutation (2394.956042ms)
+✔ real Git/Node flow: RED/GREEN plus docs check, proof gates, remerge, reopen, second run (14743.791834ms)
+✔ dependency errors and skips are visible in rendered DOM (990.940875ms)
+✔ mixed panel rejects missing IDs/votes and explicit unreviewed coverage (3442.994792ms)
+✔ characterization mode supports N1 IDs and rejects changed finding evidence (5193.644875ms)
+✔ refresh cannot rebind a manually changed aggregate as trusted output (2651.315958ms)
+✔ canonical/explicit dependency policy is local, reported and never silently missing (1195.951958ms)
+✔ empty candidate envelope cannot erase findings produced by completed hunters (1416.745042ms)
+✔ deleting a vote invalidates an already verified audit without a second tally (2897.526541ms)
+✔ new bound producer output requires a new merge; wrong agent identity is rejected (2462.615208ms)
+✔ partial dependency reports cannot claim coverage; real empty scan can (2438.748417ms)
+✔ delta initialization rejects an unresolved Git base without creating a run (683.250709ms)
+✔ concurrent binds cannot both succeed while losing a binding (1125.949541ms)
+✔ invalid agent preserves prior aggregate and reports failure (371.6645ms)
+✔ single object agent output follows the documented surface schema (180.006125ms)
+✔ assigned IDs are reserved before generating missing IDs (166.776542ms)
+✔ directory scope measures actual source and invalid scope fails strict (285.729375ms)
+✔ legacy progress never advertises verified completion (1089.646917ms)
+﹣ runtime image gate rejects a required image without immutable digest (1.839833ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects an incomplete required image set (0.097ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate resolves release env references to the checked-in runtime images (0.0545ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:-attacker.example/runtime:latest} (0.050208ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:+attacker.example/runtime:latest} (0.05275ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE} (0.042292ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest} (0.048584ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest} (0.0595ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE} (0.054875ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate accepts the checked-in development and deployment compose files (0.097459ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate scans four images on two platforms and emits eight CycloneDX SBOMs (0.06875ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure (0.042042ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ runtime image gate executes both checked-in Dockerfiles for both local platforms (0.049167ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ release mode publishes each local runtime once and scans the published multiarch digest (0.032959ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+﹣ publish mode exposes runtime-images.env only after every vulnerability scan passes (0.030458ms) # project integration not run; set ULTRA_PROJECT_ROOT explicitly
+✔ cada agente da bancada existe e o SKILL aponta o arquivo (1.117292ms)
+✔ merge atribui id da bancada e só bloqueia PR com confidence high ou panel (382.785583ms)
+✔ roadmap coloca a bancada de segurança na wave 1 e o Mirage nos imports (390.182083ms)
+ℹ tests 86
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 28
+ℹ todo 0
+ℹ duration_ms 54417.799125

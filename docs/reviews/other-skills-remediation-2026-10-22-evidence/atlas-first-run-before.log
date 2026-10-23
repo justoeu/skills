@@ -1,0 +1,38 @@
+✖ first run creates nested model and HTML output directories (200.035083ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 341.828042
+
+✖ failing tests:
+
+test at atlas-docs/scripts/tests/pipeline-regression.test.mjs:45:1
+✖ first run creates nested model and HTML output directories (200.035083ms)
+  AssertionError [ERR_ASSERTION]: Traceback (most recent call last):
+    File "~/Developer/harness/skills/atlas-docs/scripts/atlas_merge.py", line 196, in <module>
+      main()
+      ~~~~^^
+    File "~/Developer/harness/skills/atlas-docs/scripts/atlas_merge.py", line 187, in main
+      with open(out, "w", encoding="utf-8") as fh:
+           ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-regression-OvAkIb/docs/atlas/app-model.json'
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/atlas-docs/scripts/tests/pipeline-regression.test.mjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

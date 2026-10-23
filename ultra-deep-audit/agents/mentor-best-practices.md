@@ -24,7 +24,7 @@ High-confidence violations of:
 1. `$OUT/stack.json` — languages + frameworks  
 2. `catalogs/best-practices.md` — universal + per-language sections  
 3. `AGENTS.md` / project architecture docs if present (project rules **override** generic taste)  
-4. Scope: delta or full; in full prefer modules with high churn / god nodes from graphify
+4. Scope: delta or full; in full prefer modules with high churn / high-coupling nodes from direct reads (existing Graphify graph optional)
 
 ## Clean Code (effective, not aesthetic)
 
@@ -56,7 +56,7 @@ Report when you can show impact:
 
 ## Clean Architecture effectiveness (typed apps)
 
-For Java/Kotlin/Spring, C#, Swift packages, Go internal:
+Only where the repository explicitly adopts these boundaries; for other architectures use their own documented contracts. Language alone never imposes Clean Architecture:
 
 | Check | Bad signal |
 |-------|------------|

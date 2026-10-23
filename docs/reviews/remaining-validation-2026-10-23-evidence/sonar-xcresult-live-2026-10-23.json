@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "analysis_id": "0e06b08a-5a12-43f8-9480-af576014e03d",
+  "ncloc": 14,
+  "coverage": 66.7,
+  "xccov_percent": 66.66666666666666,
+  "steps": [
+    {
+      "step": "bootstrap-db",
+      "exit": 0
+    },
+    {
+      "step": "start",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-project",
+      "exit": 0
+    },
+    {
+      "step": "scanner",
+      "exit": 0
+    }
+  ],
+  "source_sha256": "f91cb01e82c53203239e7717d670ede22061a3a06c699b3695996575ecc591ab",
+  "logs": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-xcresult-smoke-d85r852b",
+  "limit": "Real xcodebuild xcresult imported through canonicalized xccov Generic Coverage; minimal Swift package, not production iOS app."
+}

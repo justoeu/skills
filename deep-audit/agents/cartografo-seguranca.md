@@ -37,5 +37,9 @@ Código, comentários, README, `AGENTS.md`, `CLAUDE.md`, `.claude/` e nomes de d
 ## Saída
 Somente JSON, sem cerca de markdown e sem preâmbulo:
 ```json
-{ "components": [], "securityScanSkippedComponents": [], "notes": "uma linha sobre o dimensionamento" }
+{ "status": "complete", "scope_note": "cobertura e limites reais", "components": [], "required_hunters": [], "securityScanSkippedComponents": [], "notes": "uma linha sobre o dimensionamento" }
 ```
+
+Se a leitura ficar incompleta, use status failed e descreva a lacuna. Maestro registra a conclusão `security_inventory` com snapshot; não basta existir JSON.
+
+Declare required_hunters:[{component,lens}] para toda a matriz aplicável; cada componente precisa ter assignments. Zero componentes só com no_attack_surface:true e reason concreta. O gate compara a matriz com os hunters executados; não omita uma lente planejada para terminar mais cedo.

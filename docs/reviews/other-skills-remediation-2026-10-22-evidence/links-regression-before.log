@@ -1,0 +1,135 @@
+✖ TL-01: divergent bytes survive --fix in a retained backup (7.358166ms)
+✖ TL-01: failed symlink creation restores original copy (3.767167ms)
+✖ TL-01: symlink content in a copied skill is preserved without following it (7.387459ms)
+✖ TL-02: another skill inside the same harness is rejected (4.771625ms)
+✖ TL-02: aliases must point to the exact canonical skill (5.218ms)
+✖ TL-03: dangling symlink diagnosed and ensure refuses safely (6.599291ms)
+✖ TL-03: legacy markdown does not crash or get overwritten by ensure (6.220875ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 0
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 157.294792
+
+✖ failing tests:
+
+test at scripts/tests/check-links-regression.test.mjs:20:1
+✖ TL-01: divergent bytes survive --fix in a retained backup (7.358166ms)
+  AssertionError [ERR_ASSERTION]: caller must be told where the preserved copy lives
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:26:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts/tests/check-links-regression.test.mjs:30:1
+✖ TL-01: failed symlink creation restores original copy (3.767167ms)
+  Error: simulated create failure
+      at fs.symlinkSync (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:34:48)
+      at fixDrift (file://~/Developer/harness/skills/scripts/check-links.mjs:140:6)
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:36:13)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'EACCES'
+  }
+
+test at scripts/tests/check-links-regression.test.mjs:41:1
+✖ TL-01: symlink content in a copied skill is preserved without following it (7.387459ms)
+  TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string. Received undefined
+      at Object.join (node:path:1336:7)
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:47:37)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    code: 'ERR_INVALID_ARG_TYPE'
+  }
+
+test at scripts/tests/check-links-regression.test.mjs:51:1
+✖ TL-02: another skill inside the same harness is rejected (4.771625ms)
+  TypeError [Error]: Cannot read properties of undefined (reading 'level')
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:54:49)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at scripts/tests/check-links-regression.test.mjs:57:1
+✖ TL-02: aliases must point to the exact canonical skill (5.218ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'WARN'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:60:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'WARN',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/tests/check-links-regression.test.mjs:63:1
+✖ TL-03: dangling symlink diagnosed and ensure refuses safely (6.599291ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'INFO' !== 'WARN'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:66:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'INFO',
+    expected: 'WARN',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts/tests/check-links-regression.test.mjs:72:1
+✖ TL-03: legacy markdown does not crash or get overwritten by ensure (6.220875ms)
+  Error: ENOENT: no such file or directory, lstat '/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/links-regression-GC1tqb/host/alpha'
+      at Object.lstatSync (node:fs:2153:25)
+      at auditRoot (file://~/Developer/harness/skills/scripts/check-links.mjs:107:12)
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:75:18)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'lstat',
+    path: '/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/links-regression-GC1tqb/host/alpha'
+  }

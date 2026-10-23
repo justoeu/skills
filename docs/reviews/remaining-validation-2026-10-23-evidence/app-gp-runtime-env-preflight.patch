@@ -1,0 +1,21 @@
+--- a/deployments/scripts/runtime-images-supply-chain-gate.sh
++++ b/deployments/scripts/runtime-images-supply-chain-gate.sh
+@@ -11,6 +11,10 @@
+ PUBLISH_REGISTRY="${RUNTIME_IMAGE_PUBLISH_REGISTRY:-}"
+ PUBLISH_TAG="${RUNTIME_IMAGE_PUBLISH_TAG:-}"
+ ENV_FILE="${RUNTIME_IMAGE_ENV_FILE:-$ROOT_DIR/target/runtime-images.env}"
++# Any failed publish attempt must invalidate a previous deploy artifact, including preflight errors.
++if [ -n "$PUBLISH_REGISTRY" ]; then
++  rm -f "$ENV_FILE"
++fi
+ IMAGES_FILE="$(mktemp)"
+ PUBLISHED_FILE="$(mktemp)"
+ ENV_STAGE=""
+@@ -110,7 +114,6 @@
+     exit 1
+   }
+   mkdir -p "$(dirname "$ENV_FILE")"
+-  rm -f "$ENV_FILE"
+   ENV_STAGE="$(mktemp "${ENV_FILE}.tmp.XXXXXX")"
+   while IFS= read -r image; do
+     [ -n "$image" ] || continue

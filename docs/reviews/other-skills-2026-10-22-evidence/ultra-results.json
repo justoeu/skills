@@ -1,0 +1,658 @@
+{
+  "root": "/tmp/review-ultra-repro-7kcf8f28",
+  "panel-valid": {
+    "exit": 0,
+    "stdout": "sec-verify: 1 kept / 1 candidates (dropped 0) \u2192 /tmp/review-ultra-repro-7kcf8f28/panel-valid/agent-sentinel.json\nverification.status=verified\n",
+    "stderr": "",
+    "coverage": {
+      "verification_status": "verified",
+      "panel_source": "vote-files",
+      "require_vote_files": true,
+      "candidates_in": 1,
+      "candidates_deduped_out": 1,
+      "panel_reviewed_findings": 1,
+      "panel_quorum_findings": 1,
+      "panel_dropped": 0,
+      "unreviewed_candidate_sites": 0,
+      "quorum": 2,
+      "voters": 3,
+      "dropped_sample": []
+    },
+    "findings": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "severity": "HIGH",
+        "confidence": "high",
+        "path": "src/auth.js",
+        "line": 10,
+        "category": null,
+        "symbol": null,
+        "snippet": null,
+        "source": null,
+        "sink": null,
+        "description": "",
+        "evidence": "",
+        "exploit_scenario": "",
+        "preconditions": [],
+        "impact": "",
+        "fix": "",
+        "cwe": null,
+        "component": null,
+        "lens": null,
+        "verification": "panel",
+        "panel": {
+          "true": 3,
+          "false": 0,
+          "voters": 3
+        },
+        "panel_detail": {
+          "REACHABILITY": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          },
+          "IMPACT": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          },
+          "DEFENSES": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          }
+        },
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "exploit or deny-path fails open",
+          "assert_after": "exploit blocked; legitimate path unchanged"
+        },
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "SEC-SEN-001"
+      }
+    ]
+  },
+  "panel-invalid": {
+    "exit": 0,
+    "stdout": "sec-verify: 0 kept / 1 candidates (dropped 1) \u2192 /tmp/review-ultra-repro-7kcf8f28/panel-invalid/agent-sentinel.json\nverification.status=verified\n",
+    "stderr": "",
+    "coverage": {
+      "verification_status": "verified",
+      "panel_source": "vote-files",
+      "require_vote_files": true,
+      "candidates_in": 1,
+      "candidates_deduped_out": 0,
+      "panel_reviewed_findings": 1,
+      "panel_quorum_findings": 0,
+      "panel_dropped": 1,
+      "unreviewed_candidate_sites": 0,
+      "quorum": 2,
+      "voters": 3,
+      "dropped_sample": [
+        {
+          "temp_id": "C1",
+          "reason": "incomplete-or-invalid-panel",
+          "true": 2,
+          "false": 0,
+          "title": "Missing owner check"
+        }
+      ]
+    },
+    "findings": []
+  },
+  "panel-empty": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "sec-verify: FAIL require-vote-files \u2014 missing 0 file(s): \n",
+    "coverage": {
+      "verification_status": "unverified",
+      "reason": "missing-independent-vote-files",
+      "panel_source": "votes-json",
+      "missing_vote_files": [],
+      "candidates_in": 0,
+      "require_vote_files": true
+    }
+  },
+  "collision-and-close": {
+    "merge": {
+      "exit": 0,
+      "stdout": "merge-findings: 2 raw \u2192 2 unique \u2192 /tmp/review-ultra-repro-7kcf8f28/collision/FINDINGS.json\n",
+      "stderr": ""
+    },
+    "before": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "SEC-SEN-001",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        }
+      },
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Other auth bug",
+        "path": "src/admin.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "OPEN",
+        "blocks_pr": true,
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "id": "SEC-SEN-001"
+      }
+    ],
+    "close": {
+      "exit": 0,
+      "stdout": "Marked DONE: 2 id(s)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/TASKS.md (100% \u00b7 2/2 DONE)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/report.html (app=collision branch=unknown-branch \u00b7 2 findings, no deps-latest.json)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/REPORT.md\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/ROADMAP.md\nIdentity: app=collision version=unknown branch=unknown-branch head=\n\u2705 ALL TASKS COMPLETE \u2014 HTML updated\n",
+      "stderr": ""
+    },
+    "done": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "resolved",
+        "blocks_pr": false,
+        "id": "SEC-SEN-001",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "resolved_in": "2026-10-23 01:27:46 UTC",
+        "resolved_at": "2026-10-23 01:27:46 UTC"
+      },
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Other auth bug",
+        "path": "src/admin.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "resolved",
+        "blocks_pr": false,
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "id": "SEC-SEN-001",
+        "resolved_in": "2026-10-23 01:27:46 UTC",
+        "resolved_at": "2026-10-23 01:27:46 UTC"
+      }
+    ],
+    "complete_title": true,
+    "report": "# Ultra-Deep Audit \u2014 collision\n\n> **App:** `collision` \u00b7 **Version:** `unknown` \u00b7 **Branch:** `unknown-branch` \u00b7 **Mode:** full\n>\n> **Progress:** 2/2 DONE (100%) \u00b7 OPEN 0 \u00b7 updated 2026-10-23 01:27:47 UTC \u00b7 \u2705 COMPLETE\n\n## Project\n\n| Field | Value |\n|-------|-------|\n| App / project | `collision` |\n| Version | `unknown` |\n| Branch | `unknown-branch` |\n| Head | `n/a` |\n| Pack | `collision` |\n| Mode | **full** \u00b7 depth **deep** \u00b7 effort **max** |\n| Root | `/private/tmp/review-ultra-repro-7kcf8f28/collision` |\n| Findings | **2** (DONE 2 \u00b7 OPEN 0) |\n| Severity | HIGH=2 |\n| HIGH/CRITICAL open | **0** |\n| blocks_pr still open | **0** |\n\n## Stack\n\n- Languages: \u2014\n- Frameworks: \u2014\n- Ecosystems: \u2014\n- Package managers: \u2014\n\n## Agents\n\n| Agent | Findings |\n|-------|----------:|\n| Sentinel | 2 |\n\n## Dependencies (Prism)\n\n_Sem `deps-latest.json` neste pack. Rode `check-deps-latest.mjs` na Onda C (Prism)._\n\n## P0 / blocks_pr\n\n- **SEC-SEN-001** [HIGH] \u2705 Missing owner check\n  - `src/auth.js`\n- **SEC-SEN-001** [HIGH] \u2705 Other auth bug\n  - `src/admin.js`\n\n## HIGH (all)\n\n- **SEC-SEN-001** blocks=false status=resolved \u2014 Missing owner check\n- **SEC-SEN-001** blocks=false status=resolved \u2014 Other auth bug\n\n## Notes\n\n_Oracle notes (manual) go here._\n",
+    "reopen": {
+      "exit": 0,
+      "stdout": "Marked OPEN: 2 id(s)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/TASKS.md (0% \u00b7 0/2 DONE)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/report.html (app=collision branch=unknown-branch \u00b7 2 findings, no deps-latest.json)\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/REPORT.md\nWrote /tmp/review-ultra-repro-7kcf8f28/collision/ROADMAP.md\nIdentity: app=collision version=unknown branch=unknown-branch head=\nOPEN remaining: SEC-SEN-001, SEC-SEN-001\n",
+      "stderr": ""
+    },
+    "reopened": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "open",
+        "blocks_pr": false,
+        "id": "SEC-SEN-001",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "resolved_in": null,
+        "resolved_at": null,
+        "resolved_test": null
+      },
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Other auth bug",
+        "path": "src/admin.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "open",
+        "blocks_pr": false,
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "id": "SEC-SEN-001",
+        "resolved_in": null,
+        "resolved_at": null,
+        "resolved_test": null
+      }
+    ]
+  },
+  "merge-state": {
+    "before": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "resolved",
+        "blocks_pr": false,
+        "id": "SEC-SEN-009",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        },
+        "resolved_in": "2026-10-23 01:27:48 UTC",
+        "resolved_test": "node --test test/auth.test.mjs",
+        "resolved_at": "2026-10-23 01:27:48 UTC"
+      }
+    ],
+    "rerun": {
+      "exit": 0,
+      "stdout": "merge-findings: 1 raw \u2192 1 unique \u2192 /tmp/review-ultra-repro-7kcf8f28/merge-state/FINDINGS.json\n",
+      "stderr": ""
+    },
+    "after": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "SEC-SEN-009",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        }
+      }
+    ],
+    "malformed": {
+      "exit": 0,
+      "stdout": "merge-findings: 0 raw \u2192 0 unique \u2192 /tmp/review-ultra-repro-7kcf8f28/merge-state/FINDINGS.json\n",
+      "stderr": "skip unreadable agent-sentinel.json\n"
+    },
+    "afterMalformed": []
+  },
+  "same-day": {
+    "exit": 0,
+    "stdout": "merge-findings: 2 raw \u2192 2 unique \u2192 /tmp/review-ultra-repro-7kcf8f28/same-day/FINDINGS.json\n",
+    "stderr": "",
+    "findings": [
+      {
+        "agent": "Atlas",
+        "domain": "architecture",
+        "title": "New Atlas-only run finding",
+        "path": "src/billing.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "ARCH-ATL-001",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        }
+      },
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Missing owner check",
+        "path": "src/auth.js",
+        "line": 10,
+        "severity": "HIGH",
+        "confidence": "high",
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "SEC-SEN-001",
+        "evidence": "",
+        "impact": "",
+        "fix": "",
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "reproduce defect",
+          "assert_after": "defect gone"
+        }
+      }
+    ]
+  },
+  "measure-full": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "measure-quality: traversal depth=1/32, 0 dirs skipped by skip-list/dot-rule\nmeasure-quality: 1 files \u2192 1 CC hotspots, 0 clone groups \u2192 /tmp/review-ultra-repro-7kcf8f28/scope/full.json\n",
+    "metrics": {
+      "generated_at": "2026-10-23T01:27:49.036Z",
+      "root": "/tmp/review-ultra-repro-7kcf8f28/scope",
+      "files_scanned": 1,
+      "traversal": {
+        "max_depth": 32,
+        "deepest_dir_depth": 1,
+        "truncated_dirs": [],
+        "skipped_dirs": [],
+        "unreadable_dirs": [],
+        "complete": true
+      },
+      "thresholds": {
+        "cc_medium": 15,
+        "cc_high": 20,
+        "nesting_flag": 4,
+        "loc_god": 80,
+        "clone_window_lines": 8
+      },
+      "hotspots": [
+        {
+          "path": "src/rules.js",
+          "line": 1,
+          "symbol": "rules",
+          "cyclomatic": 21,
+          "cognitive_est": 21,
+          "nesting": 1,
+          "loc": 23,
+          "test_file": false
+        }
+      ],
+      "long_low_cc": [],
+      "clones": [],
+      "stats": {
+        "functions_found": 1,
+        "hotspots": 1,
+        "clone_groups": 0,
+        "verbosity_candidates": 0
+      }
+    }
+  },
+  "measure-scope": {
+    "exit": 0,
+    "stdout": "",
+    "stderr": "measure-quality: 0 files \u2192 0 CC hotspots, 0 clone groups \u2192 /tmp/review-ultra-repro-7kcf8f28/scope/scope.json\n",
+    "metrics": {
+      "generated_at": "2026-10-23T01:27:49.132Z",
+      "root": "/tmp/review-ultra-repro-7kcf8f28/scope",
+      "files_scanned": 0,
+      "traversal": {
+        "max_depth": 32,
+        "deepest_dir_depth": 0,
+        "truncated_dirs": [],
+        "skipped_dirs": [],
+        "unreadable_dirs": [],
+        "complete": true
+      },
+      "thresholds": {
+        "cc_medium": 15,
+        "cc_high": 20,
+        "nesting_flag": 4,
+        "loc_god": 80,
+        "clone_window_lines": 8
+      },
+      "hotspots": [],
+      "long_low_cc": [],
+      "clones": [],
+      "stats": {
+        "functions_found": 0,
+        "hotspots": 0,
+        "clone_groups": 0,
+        "verbosity_candidates": 0
+      }
+    }
+  },
+  "deps-error": {
+    "scan": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) errors=1 \u2192 /tmp/review-ultra-repro-7kcf8f28/deps-error/deps-latest.json findings\u2192 /tmp/review-ultra-repro-7kcf8f28/deps-error/agent-prism.json\n"
+    },
+    "report": {
+      "generated_at": "2026-10-23T01:27:49.347Z",
+      "root": "/tmp/review-ultra-repro-7kcf8f28/deps-error",
+      "stack": {
+        "root": "/tmp/review-ultra-repro-7kcf8f28/deps-error",
+        "languages": [
+          "javascript"
+        ],
+        "frameworks": [],
+        "package_managers": [
+          "npm"
+        ],
+        "ecosystems": [
+          "npm"
+        ],
+        "manifests": [
+          {
+            "kind": "npm",
+            "path": "package.json"
+          }
+        ],
+        "signals": [
+          "node:fixture"
+        ],
+        "catalog": "catalogs/classic-bugs.md"
+      },
+      "policy": {
+        "stable_only": true,
+        "exclude": "alpha|beta|rc|pre|preview|dev|canary|snapshot|experimental|nightly|unstable|next|pseudo-versions|maven-milestones",
+        "include_dev": true,
+        "include_indirect": false
+      },
+      "summary": {
+        "checked": 0,
+        "outdated": 0,
+        "up_to_date": 0,
+        "errors": 1,
+        "by_bump": {
+          "major": 0,
+          "minor": 0,
+          "patch": 0
+        },
+        "by_ecosystem": {
+          "npm": {
+            "checked": 0,
+            "outdated": 0
+          }
+        },
+        "languages": [
+          "javascript"
+        ],
+        "frameworks": []
+      },
+      "update_map": {
+        "stack": {
+          "languages": [
+            "javascript"
+          ],
+          "frameworks": [],
+          "ecosystems": [
+            "npm"
+          ],
+          "package_managers": [
+            "npm"
+          ],
+          "manifests": [
+            {
+              "kind": "npm",
+              "path": "package.json"
+            }
+          ]
+        },
+        "by_ecosystem": {
+          "npm": {
+            "total": 0,
+            "outdated": 0,
+            "up_to_date": 0,
+            "updates": []
+          }
+        },
+        "suggestions": [],
+        "batches": []
+      },
+      "runner_errors": [],
+      "packages": [
+        {
+          "ecosystem": "npm",
+          "name": "example-dependency",
+          "registry_name": "example-dependency",
+          "manifest": "package.json",
+          "declared": "1.0.0",
+          "current": "1.0.0",
+          "current_source": "manifest_range",
+          "min_release_age_days": 0,
+          "dev": false,
+          "error": "NETWORK_DISABLED_FOR_REVIEW",
+          "outdated": false
+        }
+      ],
+      "findings_count": 0
+    },
+    "build": {
+      "exit": 0,
+      "stdout": "Wrote /tmp/review-ultra-repro-7kcf8f28/deps-error/report.html (app=unknown-app branch=unknown-branch \u00b7 0 findings, deps outdated=0)\n",
+      "stderr": ""
+    }
+  },
+  "single-object": {
+    "exit": 0,
+    "stdout": "merge-findings: 0 raw \u2192 0 unique \u2192 /tmp/review-ultra-repro-7kcf8f28/single-object/FINDINGS.json\n",
+    "stderr": "",
+    "findings": []
+  },
+  "reused-votes": {
+    "exit": 0,
+    "stdout": "sec-verify: 1 kept / 1 candidates (dropped 0) \u2192 /tmp/review-ultra-repro-7kcf8f28/panel-valid/reused-verified.json\nverification.status=verified\n",
+    "stderr": "",
+    "coverage": {
+      "verification_status": "verified",
+      "panel_source": "vote-files",
+      "require_vote_files": true,
+      "candidates_in": 1,
+      "candidates_deduped_out": 1,
+      "panel_reviewed_findings": 1,
+      "panel_quorum_findings": 1,
+      "panel_dropped": 0,
+      "unreviewed_candidate_sites": 0,
+      "quorum": 2,
+      "voters": 3,
+      "dropped_sample": []
+    },
+    "findings": [
+      {
+        "agent": "Sentinel",
+        "domain": "security",
+        "title": "Different finding on next run",
+        "severity": "HIGH",
+        "confidence": "high",
+        "path": "src/payments.js",
+        "line": 77,
+        "category": null,
+        "symbol": null,
+        "snippet": null,
+        "source": null,
+        "sink": null,
+        "description": "",
+        "evidence": "",
+        "exploit_scenario": "",
+        "preconditions": [],
+        "impact": "",
+        "fix": "",
+        "cwe": null,
+        "component": null,
+        "lens": null,
+        "verification": "panel",
+        "panel": {
+          "true": 3,
+          "false": 0,
+          "voters": 3
+        },
+        "panel_detail": {
+          "REACHABILITY": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          },
+          "IMPACT": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          },
+          "DEFENSES": {
+            "verdict": "TRUE_POSITIVE",
+            "reasoning": "Fixture independently read source."
+          }
+        },
+        "test_red_green": {
+          "name": "TBD",
+          "assert_before": "exploit or deny-path fails open",
+          "assert_after": "exploit blocked; legitimate path unchanged"
+        },
+        "status": "OPEN",
+        "blocks_pr": true,
+        "id": "SEC-SEN-001"
+      }
+    ]
+  },
+  "policy-agents": {
+    "exit": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  "policy-claude": {
+    "exit": 0,
+    "stdout": "true\n",
+    "stderr": ""
+  }
+}

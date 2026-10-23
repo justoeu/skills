@@ -14,7 +14,7 @@ import {
   buildArchMapFromAtlas,
   runDepsFreshness,
   aggregateVerdict,
-  HOOK_IDS,
+  HOOK_IDS, findingFingerprint,
 } from '../hooks.mjs';
 import { buildReport } from '../build-report.mjs';
 
@@ -122,7 +122,7 @@ test('buildArchMapFromAtlas deriva do app-model do atlas-docs', () => {
   assert.equal(buildArchMapFromAtlas(makePack({})), null);
 });
 
-test('deps-freshness: dep nova fora da última ativa vira bloqueio; dep velha vira follow-up', async () => {
+test('deps-freshness: versão mais nova é advisory; dep velha vira follow-up', async () => {
   const repo = makePack({
     'hooks/diff-facts.json': {
       base: 'b', head: 'h', commits: [], files: [], migrations: [], suspicious_files: [], routes: [],
@@ -130,9 +130,9 @@ test('deps-freshness: dep nova fora da última ativa vira bloqueio; dep velha vi
     },
   });
   const doc = await runDepsFreshness(repo, repo, { fakeRegistry: { npm: { undici: { latest: '7.1.0', deprecated: false } } } });
-  assert.equal(doc.verdict, 'REJECT');
+  assert.equal(doc.verdict, 'APPROVE');
   assert.equal(doc.findings.length, 1);
-  assert.equal(doc.findings[0].severity, 'high');
+  assert.equal(doc.findings[0].severity, 'medium');
   assert.equal(doc.deps[0].state, 'major-behind');
 
   const okDoc = await runDepsFreshness(repo, repo, { fakeRegistry: { npm: { undici: { latest: '5.28.4', deprecated: false } } } });
@@ -157,6 +157,24 @@ test('deps-freshness: sem dep nova o hook aprova sem tocar registry; registry fo
   });
   const offline = await runDepsFreshness(withDep, withDep, { fetchJson: async () => { throw new Error('sem rede'); } });
   assert.equal(offline.verdict, 'OPEN');
+});
+
+test('deps-freshness preserves unresolved findings when the registry becomes unavailable', async () => {
+  const dir=makePack({'hooks/diff-facts.json':{manifests:[{file:'package.json',ecosystem:'npm',added:[{name:'old-lib',version:'1.0.0'}]}]}});
+  const first=await runDepsFreshness(dir,dir,{fakeRegistry:{npm:{'old-lib':{latest:'2.0.0',deprecated:true}}}});
+  fs.writeFileSync(path.join(dir,'hooks/deps-freshness.json'),JSON.stringify(first));
+  const second=await runDepsFreshness(dir,dir,{fetchJson:async()=>{throw new Error('offline');}});
+  assert.equal(second.findings[0].status,'open');
+  fs.writeFileSync(path.join(dir,'hooks/deps-freshness.json'),JSON.stringify(second));
+  assert.equal(aggregateVerdict(dir,{require:'present'}).verdict,'FAIL');
+});
+
+test('PyPI checks yanked on the selected release, not the latest release', async () => {
+  const dir=makePack({'hooks/diff-facts.json':{manifests:[{file:'pyproject.toml',ecosystem:'pypi',added:[{name:'pkg',version:'1.0.0'}]}]}});
+  const urls=[];
+  const result=await runDepsFreshness(dir,dir,{fetchJson:async url=>{urls.push(url);return {info:{version:url.includes('/1.0.0/')?'1.0.0':'2.0.0',yanked:url.includes('/1.0.0/')}};}});
+  assert.equal(result.deps[0].state,'deprecated');
+  assert.ok(urls.some(u=>u.endsWith('/1.0.0/json')));
 });
 
 test('verdict: FAIL com achado >= high; waiver do usuário desbloqueia; OPEN não derruba; missing bloqueia com require all', async () => {
@@ -184,6 +202,11 @@ test('verdict: FAIL com achado >= high; waiver do usuário desbloqueia; OPEN nã
     'hooks/ui-scope.json': { ui_touched: false },
     'hooks/waivers.json': { waivers: [{ hook: 'security', finding: 'S-1', reason: 'rede interna, sem exposição', at: '2026-10-01T00:00:00Z' }] },
   });
+  const waiverFile=path.join(waived,'hooks/waivers.json');
+  const waiverDoc=JSON.parse(fs.readFileSync(waiverFile,'utf8'));
+  const finding=JSON.parse(fs.readFileSync(path.join(waived,'hooks/security.json'),'utf8')).findings[0];
+  waiverDoc.waivers[0].fingerprint=findingFingerprint('security',finding);
+  fs.writeFileSync(waiverFile,JSON.stringify(waiverDoc));
   const pass = aggregateVerdict(waived);
   assert.equal(pass.verdict, 'PASS');
   assert.equal(pass.waivers, 1);
@@ -228,7 +251,7 @@ test('report renderiza a aba Hooks com achados, deps, waivers e verdict', () => 
   assert.match(hooksHtml, /Não reinventar a roda/);
   assert.match(hooksHtml, /hand-rolled zip64/);
   assert.match(hooksHtml, /stdlib archive\/zip/);
-  assert.match(hooksHtml, /Deps na última ativa/);
+  assert.match(hooksHtml, /Dependências no escopo/);
   assert.match(hooksHtml, /undici/);
   assert.match(hooksHtml, /Waivers/);
   assert.match(hooksHtml, /rede interna/);

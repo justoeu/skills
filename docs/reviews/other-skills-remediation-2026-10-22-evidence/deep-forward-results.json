@@ -1,0 +1,972 @@
+{
+  "base": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8",
+  "events": [
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--full",
+        "--only",
+        "classic_bugs"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"generated_at\":\"2026-10-23 02:17:44 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"classic_bugs\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"classic_bugs\",\"deps\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:17:44 UTC\",\"event\":\"init\"}]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "snapshot",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"snapshot_id\":\"c718b224-5d6e-4f8d-b763-bf21e61a0e69\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"4653a0d4436f60dedec26c16f4eb06c2da587553ecdc8e1a99db9b11892ebbe7\",\"created_at\":\"2026-10-23T02:17:44.322Z\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--snapshot",
+        "c718b224-5d6e-4f8d-b763-bf21e61a0e69",
+        "--stage",
+        "classic_bugs",
+        "--artifacts",
+        "agent-artemis.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "check-deps-latest",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/deps-latest.json",
+        "--findings",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/deps-latest.json findings→ ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/agent-prisma-freshness.json\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--snapshot",
+        "c718b224-5d6e-4f8d-b763-bf21e61a0e69",
+        "--stage",
+        "deps",
+        "--artifacts",
+        "deps-latest.json,agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/FINDINGS.json\n  roster: 🏹 Artemis\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":1,\"open\":1,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":1,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":1}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "BUG-ART-3F632C13ECC608E8: aberto e bloqueante\n"
+    },
+    {
+      "name": "sync-progress",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "sync-progress: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/TASKS.md (0% fechado · 0/1 resolvidos)\nbuild-report: 1 achados (1 aberto · 0 resolvido · 0 refutado · 0 aceito · 0% fechado) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\nAbertos: BUG-ART-3F632C13ECC608E8\nreport.html: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n",
+      "stderr": "Gate pendente: BUG-ART-3F632C13ECC608E8: aberto e bloqueante\n"
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "file://~/Developer/harness/skills/deep-audit/scripts/pack-state.mjs:115\n  if (!Array.isArray(a) || a.some(x => !x || typeof x !== 'object' || !x.title || !(x.path || x.lens === 'deps' || x.domain === 'deps'))) throw new Error(`${label}: esperado array de achados válidos (array vazio é permitido)`);\n                                                                                                                                                ^\n\nError: agent-artemis.json: esperado array de achados válidos (array vazio é permitido)\n    at findingsArray (file://~/Developer/harness/skills/deep-audit/scripts/pack-state.mjs:115:145)\n    at loadAgentFiles (file://~/Developer/harness/skills/deep-audit/scripts/merge-findings.mjs:57:17)\n    at file://~/Developer/harness/skills/deep-audit/scripts/merge-findings.mjs:68:31\n    at #evaluateSync (node:internal/modules/esm/module_job:702:24)\n    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:717:43)\n    at node:internal/modules/esm/loader:383:11\n    at TracingChannel.traceSync (node:diagnostics_channel:557:14)\n    at ModuleLoader.importForEntryPoint (node:internal/modules/esm/loader:372:21)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:184:34)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v26.12.0\n"
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--audit-gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "classic_bugs: artefato mudou: agent-artemis.json\nconsolidação ausente ou antiga: execute merge-findings\n"
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/FINDINGS.json\n  roster: 🏹 Artemis\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":1,\"open\":1,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":1,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":1}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "sync-progress",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--done",
+        "BUG-ART-3F632C13ECC608E8",
+        "--test",
+        "total quantity"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "sync-progress: ✗ BUG-ART-3F632C13ECC608E8: revisão com veredito `invalid` — não fecha como resolvido.\n      → ENOENT: no such file or directory, open '~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/reviews/BUG-ART-3F632C13ECC608E8.json'\n      Corrija, re-vote e rode review-verify de novo.\n"
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--audit-gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "classic_bugs: ausente, incompleta ou antiga\ndeps: ausente, incompleta ou antiga\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "snapshot",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"snapshot_id\":\"8648ba25-cb41-40f4-8edc-33a6ccc52037\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:17:51.446Z\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--snapshot",
+        "8648ba25-cb41-40f4-8edc-33a6ccc52037",
+        "--stage",
+        "classic_bugs",
+        "--artifacts",
+        "agent-artemis.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "check-deps-latest",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/deps-latest.json",
+        "--findings",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/deps-latest.json findings→ ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/agent-prisma-freshness.json\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--snapshot",
+        "8648ba25-cb41-40f4-8edc-33a6ccc52037",
+        "--stage",
+        "deps",
+        "--artifacts",
+        "deps-latest.json,agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/FINDINGS.json\n  roster: 🏹 Artemis\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":1,\"open\":1,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":1,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":1}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "review-start",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--id",
+        "BUG-ART-3F632C13ECC608E8"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"snapshot_id\":\"45f561e2-734b-4ebc-8e3a-163a7407a531\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:17:53.769Z\",\"id\":\"BUG-ART-3F632C13ECC608E8\",\"finding_hash\":\"8e73a1beb3de130709d16d3162758fb955a810ee7dc9443f4b84053f9976b7c8\",\"round_id\":\"fc299cbb-0619-431c-967a-cf1c4db27375\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "reversal-proof",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--id",
+        "BUG-ART-3F632C13ECC608E8",
+        "--base",
+        "a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a",
+        "--fix-paths",
+        "src/cart.cjs",
+        "--test-cmd",
+        "node test/total.cjs"
+      ],
+      "status": 0,
+      "stdout": "prova green/red/green concluída em checkout descartável\n",
+      "stderr": ""
+    },
+    {
+      "name": "review-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--id",
+        "BUG-ART-3F632C13ECC608E8"
+      ],
+      "status": 0,
+      "stdout": "BUG-ART-3F632C13ECC608E8: approved\n",
+      "stderr": ""
+    },
+    {
+      "name": "sync-progress",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--done",
+        "BUG-ART-3F632C13ECC608E8",
+        "--test",
+        "test/total.cjs quantity19"
+      ],
+      "status": 0,
+      "stdout": "sync-progress: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/TASKS.md (100% fechado · 1/1 resolvidos)\nbuild-report: 1 achados (0 aberto · 1 resolvido · 0 refutado · 0 aceito · 100% fechado) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n✅ Rodada fechada — todo achado tem desfecho.\nreport.html: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"closure\",\"counts\":{\"total\":1,\"open\":0,\"resolved\":1,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":0}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/FINDINGS.json\n  roster: 🏹 Artemis\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"closure\",\"counts\":{\"total\":1,\"open\":0,\"resolved\":1,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":0}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "BUG-ART-3F632C13ECC608E8: aprovação ausente/inválida/antiga: QUALITY: ENOENT: no such file or directory, lstat '~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/reviews/votes/BUG-ART-3F632C13ECC608E8-QUALITY.json'\n"
+    },
+    {
+      "name": "review-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--id",
+        "BUG-ART-3F632C13ECC608E8"
+      ],
+      "status": 2,
+      "stdout": "BUG-ART-3F632C13ECC608E8: invalid: QUALITY: ENOENT: no such file or directory, lstat '~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/reviews/votes/BUG-ART-3F632C13ECC608E8-QUALITY.json'\n",
+      "stderr": ""
+    },
+    {
+      "name": "review-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--id",
+        "BUG-ART-3F632C13ECC608E8"
+      ],
+      "status": 0,
+      "stdout": "BUG-ART-3F632C13ECC608E8: approved\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"closure\",\"counts\":{\"total\":1,\"open\":0,\"resolved\":1,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":0}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "sync-progress",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--open",
+        "BUG-ART-3F632C13ECC608E8"
+      ],
+      "status": 0,
+      "stdout": "sync-progress: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/TASKS.md (0% fechado · 0/1 resolvidos)\nbuild-report: 1 achados (1 aberto · 0 resolvido · 0 refutado · 0 aceito · 0% fechado) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\nAbertos: BUG-ART-3F632C13ECC608E8\nreport.html: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n",
+      "stderr": "Gate pendente: BUG-ART-3F632C13ECC608E8: aberto e bloqueante\n"
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "BUG-ART-3F632C13ECC608E8: aberto e bloqueante\n"
+    },
+    {
+      "name": "sync-progress",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--done",
+        "BUG-ART-3F632C13ECC608E8",
+        "--test",
+        "test/total.cjs quantity19"
+      ],
+      "status": 0,
+      "stdout": "sync-progress: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/TASKS.md (100% fechado · 1/1 resolvidos)\nbuild-report: 1 achados (0 aberto · 1 resolvido · 0 refutado · 0 aceito · 100% fechado) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n✅ Rodada fechada — todo achado tem desfecho.\nreport.html: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3/report.html\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"closure\",\"counts\":{\"total\":1,\"open\":0,\"resolved\":1,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"classic_bugs\":1},\"byAgent\":{\"Artemis\":1},\"openHigh\":0}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--resume",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"generated_at\":\"2026-10-23 02:17:44 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"classic_bugs\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"classic_bugs\",\"deps\"],\"stages\":{\"classic_bugs\":{\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"snapshot_id\":\"8648ba25-cb41-40f4-8edc-33a6ccc52037\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:17:51.446Z\",\"status\":\"complete\",\"completed_at\":\"2026-10-23T02:17:51.769Z\",\"artifacts\":[{\"path\":\"agent-artemis.json\",\"hash\":\"612e5964237f05525aab1f9fd7692993e88098577dd7de6dac8845f82b3bbe80\"}]},\"deps\":{\"schema_version\":2,\"run_id\":\"a65c5021-877c-4265-a2d3-e3bc3a8d54f3\",\"snapshot_id\":\"8648ba25-cb41-40f4-8edc-33a6ccc52037\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:17:51.446Z\",\"status\":\"complete\",\"completed_at\":\"2026-10-23T02:17:52.440Z\",\"artifacts\":[{\"path\":\"deps-latest.json\",\"hash\":\"022f1ed29aad7abba9f20da6ceacaf49a2019696c2ad308e95d7efca70641e34\"},{\"path\":\"agent-prisma-freshness.json\",\"hash\":\"37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570\"}]}},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:17:44 UTC\",\"event\":\"init\"}],\"merge_inputs_hash\":\"8622d1ae29af83931b84d364dfa6b5a7b90592a46c2bb934f957cb2ded7db809\",\"merged_at\":\"2026-10-23 02:17:58 UTC\",\"agent_sources\":[{\"file\":\"agent-artemis.json\",\"count\":1,\"hash\":\"612e5964237f05525aab1f9fd7692993e88098577dd7de6dac8845f82b3bbe80\"},{\"file\":\"agent-prisma-freshness.json\",\"count\":0,\"hash\":\"37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570\"}],\"raw_findings\":1,\"unique_findings\":1,\"current\":{\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\"}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--full",
+        "--only",
+        "classic_bugs"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-fac83b2e-8660-4b3a-a0e9-a2561a035d9c\",\"schema_version\":2,\"run_id\":\"fac83b2e-8660-4b3a-a0e9-a2561a035d9c\",\"generated_at\":\"2026-10-23 02:18:09 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"classic_bugs\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"classic_bugs\",\"deps\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:18:09 UTC\",\"event\":\"init\"}]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--full",
+        "--only",
+        "security"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993\",\"schema_version\":2,\"run_id\":\"b4072a01-039b-41df-a2b2-1028ac1ec993\",\"generated_at\":\"2026-10-23 02:18:09 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"security\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"security\",\"deps\",\"security_inventory\",\"security_hunters\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:18:09 UTC\",\"event\":\"init\"}]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "snapshot",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"b4072a01-039b-41df-a2b2-1028ac1ec993\",\"snapshot_id\":\"17d5c1cd-8ce8-45fa-8a64-e50cdd982093\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:18:10.098Z\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "security_inventory",
+        "--artifacts",
+        "sec-deep/inventory.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "security_hunters",
+        "--artifacts",
+        "sec-deep/candidates.json,sec-deep/hunter-orders-authorization.json"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "run-state: candidates não corresponde aos resultados dos caçadores\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "security_hunters",
+        "--artifacts",
+        "sec-deep/candidates.json,sec-deep/hunter-orders-authorization.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "sec-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--candidates",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/candidates.json",
+        "--votes-dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/votes",
+        "--require-vote-files",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/agent-cerbero.json",
+        "--coverage-out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/coverage.json",
+        "--agent",
+        "Cérbero"
+      ],
+      "status": 0,
+      "stdout": "sec-verify: 1/1; verified\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "security",
+        "--artifacts",
+        "agent-cerbero.json,sec-deep/coverage.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "check-deps-latest",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/deps-latest.json",
+        "--findings",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/deps-latest.json findings→ ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/agent-prisma-freshness.json\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "deps",
+        "--artifacts",
+        "deps-latest.json,agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/FINDINGS.json\n  roster: 🛡️ Cérbero\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":1,\"open\":1,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":1,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"security\":1},\"byAgent\":{\"Cérbero\":1},\"openHigh\":1}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "sec-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--candidates",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/candidates.json",
+        "--votes-dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/votes",
+        "--require-vote-files",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/agent-cerbero.json",
+        "--coverage-out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/coverage.json",
+        "--agent",
+        "Cérbero"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "ORDER1-IMPACT: voto inválido/antigo ou sem justificativa/contexto\n"
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--audit-gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "security: artefato mudou: sec-deep/coverage.json\nsecurity: painel ausente, inválido ou antigo\n"
+    },
+    {
+      "name": "sec-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--candidates",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/candidates.json",
+        "--votes-dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/votes",
+        "--require-vote-files",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/agent-cerbero.json",
+        "--coverage-out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/sec-deep/coverage.json",
+        "--agent",
+        "Cérbero"
+      ],
+      "status": 0,
+      "stdout": "sec-verify: 1/1; verified\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--snapshot",
+        "17d5c1cd-8ce8-45fa-8a64-e50cdd982093",
+        "--stage",
+        "security",
+        "--artifacts",
+        "agent-cerbero.json,sec-deep/coverage.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993/FINDINGS.json\n  roster: 🛡️ Cérbero\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":1,\"open\":1,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":1,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":1,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{\"security\":1},\"byAgent\":{\"Cérbero\":1},\"openHigh\":1}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--full",
+        "--only",
+        "security"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500\",\"schema_version\":2,\"run_id\":\"dc6fdd31-5e24-401b-af3c-2283ae1dc500\",\"generated_at\":\"2026-10-23 02:18:19 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"security\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"security\",\"deps\",\"security_inventory\",\"security_hunters\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:18:19 UTC\",\"event\":\"init\"}]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "snapshot",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"dc6fdd31-5e24-401b-af3c-2283ae1dc500\",\"snapshot_id\":\"af7825bd-11b0-4826-8756-050d00a0e778\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:18:19.791Z\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--snapshot",
+        "af7825bd-11b0-4826-8756-050d00a0e778",
+        "--stage",
+        "security_inventory",
+        "--artifacts",
+        "sec-deep/inventory.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--snapshot",
+        "af7825bd-11b0-4826-8756-050d00a0e778",
+        "--stage",
+        "security_hunters",
+        "--artifacts",
+        "sec-deep/candidates.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "sec-verify",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--snapshot",
+        "af7825bd-11b0-4826-8756-050d00a0e778",
+        "--candidates",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/sec-deep/candidates.json",
+        "--votes-dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/sec-deep/votes",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/agent-cerbero.json",
+        "--coverage-out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/sec-deep/coverage.json"
+      ],
+      "status": 0,
+      "stdout": "sec-verify: 0/0; verified\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--snapshot",
+        "af7825bd-11b0-4826-8756-050d00a0e778",
+        "--stage",
+        "security",
+        "--artifacts",
+        "agent-cerbero.json,sec-deep/coverage.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "check-deps-latest",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--out",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/deps-latest.json",
+        "--findings",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/deps-latest.json findings→ ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/agent-prisma-freshness.json\n"
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--snapshot",
+        "af7825bd-11b0-4826-8756-050d00a0e778",
+        "--stage",
+        "deps",
+        "--artifacts",
+        "deps-latest.json,agent-prisma-freshness.json"
+      ],
+      "status": 0,
+      "stdout": "etapa concluída\n",
+      "stderr": ""
+    },
+    {
+      "name": "merge-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500"
+      ],
+      "status": 0,
+      "stdout": "merge-findings: 0 cru → 0 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500/FINDINGS.json\n",
+      "stderr": ""
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-dc6fdd31-5e24-401b-af3c-2283ae1dc500",
+        "--audit-gate"
+      ],
+      "status": 0,
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":0,\"open\":0,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":0,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{},\"byAgent\":{},\"openHigh\":0}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--full",
+        "--only",
+        "deps"
+      ],
+      "status": 0,
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-9e9584c4-edc5-49ce-9b79-5cacb1174048\",\"schema_version\":2,\"run_id\":\"9e9584c4-edc5-49ce-9b79-5cacb1174048\",\"generated_at\":\"2026-10-23 02:18:24 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo\",\"git\":true,\"app\":\"deep-independent-cart\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"only\":[\"deps\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"deps\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:18:24 UTC\",\"event\":\"init\"}]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "snapshot",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-9e9584c4-edc5-49ce-9b79-5cacb1174048"
+      ],
+      "status": 0,
+      "stdout": "{\"schema_version\":2,\"run_id\":\"9e9584c4-edc5-49ce-9b79-5cacb1174048\",\"snapshot_id\":\"928d5e75-822b-4a1d-967d-e8db7878bba3\",\"head\":\"a9d7ff3852763fee7d0ccd10b9fc4b9bd307857a\",\"branch\":\"feature/cart\",\"source_hash\":\"ef1d5137a7850fa698de06518523d66ccf56548b5175c7d633d7cd63f362c29b\",\"created_at\":\"2026-10-23T02:18:24.542Z\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-state",
+      "args": [
+        "complete",
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-9e9584c4-edc5-49ce-9b79-5cacb1174048",
+        "--stage",
+        "deps",
+        "--snapshot",
+        "928d5e75-822b-4a1d-967d-e8db7878bba3",
+        "--artifacts",
+        "deps-latest.json,agent-prisma-freshness.json"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "run-state: deps-latest: schema inválido\n"
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--only",
+        "classic_bugs",
+        "--base",
+        "refs/remotes/nonexistent/missing"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "file://~/Developer/harness/skills/deep-audit/scripts/pack-state.mjs:61\n  if (r.status !== 0 && !optional) throw new Error(`git ${args[0]} falhou: ${r.stderr || r.error || r.status}`);\n                                         ^\n\nError: git rev-parse falhou: fatal: Needed a single revision\n\n    at git (file://~/Developer/harness/skills/deep-audit/scripts/pack-state.mjs:61:42)\n    at file://~/Developer/harness/skills/deep-audit/scripts/init-run.mjs:63:35\n    at #evaluateSync (node:internal/modules/esm/module_job:702:24)\n    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:717:43)\n    at node:internal/modules/esm/loader:383:11\n    at TracingChannel.traceSync (node:diagnostics_channel:557:14)\n    at ModuleLoader.importForEntryPoint (node:internal/modules/esm/loader:372:21)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:184:34)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v26.12.0\n"
+    },
+    {
+      "name": "init-run",
+      "args": [
+        "--root",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo",
+        "--resume",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "file://~/Developer/harness/skills/deep-audit/scripts/init-run.mjs:165\n      (scope && JSON.stringify(meta.scope) !== JSON.stringify(scope.split(',')))) throw new Error('retomada incompatível: root/branch/HEAD/base/escopo mudou; crie nova run');\n                                                                                        ^\n\nError: retomada incompatível: root/branch/HEAD/base/escopo mudou; crie nova run\n    at file://~/Developer/harness/skills/deep-audit/scripts/init-run.mjs:165:89\n    at #evaluateSync (node:internal/modules/esm/module_job:702:24)\n    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:717:43)\n    at node:internal/modules/esm/loader:383:11\n    at TracingChannel.traceSync (node:diagnostics_channel:557:14)\n    at ModuleLoader.importForEntryPoint (node:internal/modules/esm/loader:372:21)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:184:34)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v26.12.0\n"
+    },
+    {
+      "name": "lint-findings",
+      "args": [
+        "--dir",
+        "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+        "--gate"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "branch/HEAD mudou desde init; inicie nova run, sem reatribuir evidência antiga\nbranch/HEAD mudou desde init; inicie nova run, sem reatribuir evidência antiga\nBUG-ART-3F632C13ECC608E8: aprovação ausente/inválida/antiga: branch/HEAD mudou desde init; inicie nova run, sem reatribuir evidência antiga; CORRECTNESS: voto não corresponde ao contexto/diff desta rodada; QUALITY: voto não corresponde ao contexto/diff desta rodada; SCOPE: voto não corresponde ao contexto/diff desta rodada\n"
+    }
+  ],
+  "first": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+  "id": "BUG-ART-3F632C13ECC608E8",
+  "red": 1,
+  "fix_closed": true,
+  "reopen_and_reclose": true,
+  "same_day_new": true,
+  "security": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+  "security_adversarial": true,
+  "legitimate_zero_instrument": true,
+  "head_invalidation": true,
+  "pass": true
+}

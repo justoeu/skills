@@ -291,7 +291,7 @@
 (function () {
   var MODEL = null;
   try { MODEL = JSON.parse(document.getElementById("atlas-data").textContent); }
-  catch (e) { document.getElementById("app").innerHTML = '<p style="padding:24px;font-family:monospace;color:#b4453a">Falha ao ler app-model.json: ' + e.message + "</p>"; return; }
+  catch (e) { document.getElementById("app").innerHTML = '<p style="padding:24px;font-family:monospace;color:#b4453a">Falha ao ler app-model.json: ' + E(e.message) + "</p>"; return; }
   if (!MODEL || !MODEL.app) {
     document.getElementById("app").innerHTML = '<p style="padding:24px;font-family:monospace;color:#b4453a">Modelo ausente. Rode atlas_build.py com um app-model.json válido.</p>';
     return;
@@ -334,8 +334,18 @@
     return "síncrono";
   }
   function modeColor(m) { return m === "bloqueante" || m === "block" ? "#b4453a" : m === "fail-open" || m === "compensável" ? "#c08a2e" : m === "transacional" ? "#2b6a70" : "#3f7a4f"; }
-  function provBadge(prov) { return prov === "external" ? '<span class="ext-tag">NÃO CONECTADO</span>' : '<span class="code-tag">CÓDIGO</span>'; }
-  function dashVal(v, prov) { return prov === "external" && (v == null || v === "" || v === "—") ? "—" : (v == null || v === "" ? "—" : v); }
+  function hasObservationSource(source) {
+    return !!(source && typeof source.ref === "string" && source.ref.trim() && typeof source.observedAt === "string" && /(?:Z|[+-]\d\d:\d\d)$/.test(source.observedAt) && Number.isFinite(Date.parse(source.observedAt)));
+  }
+  function provBadge(prov, source) {
+    if ((prov === "observed" || prov === "external") && hasObservationSource(source)) return '<span class="ext-tag" title="' + E(source.ref + " · " + source.observedAt) + '">FONTE DECLARADA</span>';
+    return prov === "external" || prov === "observed" ? '<span class="ext-tag">NÃO CONECTADO</span>' : '<span class="code-tag">CÓDIGO</span>';
+  }
+  function dashVal(v, prov, source) { return (prov === "external" || prov === "observed") && !hasObservationSource(source) ? "—" : (v == null || v === "" ? "—" : v); }
+  function runtimeVal(v, record) { return hasObservationSource(record.source) ? dashVal(v) : "—"; }
+  function runtimeSource(record) {
+    return provBadge("external", record.source) + (hasObservationSource(record.source) ? '<div class="note-src">' + E(record.source.ref + " · " + record.source.observedAt) + "</div>" : "");
+  }
 
   /* ---------------- nav ---------------- */
   var NAV = [
@@ -406,13 +416,13 @@
     html += '<div class="s-top"><div class="s-logo"><div class="s-mark">Ø</div>';
     if (nav) html += '<div><div class="s-name">Atlas Docs</div><div class="s-ver">v' + E(MODEL.schema || "1") + " · " + E((a.generatedAt || "").slice(0, 10)) + "</div></div>";
     html += "</div>";
-    if (nav) html += '<button class="s-btn" onclick="A.navT()" title="recolher">‹</button>';
-    else html += '<button class="s-btn wide" onclick="A.navT()" title="expandir">›</button>';
+    if (nav) html += '<button class="s-btn" data-action="navT" title="recolher">‹</button>';
+    else html += '<button class="s-btn wide" data-action="navT" title="expandir">›</button>';
     html += "</div>";
     if (nav) {
       html += '<div><div class="s-label">Aplicação analisada</div><div class="s-app">';
       html += '<div class="s-app-hd"><div class="s-app-name">' + E(a.name || "—") + '</div>';
-      html += '<button type="button" class="s-app-score" aria-label="Como o score Atlas é calculado" onmouseenter="A.scoreShow(this)" onmouseleave="A.scoreHide()" onfocus="A.scoreShow(this)" onblur="A.scoreHide()">';
+      html += '<button type="button" class="s-app-score" aria-label="Como o score Atlas é calculado" data-score-tip="true">';
       html += E(score.overall != null ? score.overall + (score.grade ? " · " + score.grade : "") : "—");
       html += "</button></div>";
       html += '<dl class="s-app-facts">';
@@ -433,7 +443,7 @@
       html += '<div style="display:flex;flex-direction:column;gap:1px;margin:2px 0 4px">';
       flows.forEach(function (f) {
         var sel = S.screen === "fluxos" && S.flow === f.id;
-        html += '<button class="nav-flow" onclick="A.flow(\'' + E(f.id) + '\')">';
+        html += '<button class="nav-flow" data-action="flow" data-value="' + E(f.id) + '">';
         html += '<span class="lb">' + E(f.label || f.id) + '</span>';
         html += '<span class="cov" style="color:' + covColor(f.cov) + '">' + E(f.cov != null ? f.cov + "%" : "—") + "</span>";
         if (sel) html += '<span class="bar"></span>';
@@ -520,7 +530,7 @@
 
   function navRow(n, nav) {
     var sel = S.screen === n.k;
-    return '<button class="nav-row' + (sel ? " sel" : "") + '" onclick="A.go(\'' + n.k + '\')" title="' + E(n.label) + '">' +
+    return '<button class="nav-row' + (sel ? " sel" : "") + '" data-action="go" data-value="' + E(n.k) + '" title="' + E(n.label) + '">' +
       '<span class="ic">' + n.icon + '</span>' + (nav ? '<span class="lb">' + E(n.label) + "</span>" : "") +
       (sel ? '<span class="bar"></span>' : "") + "</button>";
   }
@@ -533,7 +543,7 @@
     html += '<div class="hd-chips">';
     if (a.branch) html += '<div class="chip"><span style="width:7px;height:7px;border-radius:50%;background:#3f7a4f;display:inline-block"></span>' + E(a.syncNote || "sincronizado com " + a.branch) + "</div>";
     if (a.commit) html += '<div class="chip">Diff: <strong style="color:#1d2430">' + E(a.commit) + (a.commitPrev ? " ← " + E(a.commitPrev) : "") + "</strong></div>";
-    if (hasPanel) html += '<button class="chip btn" onclick="A.panel()"><span class="mono">' + (S.panel ? "›" : "‹") + "</span>" + (S.panel ? "Recolher inspetor" : "Expandir diagrama") + "</button>";
+    if (hasPanel) html += '<button class="chip btn" data-action="panel"><span class="mono">' + (S.panel ? "›" : "‹") + "</span>" + (S.panel ? "Recolher inspetor" : "Expandir diagrama") + "</button>";
     html += "</div></header>";
     return html;
   }
@@ -542,7 +552,9 @@
   function page(sc) {
     switch (sc) {
       case "know": return rKnow();
-      case "fluxos": return S.flow === (richFlow && richFlow.id) && richFlow ? rRich(richFlow) : rChain(flowById(S.flow) || chainFlows[0] || flows[0]);
+      case "fluxos":
+        if (S.flow && !flowById(S.flow)) return '<section class="card" data-atlas="missing-flow"><div class="card-title">Fluxo inexistente</div><p>Referência não encontrada: ' + E(S.flow) + "</p></section>";
+        return S.flow === (richFlow && richFlow.id) && richFlow ? rRich(richFlow) : rChain(flowById(S.flow) || chainFlows[0] || flows[0]);
       case "arq": return rArq();
       case "c4": return rC4();
       case "con": return rCon();
@@ -577,7 +589,7 @@
       html += '<div class="mono" style="font-size:11px;word-break:break-all">' + E(e.ref) + "</div>";
       if (e.status === "mapeado" && e.flow) {
         var f = flowById(e.flow);
-        html += '<div><button class="pill" style="cursor:pointer" onclick="A.flow(\'' + E(e.flow) + '\')" title="abrir fluxo">' + E(f && f.label ? f.label : e.flow) + "</button></div>";
+        html += '<div><button class="pill" style="cursor:pointer" data-action="flow" data-value="' + E(e.flow) + '" title="abrir fluxo">' + E(f && f.label ? f.label : e.flow) + "</button></div>";
       } else if (e.status === "trivial") {
         html += '<div><span class="tag gray">TRIVIAL</span></div>';
       } else {
@@ -605,8 +617,8 @@
       arr(id.stats).forEach(function (s) {
         var ext = s.prov === "external";
         html += '<div class="stat' + (ext ? " dashed" : "") + '">';
-        html += '<div class="k"><span>' + E(s.k) + "</span>" + provBadge(s.prov) + "</div>";
-        html += '<div class="v' + (ext && dashVal(s.v, s.prov) === "—" ? " muted" : "") + '">' + E(dashVal(s.v, s.prov)) + "</div>";
+        html += '<div class="k"><span>' + E(s.k) + "</span>" + provBadge(s.prov, s.source) + "</div>";
+        html += '<div class="v' + (ext && dashVal(s.v, s.prov, s.source) === "—" ? " muted" : "") + '">' + E(dashVal(s.v, s.prov, s.source)) + "</div>";
         if (s.sub) html += '<div class="sub">' + E(s.sub) + "</div>";
         html += "</div>";
       });
@@ -669,7 +681,7 @@
     html += '<div style="display:flex;gap:6px;font-size:11.5px" class="mono">';
     ["seq", "comp", "er"].forEach(function (v) {
       var lb = v === "seq" ? "sequência" : v === "comp" ? "componentes" : "ER";
-      html += '<button class="pill' + (S.view === v ? "" : " gray") + '" onclick="A.view(\'' + v + '\')">' + lb + "</button>";
+      html += '<button class="pill' + (S.view === v ? "" : " gray") + '" data-action="view" data-value="' + E(v) + '">' + lb + "</button>";
     });
     html += "</div></div>";
     html += '<div class="dg-wrap">' + (S.view === "seq" ? diagramSvg(f.diagram) : S.view === "comp" ? diagramComponents(f.diagram) : erMini()) + "</div>";
@@ -695,7 +707,7 @@
   }
 
   function diagramNodes(d) {
-    var nodes = d.nodes.map(function (n) { return Object.assign({ w: 170, h: 66 }, n); });
+    var nodes = d.nodes.map(function (n) { return Object.assign({}, n, { w: num(n.w, 170), h: num(n.h, 66) }); });
     var hasXY = nodes.every(function (n) { return typeof n.x === "number" && typeof n.y === "number"; });
     if (!hasXY) autoLayout(nodes, d.edges || []);
     return nodes;
@@ -740,13 +752,13 @@
       var a = byId[e.from], b = byId[e.to];
       if (!a || !b) return;
       var d1 = e.path || edgePath(a, b);
-      html += '<path d="' + d1 + '" fill="none" stroke="#7cb8bd" stroke-width="1.6" marker-end="url(#ar)"></path>';
+      html += '<path d="' + E(d1) + '" fill="none" stroke="#7cb8bd" stroke-width="1.6" marker-end="url(#ar)"></path>';
       var m = pathMid(d1);
       if (e.label) html += '<text x="' + (m.x + 6) + '" y="' + (m.y - 4) + '" font-family="JetBrains Mono, monospace" font-size="10" fill="#6f8f93">' + E(e.label) + "</text>";
     });
     html += "</svg>";
     nodes.forEach(function (n) {
-      html += '<div class="dg-node ' + (n.kind || "own") + '" style="left:' + n.x + "px;top:" + n.y + "px;width:" + n.w + "px;min-height:" + n.h + 'px" onclick="A.selNode(\'' + E(n.id) + '\')">';
+      html += '<div class="dg-node ' + E(n.kind || "own") + '" style="left:' + n.x + "px;top:" + n.y + "px;width:" + n.w + "px;min-height:" + n.h + 'px" data-action="selNode" data-value="' + E(n.id) + '">';
       html += '<div class="nm">' + E(n.label) + "</div>";
       if (n.sub) html += '<div class="sb">' + E(n.sub) + "</div>";
       if (sel === n.id) html += '<div class="ring"></div>';
@@ -781,7 +793,7 @@
       html += '<div class="kv-label" style="margin-bottom:9px">' + groups[k] + "</div>";
       html += '<div style="display:flex;flex-direction:column;gap:7px">';
       ns.forEach(function (n) {
-        html += '<button class="pill gray" style="text-align:left;cursor:pointer" onclick="A.selNode(\'' + E(n.id) + '\')"><strong>' + E(n.label) + "</strong>" + (n.sub ? " · " + E(n.sub) : "") + "</button>";
+        html += '<button class="pill gray" style="text-align:left;cursor:pointer" data-action="selNode" data-value="' + E(n.id) + '"><strong>' + E(n.label) + "</strong>" + (n.sub ? " · " + E(n.sub) : "") + "</button>";
       });
       html += "</div></div>";
     });
@@ -801,7 +813,7 @@
       html += "</div></div></div>";
     });
     html += "</div>";
-    html += '<div style="margin-top:12px"><button class="pill" onclick="A.go(\'dados\')">ver modelo completo e DDL →</button></div></div>';
+    html += '<div style="margin-top:12px"><button class="pill" data-action="go" data-value="dados">ver modelo completo e DDL →</button></div></div>';
     return html;
   }
 
@@ -817,7 +829,7 @@
       html += '<div class="dg-wrap"><div class="chain">';
       steps.forEach(function (p, i) {
         var sel = i === S.step;
-        html += '<div class="chain-cell"><div class="chain-node' + (sel ? " sel" : "") + '" onclick="A.selStep(' + i + ')">';
+        html += '<div class="chain-cell"><div class="chain-node' + (sel ? " sel" : "") + '" data-action="selStep" data-value="' + i + '">';
         html += '<div class="n">' + String(i + 1).padStart(2, "0") + "</div>";
         html += '<div class="t">' + E((p.name || "").split(" · ")[0]) + "</div>";
         html += '<div class="tech">' + E(p.tech || "") + "</div>";
@@ -837,7 +849,7 @@
         var sel = i === S.step && S.stepOpen;
         html += '<div style="display:flex;flex-direction:column">';
         html += '<div class="acc' + (sel ? " sel" : "") + '" style="border-radius:10px;margin-bottom:2px">';
-        html += '<div class="acc-hd" onclick="A.selStep(' + i + ')">';
+        html += '<div class="acc-hd" data-action="selStep" data-value="' + i + '">';
         html += '<div class="mono" style="font-size:11px;color:#2b6a70;width:24px">' + String(i + 1).padStart(2, "0") + "</div>";
         html += '<div style="flex:1 1 200px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(p.name) + "</div>";
         if (p.desc) html += '<div style="font-size:12px;color:#5d6470;line-height:1.5;margin-top:2px">' + E(p.desc) + "</div></div>";
@@ -1074,7 +1086,7 @@
       if (!a || !b) return;
       var d1 = boxEdgePath(a._x, a._y, a._w, a._h, b._x, b._y, b._w, b._h);
       var dashed = e.kind === "async" || e.kind === "event" || e.kind === "queue";
-      html += '<path d="' + d1 + '" fill="none" stroke="#7cb8bd" stroke-width="1.6"' + (dashed ? ' stroke-dasharray="5 4"' : "") + ' marker-end="url(#clsar)"></path>';
+      html += '<path d="' + E(d1) + '" fill="none" stroke="#7cb8bd" stroke-width="1.6"' + (dashed ? ' stroke-dasharray="5 4"' : "") + ' marker-end="url(#clsar)"></path>';
       var lbl = e.methods.join(" · ") || e.how || "";
       if (lbl) {
         var m = boxMid(d1);
@@ -1085,7 +1097,7 @@
     classes.forEach(function (c) {
       var key = String(c.name || c.id);
       var selCls = !!(sel && sel.cls === key);
-      html += '<div class="cls-node ' + E(c.stereo || "domain") + (selCls ? " sel" : "") + '" style="left:' + c._x + "px;top:" + c._y + 'px" onclick="A.selClass(\'' + E(key) + '\')">';
+      html += '<div class="cls-node ' + E(c.stereo || "domain") + (selCls ? " sel" : "") + '" style="left:' + c._x + "px;top:" + c._y + 'px" data-action="selClass" data-value="' + E(key) + '">';
       html += '<div class="hd"><div class="st">«' + E(c.stereo || "classe") + '»</div><div class="nm" title="' + E(c.pkg || "") + '">' + E(c.name || c.id) + "</div></div>";
       if (arr(c.fields).length) {
         html += '<div class="sec"><div class="lbl">dependências</div>';
@@ -1096,7 +1108,7 @@
         html += '<div class="sec"><div class="lbl">métodos acionados neste fluxo</div>';
         arr(c.methods).forEach(function (m, mi) {
           var selM = !!(selCls && sel && sel.mtd === mi);
-          html += '<button type="button" class="mt' + (selM ? " sel" : "") + '" onclick="event.stopPropagation();A.selMethod(\'' + E(key) + '\',' + mi + ')" title="' + E(m.what || m.sig || m.name || "") + '">';
+          html += '<button type="button" class="mt' + (selM ? " sel" : "") + '" data-action="selMethod" data-value="' + E(key) + '" data-index="' + mi + '" title="' + E(m.what || m.sig || m.name || "") + '">';
           html += '<span class="n">' + String(mi + 1).padStart(2, "0") + '</span><span class="sg">' + E(m.sig || m.name) + "</span></button>";
         });
         html += "</div>";
@@ -1251,7 +1263,7 @@
       if (!a || !b) return;
       var d1 = boxEdgePath(a._x, a._y, a._w, a._h, b._x, b._y, b._w, b._h);
       var dashed = e.kind === "async" || e.kind === "event" || e.kind === "queue";
-      html += '<path d="' + d1 + '" fill="none" stroke="#7cb8bd" stroke-width="1.6"' + (dashed ? ' stroke-dasharray="5 4"' : "") + ' marker-end="url(#c4ar)"></path>';
+      html += '<path d="' + E(d1) + '" fill="none" stroke="#7cb8bd" stroke-width="1.6"' + (dashed ? ' stroke-dasharray="5 4"' : "") + ' marker-end="url(#c4ar)"></path>';
       if (e.label) {
         var m = boxMid(d1);
         html += '<text x="' + (m.x + 6) + '" y="' + (m.y - 4) + '" font-family="JetBrains Mono, monospace" font-size="10" fill="#6f8f93">' + E(e.label) + "</text>";
@@ -1263,7 +1275,7 @@
     });
     graph.nodes.forEach(function (n) {
       var s = !!sel && sel === n.id;
-      html += '<div class="c4-node ' + n.css + '" style="left:' + n._x + "px;top:" + n._y + "px;width:" + n._w + 'px' + (n.hub ? ";border-width:2px" : "") + '" onclick="A.selC4(\'' + E(n.id) + '\')">';
+      html += '<div class="c4-node ' + E(n.css) + '" style="left:' + n._x + "px;top:" + n._y + "px;width:" + n._w + 'px' + (n.hub ? ";border-width:2px" : "") + '" data-action="selC4" data-value="' + E(n.id) + '">';
       html += '<div class="nm">' + E(n.name) + "</div>";
       html += '<div class="sb">' + E(c4NodeSub(n)) + "</div>";
       if (s) html += '<div class="selring"></div>';
@@ -1286,7 +1298,7 @@
     if (arr(n.flows).length) {
       html += '<div style="margin-top:10px"><div class="kv-label tight" style="margin-bottom:6px">PARTICIPA DOS FLUXOS</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
       arr(n.flows).forEach(function (fid) {
-        html += '<button class="pill" style="cursor:pointer" onclick="A.flow(\'' + E(fid) + '\')" title="abrir fluxo">' + E(c4FlowLabel(fid)) + "</button>";
+        html += '<button class="pill" style="cursor:pointer" data-action="flow" data-value="' + E(fid) + '" title="abrir fluxo">' + E(c4FlowLabel(fid)) + "</button>";
       });
       html += "</div></div>";
     }
@@ -1317,8 +1329,8 @@
     html += "<div><div class=\"card-title\">Modelo C4 — este sistema em dois níveis</div>";
     html += '<div class="card-sub">C1: quem usa o sistema e com quem ele fala · C2: os containers por dentro do limite do sistema</div></div>';
     html += '<div style="display:flex;gap:6px">';
-    html += '<button class="c4-tab' + (S.c4tab === "c2" ? "" : " sel") + '" onclick="A.c4tab(\'c1\')">C1 · contexto</button>';
-    html += '<button class="c4-tab' + (S.c4tab === "c2" ? " sel" : "") + '" onclick="A.c4tab(\'c2\')">C2 · containers</button>';
+    html += '<button class="c4-tab' + (S.c4tab === "c2" ? "" : " sel") + '" data-action="c4tab" data-value="c1">C1 · contexto</button>';
+    html += '<button class="c4-tab' + (S.c4tab === "c2" ? " sel" : "") + '" data-action="c4tab" data-value="c2">C2 · containers</button>';
     html += "</div></div>";
     html += '<div class="grid-auto" style="margin-top:14px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">';
     html += c4stat("C1 · ATORES", arr(ctx.actors).length, arr(ctx.actors).length > 0);
@@ -1412,7 +1424,7 @@
       arr(a.compose).forEach(function (d, i) {
         var open = !!S.acc["dock" + i];
         html += '<div class="acc' + (open ? " sel" : "") + '">';
-        html += '<div class="acc-hd" onclick="A.tgl(\'dock' + i + '\')"><div style="flex:1 1 200px;min-width:0"><div class="mono" style="font-size:13px;font-weight:600">' + E(d.name) + '</div><div style="font-size:12px;color:#5d6470;margin-top:2px">' + E(d.sub || "") + "</div></div>";
+        html += '<div class="acc-hd" data-action="tgl" data-value="dock' + i + '"><div style="flex:1 1 200px;min-width:0"><div class="mono" style="font-size:13px;font-weight:600">' + E(d.name) + '</div><div style="font-size:12px;color:#5d6470;margin-top:2px">' + E(d.sub || "") + "</div></div>";
         html += '<div class="mono" style="font-size:10px;color:#8a857d">' + E(d.file || "") + '</div><div class="caret">' + (open ? "−" : "+") + "</div></div>";
         if (open) html += '<div style="padding:0 13px 13px"><pre class="pre-dark">' + E(d.yaml) + '</pre><div class="note-src" style="margin-top:8px">valores sensíveis mascarados na geração da documentação</div></div>';
         html += "</div>";
@@ -1501,9 +1513,9 @@
       html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(160px,1fr) 84px 78px 86px 110px"><div>TABELA</div><div style="text-align:right">LINHAS</div><div style="text-align:right">TAM.</div><div style="text-align:right">ESCRITA/S</div><div style="text-align:right">RETENÇÃO</div></div>';
       arr(d.tables).forEach(function (t) {
         html += '<div class="tbl" style="grid-template-columns:minmax(160px,1fr) 84px 78px 86px 110px">';
-        html += '<div class="mono" style="font-size:11.5px">' + E(t.name) + "</div>";
+        html += '<div class="mono" style="font-size:11.5px">' + E(t.name) + "<div>" + runtimeSource(t) + "</div></div>";
         ["rows", "size", "wps"].forEach(function (k) {
-          html += '<div style="text-align:right;color:#5d6470" class="mono">' + E(dashVal(t[k], t.prov)) + "</div>";
+          html += '<div style="text-align:right;color:#5d6470" class="mono">' + E(runtimeVal(t[k], t)) + "</div>";
         });
         html += '<div style="text-align:right;color:#8a857d;font-size:11.5px" class="mono">' + E(t.keep || "—") + "</div></div>";
       });
@@ -1557,7 +1569,7 @@
         html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px">';
         arr(v.flows).forEach(function (fid) {
           var f = flowById(fid);
-          html += '<button class="pill" style="cursor:pointer" onclick="A.flow(\'' + E(fid) + '\')" title="abrir fluxo">' + E(f && f.label ? f.label : fid) + "</button>";
+          html += '<button class="pill" style="cursor:pointer" data-action="flow" data-value="' + E(fid) + '" title="abrir fluxo">' + E(f && f.label ? f.label : fid) + "</button>";
         });
         html += "</div>";
       }
@@ -1596,7 +1608,7 @@
     html += '<div class="stat"><div class="k"><span>OBRIGATÓRIAs</span></div><div class="v">' + required + "</div></div>";
     html += '<div class="stat' + (undecl ? " dashed" : "") + '"><div class="k"><span>NÃO DECLARADAs</span></div><div class="v' + (undecl ? "" : " muted") + '">' + undecl + "</div></div>";
     html += "</div>";
-    html += '<div style="margin-top:14px"><input class="env-search" placeholder="filtrar por nome, descrição, fluxo ou arquivo…" value="' + E(S.envQ) + '" oninput="A.envQ(this.value)"></div>';
+    html += '<div style="margin-top:14px"><input class="env-search" placeholder="filtrar por nome, descrição, fluxo ou arquivo…" value="' + E(S.envQ) + '" data-input="envQ"></div>';
     html += '<div id="env-list" style="margin-top:10px">' + envList() + "</div>";
     if (undecl) html += '<div class="legend-pills"><span class="pill dashed">NÃO DECLARADA = lida no código e ausente de todo .env/compose — drift que o deploy sente</span></div>';
     html += "</section>";
@@ -1613,11 +1625,11 @@
       html += '<div class="tbl-hd" style="display:grid;grid-template-columns:minmax(190px,1.4fr) 62px minmax(140px,1fr) 72px 92px"><div>TÓPICO</div><div style="text-align:right">PART.</div><div>CONSUMIDOR</div><div style="text-align:right">LAG</div><div style="text-align:right">DLQ</div></div>';
       arr(ev.topics).forEach(function (q) {
         html += '<div class="tbl" style="grid-template-columns:minmax(190px,1.4fr) 62px minmax(140px,1fr) 72px 92px">';
-        html += '<div class="mono" style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis">' + E(q.topic) + "</div>";
+        html += '<div class="mono" style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis">' + E(q.topic) + "<div>" + runtimeSource(q) + "</div></div>";
         html += '<div style="text-align:right;color:#5d6470">' + E(q.parts) + "</div>";
         html += '<div style="color:#5d6470;overflow:hidden;text-overflow:ellipsis">' + E(q.group) + "</div>";
-        html += '<div style="text-align:right" class="mono"><span style="font-size:11px;color:' + (q.lagKind === "bad" ? "#b4453a" : q.lagKind === "warn" ? "#c08a2e" : "#3f7a4f") + '">' + E(dashVal(q.lag, q.prov)) + "</span></div>";
-        html += '<div style="text-align:right" class="mono"><span style="font-size:10.5px;color:#8a857d">' + E(q.dlq || "—") + "</span></div></div>";
+        html += '<div style="text-align:right" class="mono"><span style="font-size:11px;color:' + (q.lagKind === "bad" ? "#b4453a" : q.lagKind === "warn" ? "#c08a2e" : "#3f7a4f") + '">' + E(runtimeVal(q.lag, q)) + "</span></div>";
+        html += '<div style="text-align:right" class="mono"><span style="font-size:10.5px;color:#8a857d">' + E(runtimeVal(q.dlq, q)) + "</span></div></div>";
       });
       html += "</div></div></section>";
     }
@@ -1654,7 +1666,7 @@
     list.forEach(function (t, i) {
       var open = !!S.acc["tp" + i];
       html += '<div class="acc' + (open ? " sel" : "") + '">';
-      html += '<div class="acc-hd" onclick="A.tgl(\'tp' + i + '\')">';
+      html += '<div class="acc-hd" data-action="tgl" data-value="tp' + i + '">';
       html += '<div style="flex:1 1 220px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(t.name) + '</div><div class="mono" style="font-size:10.5px;color:#5d6470;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + E(t.prod || "") + "</div></div>";
       html += '<div class="mono" style="font-size:10px;color:#8a857d">' + E(t.kind || "") + "</div>";
       html += '<div class="mono" style="font-size:10px;width:74px;text-align:right;color:' + critColor(t.crit) + '">' + E(t.crit || "") + '</div><div class="caret">' + (open ? "−" : "+") + "</div></div>";
@@ -1700,7 +1712,7 @@
     list.forEach(function (d, i) {
       var open = !!S.acc["dp" + i];
       html += '<div class="acc' + (open ? " sel" : "") + '">';
-      html += '<div class="acc-hd" onclick="A.tgl(\'dp' + i + '\')">';
+      html += '<div class="acc-hd" data-action="tgl" data-value="dp' + i + '">';
       html += '<div style="flex:1 1 230px;min-width:0"><div style="font-size:13px;font-weight:600">' + E(d.name) + '</div><div style="font-size:12px;color:#5d6470;line-height:1.5;margin-top:3px">' + E(d.desc || "") + '</div><div class="mono" style="font-size:10.5px;color:#2b6a70;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + E(d.addr || "") + "</div></div>";
       html += '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">';
       html += '<div><div class="kv-label">TIPO</div><div style="font-size:12px;margin-top:2px">' + E(d.kind || "") + "</div></div>";
@@ -1854,7 +1866,7 @@
   }
 
   function coverageCard(cov) {
-    var html = '<section class="card"><div class="card-title">Cobertura por varredura</div><div class="card-sub" style="margin-bottom:16px">Percentual apurado a cada scan</div><div class="bars">';
+    var html = '<section class="card"><div class="card-title">Score por observação</div><div class="card-sub" style="margin-bottom:16px">Score geral a cada scan ou alteração apurada; rebuild idêntico não duplica ponto</div><div class="bars">';
     cov.forEach(function (c) {
       html += '<div class="bar-cell"><div class="bv">' + E(c.v) + '</div><div class="bar" style="height:' + Math.max(2, num(c.v, 0)) + "%;background:" + covBarColor(c.v) + '"></div></div>';
     });
@@ -1892,7 +1904,7 @@
 
   /* ----- inspector ----- */
   function panelClosedStrip() {
-    return '<div class="panel-open-strip" onclick="A.panel()"><div class="mono" style="font-size:14px;color:#2b6a70">‹</div><div class="vt">abrir inspetor</div></div>';
+    return '<div class="panel-open-strip" data-action="panel"><div class="mono" style="font-size:14px;color:#2b6a70">‹</div><div class="vt">abrir inspetor</div></div>';
   }
 
   function inspector() {
@@ -1914,7 +1926,7 @@
     var html = '<section class="card flush">';
     html += '<div class="insp-hd"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">';
     html += '<div class="kv-label">' + E(insp.kind || n.kind || "componente") + '</div>';
-    html += '<div style="display:flex;gap:5px"><div class="caret" style="cursor:pointer" onclick="A.tgl(\'insp\')">' + (S.acc.insp === false ? "+" : "−") + '</div><div class="caret" style="cursor:pointer" onclick="A.panel()">›</div></div></div>';
+    html += '<div style="display:flex;gap:5px"><div class="caret" style="cursor:pointer" data-action="tgl" data-value="insp">' + (S.acc.insp === false ? "+" : "−") + '</div><div class="caret" style="cursor:pointer" data-action="panel">›</div></div></div>';
     html += '<div style="font-size:16px;font-weight:600;margin-top:4px">' + E(n.label) + "</div>";
     if (insp.desc) html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.55;margin-top:6px">' + E(insp.desc) + "</div>";
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:11px" class="mono">';
@@ -1924,7 +1936,7 @@
     if (S.acc.insp !== false) {
       html += '<div class="insp-tabs">';
       [["payload", "Payload", "exemplo derivado do código"], ["contract", "Contrato", "fatos e erros mapeados"], ["ddl", "DDL", "migrações aplicadas"], ["code", "Código", "links para o repositório"]].forEach(function (t) {
-        html += '<button class="insp-tab' + (tab === t[0] ? " sel" : "") + '" onclick="A.tab(\'' + t[0] + '\')">' + t[1] + "</button>";
+        html += '<button class="insp-tab' + (tab === t[0] ? " sel" : "") + '" data-action="tab" data-value="' + E(t[0]) + '">' + t[1] + "</button>";
       });
       html += '<span class="insp-tab-hint">' + ({ payload: "exemplo derivado do código", contract: "fatos e erros mapeados", ddl: "migrações aplicadas", code: "links para o repositório" }[tab] || "") + "</span></div>";
       html += '<div class="insp-body">';
@@ -1970,7 +1982,7 @@
     var html = '<section class="card flush">';
     html += '<div class="insp-hd"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">';
     html += '<div class="kv-label">passo ' + String(S.step + 1).padStart(2, "0") + '</div>';
-    html += '<div class="caret" style="cursor:pointer" onclick="A.panel()">›</div></div>';
+    html += '<div class="caret" style="cursor:pointer" data-action="panel">›</div></div>';
     html += '<div style="font-size:16px;font-weight:600;margin-top:4px">' + E((p.name || "").split(" · ")[0]) + "</div>";
     if (p.desc) html += '<div style="font-size:12.5px;color:#5d6470;line-height:1.55;margin-top:6px">' + E(p.desc) + "</div>";
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:11px" class="mono">';
@@ -1987,7 +1999,7 @@
     var chg = arr(h.changelog);
     var open = S.acc.chg !== false;
     var html = '<section class="card">';
-    html += '<div onclick="A.tgl(\'chg\')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "12px" : "0") + ';cursor:pointer">';
+    html += '<div data-action="tgl" data-value="chg" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "12px" : "0") + ';cursor:pointer">';
     html += '<div class="card-title">Documentação incremental</div><div style="display:flex;align-items:center;gap:8px"><span class="mono" style="font-size:10.5px;color:#8a857d">' + E(MODEL.app.commit || "") + '</span><div class="caret">' + (open ? "−" : "+") + "</div></div></div>";
     if (open) {
       if (!chg.length) html += '<div class="card-sub">Sem mudanças registradas ainda.</div>';
@@ -2018,7 +2030,7 @@
     if (!a.style && !arr(a.risks).length && !a.consistency && !a.idempotency) return "";
     var open = S.acc.arch !== false;
     var html = '<section class="dark-card">';
-    html += '<div onclick="A.tgl(\'arch\')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "10px" : "0") + ';cursor:pointer">';
+    html += '<div data-action="tgl" data-value="arch" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:' + (open ? "10px" : "0") + ';cursor:pointer">';
     html += '<div class="t">Arquitetura detectada</div><div class="caret" style="border-color:#33405c;color:#8fd6da">' + (open ? "−" : "+") + "</div></div>";
     if (open) {
       var rows = [["Estilo", a.style], ["Consistência", a.consistency], ["Idempotência", a.idempotency]];
@@ -2031,7 +2043,7 @@
 
   /* ---------------- actions ---------------- */
   function setHash() {
-    var h = "#/" + S.screen + (S.screen === "fluxos" && S.flow ? "/" + S.flow : "");
+    var h = "#/" + S.screen + (S.screen === "fluxos" && S.flow ? "/" + encodeURIComponent(S.flow) : "");
     try { if (location.hash !== h) history.replaceState(null, "", h); } catch (e) {}
   }
   window.A = {
@@ -2057,15 +2069,55 @@
     scoreHide: function () { clearTimeout(scoreTipTimer); scoreTipTimer = setTimeout(dropScoreTip, 140); }
   };
 
+  // One delegated listener handles the nearest action, including nested method buttons.
+  // Model strings are read as data; no handler source is generated from them.
+  document.addEventListener("click", function (event) {
+    var el = event.target.closest && event.target.closest("[data-action]");
+    if (!el) return;
+    var value = el.getAttribute("data-value");
+    switch (el.getAttribute("data-action")) {
+      case "flow": A.flow(value); break;
+      case "go": A.go(value); break;
+      case "selNode": A.selNode(value); break;
+      case "selClass": A.selClass(value); break;
+      case "selMethod": A.selMethod(value, num(el.getAttribute("data-index"), 0)); break;
+      case "selC4": A.selC4(value); break;
+      case "selStep": A.selStep(num(value, 0)); break;
+      case "view": A.view(value); break;
+      case "tab": A.tab(value); break;
+      case "c4tab": A.c4tab(value); break;
+      case "tgl": A.tgl(value); break;
+      case "panel": A.panel(); break;
+      case "navT": A.navT(); break;
+    }
+  });
+  document.addEventListener("input", function (event) {
+    if (event.target.getAttribute("data-input") === "envQ") A.envQ(event.target.value);
+  });
+  ["mouseover", "focusin"].forEach(function (name) {
+    document.addEventListener(name, function (event) {
+      var el = event.target.closest && event.target.closest("[data-score-tip]");
+      if (el && (!event.relatedTarget || !el.contains(event.relatedTarget))) A.scoreShow(el);
+    });
+  });
+  ["mouseout", "focusout"].forEach(function (name) {
+    document.addEventListener(name, function (event) {
+      var el = event.target.closest && event.target.closest("[data-score-tip]");
+      if (el && (!event.relatedTarget || !el.contains(event.relatedTarget))) A.scoreHide();
+    });
+  });
+
   /* ---------------- boot: hash router ---------------- */
-  (function boot() {
+  function readHash() {
     var h = (location.hash || "").replace(/^#\/?/, "");
     var parts = h.split("/");
     if (parts[0] && NAV.some(function (n) { return n.k === parts[0]; })) S.screen = parts[0];
-    if (S.screen === "fluxos" && parts[1] && flowById(parts[1])) S.flow = parts[1];
+    if (S.screen === "fluxos" && parts[1]) { try { S.flow = decodeURIComponent(parts.slice(1).join("/")); } catch (e) { S.flow = parts[1]; } }
     setHash();
     render();
-  })();
+  }
+  window.addEventListener("hashchange", readHash);
+  readHash();
 })();
 </script>
 </body>

@@ -12,19 +12,19 @@ tem `ui_touched: true` **e** sem `bypass`. `ui_touched: false` → grave você m
 não dirija nada; o SKIP já sai automático no `hooks.mjs verdict` com o motivo —
 bypass é decisão explícita, não é lacuna.
 
-## Passo 0 — modo do drive (pergunta única ao usuário)
+## Passo 0 — modo do drive
 
-Antes da primeira jornada, o Oracle pergunta **uma vez por run** (só quando
-`ui_touched: true`; flag `--ui-drive` já responde e dispensa a pergunta):
+Reuse a escolha do usuário ou `--ui-drive`; sem escolha explícita, use fast.
+Pergunte apenas quando houver uma restrição material não resolvida:
 
 - **rápido** (`fast`, default): spec escrito direto do código-fonte (rotas e
   componentes são legíveis) → driver headless. Jornadas em segundos.
 - **guiado** (`guided`): Playwright MCP explora a tela viva primeiro (adaptivo,
   acha seletores/estados que o código não revela), depois destila no spec.
 
-**Regra inegociável de performance: a primeira passada pode ser MCP; re-execução
-nunca.** Depois de qualquer correção ("até secar"), a jornada re-roda pelo driver
-headless — descoberta cara 1×, prova barata N×.
+Prefira jornada reexecutável pelo runner do repo ou driver. Use ferramentas do host
+quando necessário para explorar ou quando o ambiente exigir; respeite as instruções
+dessas ferramentas. Registre o modo e a evidência da execução real.
 
 ## Passo 1 — boot pelo jeito do repo
 
@@ -42,7 +42,7 @@ as specs das jornadas (`run-e2e --cmd "…"`). Sem runner → **modo drive**.
 **Modo drive — Playwright AI Agents (MCP) para explorar, script para provar:**
 
 1. **Explorar** com o [Playwright MCP](https://github.com/microsoft/playwright-mcp)
-   (`npx -y @playwright/mcp@latest`; host com MCP registra como servidor): navegue
+   (quando já disponível no host): navegue
    com `browser_navigate`/`browser_snapshot` (árvore de acessibilidade — seletores
    estáveis), `browser_click`/`browser_fill`, e leia `browser_console_messages` +
    `browser_network_requests` + `browser_take_screenshot`. Use a exploração para
@@ -54,10 +54,10 @@ as specs das jornadas (`run-e2e --cmd "…"`). Sem runner → **modo drive**.
 Host sem MCP → escreva o spec direto do código-fonte (rotas/components são
 legíveis) e rode o driver. `npx` falhou também → browser tools do host
 preenchendo `journeys/<tela>.json` à mão (`mode: "browser-host"`). Sem browser de
-jeito nenhum → `verdict: "OPEN"` com a lacuna — nunca finja ter dirigido.
+jeito nenhum → `verdict: "OPEN"` com a lacuna; UI obrigatória sem aceite impede fechamento.
 
 **Login**: credenciais de teste do repo (seed/fixture/env de teste). Não existem →
-**pergunte ao usuário** (nunca invente, nunca use cred real — §8 regra 8). Só
+**peça credenciais de teste ou registre o impedimento**. Use somente ambiente autorizado. Só
 localhost: nunca aponte para URL de produção.
 
 ## Passo 2 — dirija cada tela em escopo
@@ -67,7 +67,7 @@ JSON da jornada** em `$OUT/ui/drive/<tela>.spec.json` e roda o driver headless:
 
 ```bash
 node "$SKILL_ROOT/scripts/ui-acceptance.mjs" drive --dir "$OUT" \
-  --spec "$OUT/ui/drive/checkout.spec.json" --user "$TEST_USER" --pass "$TEST_PASS"
+  --spec "$OUT/ui/drive/checkout.spec.json"
 ```
 
 ```json
@@ -87,7 +87,7 @@ Ações: `goto · click · fill · assert_visible · assert_text · wait · scre
 O driver (Playwright via npx, **não vira dependência do repo**) coleta por código:
 console errors, `pageerror`, respostas ≥400 das chamadas, screenshot por passo —
 e grava `ui/journeys/<tela>.json` com verdict. Credenciais vêm por
-flag/env (`TEST_USER`/`TEST_PASS` do repo), **nunca dentro do spec**.
+env (`TEST_USER`/`TEST_PASS` do repo), **nunca dentro do spec**.
 
 `npx` falhou (sem rede / browser não instala)? **Fallback:** dirija com as browser
 tools do host (built-in browser, chrome, plugin) executando este mesmo checklist e
@@ -129,11 +129,15 @@ Grave `$OUT/hooks/ui-acceptance.json` (schema dos hooks, rounds como os demais):
 ```
 
 - App não sobe / crash de render em tela tocada / exception de console em tela
-  tocada / funcionalidade visível fora do SDD / 4xx-5xx em chamada da tela nova /
+  tocada / funcionalidade visível fora do SDD / 4xx-5xx inesperado em chamada da tela nova /
   padrão documentado violado → `REJECT` (bloqueia, régua dos hooks).
 - Divergência de irmã sem documento (`medium`), copy/espaçamento, console em
   tela legada (`low`) → findings advisory, sem REJECT.
 - Achado real → o **Ferreiro** (implementer) corrige no pack e você re-dirige a
-  jornada (append round). Até secar.
+  jornada (append round). Se não houver progresso, registre o impedimento concreto.
 - Sempre termine: `ui-acceptance.mjs teardown --dir "$OUT"` — só o pid que o boot
   registrou, nunca kill em massa.
+
+## Identidade e erros esperados
+
+Scope desconhecido (ui_touched:null) não é SKIP. Gere diff-facts/base antes de decidir. Use screen como slug sem barras; cada runDrive cria execution_id e sua própria evidência. O último resultado pode ser REJECT mesmo sem JSON do browser. Erros de console/pageerror e respostas HTTP inesperadas reprovam o driver. Para jornadas negativas, declare expected_network_errors:[{status:422,path:"/api/checkout"}] no spec, com pares exatos justificados pelo SDD. Não ignore todos os 4xx/5xx. Boot exige porta livre e healthcheck 2xx esperado; não reutilize outro servidor incidentalmente. Teardown conserva boot.json com stopped_at. Oracle captura snapshot antes da rodada e carimba o hook UI ao terminar; reexecução pós-correção usa nova evidência, nunca APPROVE antigo.

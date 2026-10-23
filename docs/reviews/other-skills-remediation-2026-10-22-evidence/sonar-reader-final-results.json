@@ -1,0 +1,93 @@
+{
+  "fixture": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-reader-final-vl84q4qi",
+  "runs": [
+    {
+      "mode": "file_admin",
+      "scanner": {
+        "local_names": [],
+        "analysis_token_correct": true,
+        "benign_marker_preserved": true,
+        "secret_in_argv": false
+      },
+      "read_credential": "admin",
+      "stdout_clean": true
+    },
+    {
+      "mode": "explicit_reader",
+      "scanner": {
+        "local_names": [],
+        "analysis_token_correct": true,
+        "benign_marker_preserved": true,
+        "secret_in_argv": false
+      },
+      "read_credential": "reader",
+      "stdout_clean": true
+    },
+    {
+      "mode": "inherited_admin",
+      "scanner": {
+        "local_names": [],
+        "analysis_token_correct": true,
+        "benign_marker_preserved": true,
+        "secret_in_argv": false
+      },
+      "read_credential": "admin",
+      "stdout_clean": true
+    }
+  ],
+  "redirects": [
+    {
+      "client": "scan",
+      "status": 301,
+      "blocked": true
+    },
+    {
+      "client": "bootstrap",
+      "status": 301,
+      "blocked": true
+    },
+    {
+      "client": "scan",
+      "status": 302,
+      "blocked": true
+    },
+    {
+      "client": "bootstrap",
+      "status": 302,
+      "blocked": true
+    },
+    {
+      "client": "scan",
+      "status": 303,
+      "blocked": true
+    },
+    {
+      "client": "bootstrap",
+      "status": 303,
+      "blocked": true
+    },
+    {
+      "client": "scan",
+      "status": 307,
+      "blocked": true
+    },
+    {
+      "client": "bootstrap",
+      "status": 307,
+      "blocked": true
+    },
+    {
+      "client": "scan",
+      "status": 308,
+      "blocked": true
+    },
+    {
+      "client": "bootstrap",
+      "status": 308,
+      "blocked": true
+    }
+  ],
+  "redirect_target_requests": 0,
+  "proxy_requests": 0,
+  "proxy_bypass_verified_for_both_clients": true
+}

@@ -1,0 +1,43 @@
+{
+  "node": {
+    "total": 279,
+    "passed": 251,
+    "failed": 0,
+    "skipped": 28
+  },
+  "python": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0
+  },
+  "formal_skills": {
+    "valid": 6,
+    "invalid": 0
+  },
+  "syntax": {
+    "javascript": 66,
+    "python": 11,
+    "shell": 1
+  },
+  "links": {
+    "drift": 0,
+    "warn": 0,
+    "missing": 0
+  },
+  "docker_smoke": "passed",
+  "independent": [
+    "deep",
+    "ultra",
+    "atlas",
+    "abuse",
+    "sonar",
+    "links"
+  ],
+  "markdown": {
+    "files": 90,
+    "relative_links": 86,
+    "missing": 0
+  },
+  "diff_check": "passed",
+  "source_snapshot_verified": 171
+}

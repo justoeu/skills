@@ -1,0 +1,146 @@
+[
+  {
+    "mode": "file_admin",
+    "scanner": {
+      "project_token_only": true,
+      "admin_in_env": false,
+      "reader_in_env": false,
+      "secret_in_argv": false
+    },
+    "calls": [
+      {
+        "endpoint": "/api/languages/list",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/ce/task",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/qualitygates/project_status",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/measures/component",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      }
+    ],
+    "stdout_contains_canary": false
+  },
+  {
+    "mode": "explicit_reader",
+    "scanner": {
+      "project_token_only": true,
+      "admin_in_env": false,
+      "reader_in_env": false,
+      "secret_in_argv": false
+    },
+    "calls": [
+      {
+        "endpoint": "/api/languages/list",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/ce/task",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/qualitygates/project_status",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": false,
+        "is_reader": true
+      },
+      {
+        "endpoint": "/api/measures/component",
+        "is_scan": false,
+        "is_admin": false,
+        "is_reader": true
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": false,
+        "is_reader": true
+      }
+    ],
+    "stdout_contains_canary": false
+  },
+  {
+    "mode": "inherited_admin",
+    "scanner": {
+      "project_token_only": true,
+      "admin_in_env": true,
+      "reader_in_env": false,
+      "secret_in_argv": false
+    },
+    "calls": [
+      {
+        "endpoint": "/api/languages/list",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/ce/task",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/qualitygates/project_status",
+        "is_scan": true,
+        "is_admin": false,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/measures/component",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      },
+      {
+        "endpoint": "/api/project_analyses/search",
+        "is_scan": false,
+        "is_admin": true,
+        "is_reader": false
+      }
+    ],
+    "stdout_contains_canary": false
+  }
+]

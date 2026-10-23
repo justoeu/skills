@@ -1,0 +1,50 @@
+test_ambiguous_build_is_reported_without_coverage (test_scan.ScanTests.test_ambiguous_build_is_reported_without_coverage) ... ok
+test_authenticated_clients_reject_redirects (test_scan.ScanTests.test_authenticated_clients_reject_redirects) ... FAIL
+/opt/homebrew/Cellar/python@3.15/3.15.0_1/Frameworks/Python.framework/Versions/3.15/lib/python3.15/tempfile.py:538: ResourceWarning: Implicitly cleaning up <HTTPError 404: 'Not Found'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+test_custom_port_is_forwarded_to_compose (test_scan.ScanTests.test_custom_port_is_forwarded_to_compose) ... ok
+test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) ... ok
+test_operational_failures_do_not_claim_success (test_scan.ScanTests.test_operational_failures_do_not_claim_success) ... ok
+test_private_metrics_use_read_access_without_giving_admin_to_scanner (test_scan.ScanTests.test_private_metrics_use_read_access_without_giving_admin_to_scanner) ... ok
+test_red_gate_is_advisory_after_successful_analysis (test_scan.ScanTests.test_red_gate_is_advisory_after_successful_analysis) ... ok
+test_scanner_does_not_inherit_local_credentials (test_scan.ScanTests.test_scanner_does_not_inherit_local_credentials) ... FAIL
+test_scanner_failure_never_reads_old_gate (test_scan.ScanTests.test_scanner_failure_never_reads_old_gate) ... ok
+test_success_is_correlated_to_analysis_and_token_not_in_argv (test_scan.ScanTests.test_success_is_correlated_to_analysis_and_token_not_in_argv) ... ok
+test_two_scans_use_isolated_current_coverage (test_scan.ScanTests.test_two_scans_use_isolated_current_coverage) ... ok
+
+======================================================================
+FAIL: test_authenticated_clients_reject_redirects (test_scan.ScanTests.test_authenticated_clients_reject_redirects)
+----------------------------------------------------------------------
+scan.ScanError: API /redirect: HTTP 404
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 139, in test_authenticated_clients_reject_redirects
+    with self.assertRaisesRegex(scan.ScanError,'HTTP 302'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "HTTP 302" does not match "API /redirect: HTTP 404"
+
+======================================================================
+FAIL: test_scanner_does_not_inherit_local_credentials (test_scan.ScanTests.test_scanner_does_not_inherit_local_credentials)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 135, in test_scanner_does_not_inherit_local_credentials
+    self.assertEqual(json.loads((folder/'local-env-names.json').read_text()),[])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['SONAR_LOCAL_ADMIN_PENDING', 'SONAR_LOCAL[71 chars]_00'] != []
+
+First list contains 4 additional elements.
+First extra element 0:
+'SONAR_LOCAL_ADMIN_PENDING'
+
++ []
+- ['SONAR_LOCAL_ADMIN_PENDING',
+-  'SONAR_LOCAL_DB_PASSWORD',
+-  'SONAR_LOCAL_ADMIN_PASSWORD',
+-  'SONAR_LOCAL_READ_TOKEN_V2_00']
+
+----------------------------------------------------------------------
+Ran 11 tests in 14.621s
+
+FAILED (failures=2)

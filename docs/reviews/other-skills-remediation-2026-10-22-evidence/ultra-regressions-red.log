@@ -1,0 +1,165 @@
+✖ invalid agent preserves prior aggregate and reports failure (92.600208ms)
+✖ single object agent output follows the documented surface schema (83.883875ms)
+✖ assigned IDs are reserved before generating missing IDs (97.880583ms)
+✖ directory scope measures actual source and invalid scope fails strict (87.005417ms)
+✖ legacy progress never advertises verified completion (519.976958ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 987.318625
+
+✖ failing tests:
+
+test at ultra-deep-audit/scripts/tests/regressions.test.mjs:13:1
+✖ invalid agent preserves prior aggregate and reports failure (92.600208ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: 0
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/regressions.test.mjs:13:328)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 0,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/regressions.test.mjs:14:1
+✖ single object agent output follows the documented surface schema (83.883875ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/regressions.test.mjs:14:228)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/regressions.test.mjs:15:1
+✖ assigned IDs are reserved before generating missing IDs (97.880583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/regressions.test.mjs:15:323)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/regressions.test.mjs:16:1
+✖ directory scope measures actual source and invalid scope fails strict (87.005417ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/regressions.test.mjs:16:438)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/regressions.test.mjs:17:1
+✖ legacy progress never advertises verified completion (519.976958ms)
+  AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /✅ COMPLETE/. Input:
+  
+  '# Ultra-Deep Audit — ultra-regression-fUzs4i\n' +
+    '\n' +
+    '> **App:** `ultra-regression-fUzs4i` · **Version:** `unknown` · **Branch:** `unknown-branch` · **Mode:** full\n' +
+    '>\n' +
+    '> **Progress:** 1/1 DONE (100%) · OPEN 0 · updated 2026-10-23 01:41:27 UTC · ✅ COMPLETE\n' +
+    '\n' +
+    '## Project\n' +
+    '\n' +
+    '| Field | Value |\n' +
+    '|-------|-------|\n' +
+    '| App / project | `ultra-regression-fUzs4i` |\n' +
+    '| Version | `unknown` |\n' +
+    '| Branch | `unknown-branch` |\n' +
+    '| Head | `n/a` |\n' +
+    '| Pack | `ultra-regression-fUzs4i` |\n' +
+    '| Mode | **full** · depth **deep** · effort **max** |\n' +
+    '| Root | `~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/ultra-regression-fUzs4i` |\n' +
+    '| Findings | **1** (DONE 1 · OPEN 0) |\n' +
+    '| Severity | HIGH=1 |\n' +
+    '| HIGH/CRITICAL open | **0** |\n' +
+    '| blocks_pr still open | **0** |\n' +
+    '\n' +
+    '## Stack\n' +
+    '\n' +
+    '- Languages: —\n' +
+    '- Frameworks: —\n' +
+    '- Ecosystems: —\n' +
+    '- Package managers: —\n' +
+    '\n' +
+    '## Agents\n' +
+    '\n' +
+    '| Agent | Findings |\n' +
+    '|-------|----------:|\n' +
+    '| Sentinel | 1 |\n' +
+    '\n' +
+    '## Dependencies (Prism)\n' +
+    '\n' +
+    '_Sem `deps-latest.json` neste pack. Rode `check-deps-latest.mjs` na Onda C (Prism)._\n' +
+    '\n' +
+    '## P0 / blocks_pr\n' +
+    '\n' +
+    '- **SEC-SEN-001** [HIGH] ✅ owner guard\n' +
+    '  - `src/auth.js`\n' +
+    '\n' +
+    '## HIGH (all)\n' +
+    '\n' +
+    '- **SEC-SEN-001** blocks=false status=resolved — owner guard\n' +
+    '\n' +
+    '## Notes\n' +
+    '\n' +
+    '_Oracle notes (manual) go here._\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/regressions.test.mjs:17:249)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '# Ultra-Deep Audit — ultra-regression-fUzs4i\n\n> **App:** `ultra-regression-fUzs4i` · **Version:** `unknown` · **Branch:** `unknown-branch` · **Mode:** full\n>\n> **Progress:** 1/1 DONE (100%) · OPEN 0 · updated 2026-10-23 01:41:27 UTC · ✅ COMPLETE\n\n## Project\n\n| Field | Value |\n|-------|-------|\n| App / project | `ultra-regression-fUzs4i` |\n| Version | `unknown` |\n| Branch | `unknown-branch` |\n| Head | `n/a` |\n| Pack | `ultra-regression-fUzs4i` |\n| Mode | **full** · depth **deep** · effort **max** |\n| Root | `~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/ultra-regression-fUzs4i` |\n| Findings | **1** (DONE 1 · OPEN 0) |\n| Severity | HIGH=1 |\n| HIGH/CRITICAL open | **0** |\n| blocks_pr still open | **0** |\n\n## Stack\n\n- Languages: —\n- Frameworks: —\n- Ecosystems: —\n- Package managers: —\n\n## Agents\n\n| Agent | Findings |\n|-------|----------:|\n| Sentinel | 1 |\n\n## Dependencies (Prism)\n\n_Sem `deps-latest.json` neste pack. Rode `check-deps-latest.mjs` na Onda C (Prism)._\n\n## P0 / blocks_pr\n\n- **SEC-SEN-001** [HIGH] ✅ owner guard\n  - `src/auth.js`\n\n## HIGH (all)\n\n- **SEC-SEN-001** blocks=false status=resolved — owner guard\n\n## Notes\n\n_Oracle notes (manual) go here._\n',
+    expected: /✅ COMPLETE/,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }

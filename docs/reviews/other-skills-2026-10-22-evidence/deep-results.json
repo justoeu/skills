@@ -1,0 +1,234 @@
+[
+  {
+    "case": "invalid security vote",
+    "tally": {
+      "status": 0,
+      "stdout": "sec-verify: 0 kept / 1 candidates (dropped 1) → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/malformed-panel/agent-cerbero.json\nverification.status=verified",
+      "stderr": ""
+    },
+    "coverage": {
+      "verification_status": "verified",
+      "panel_source": "vote-files",
+      "require_vote_files": true,
+      "candidates_in": 1,
+      "candidates_deduped_out": 0,
+      "panel_reviewed_findings": 1,
+      "panel_quorum_findings": 0,
+      "panel_dropped": 1,
+      "unreviewed_candidate_sites": 0,
+      "quorum": 2,
+      "voters": 3,
+      "dropped_sample": [
+        {
+          "temp_id": "C1",
+          "reason": "incomplete-or-invalid-panel",
+          "true": 2,
+          "false": 0,
+          "title": "Real high candidate"
+        }
+      ]
+    },
+    "findings": [],
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 0 achados · 0 aberto · 0 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": ""
+    }
+  },
+  {
+    "case": "zero security candidates",
+    "tally": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "sec-verify: FAIL require-vote-files — missing 0 file(s):"
+    },
+    "coverage": {
+      "verification_status": "unverified",
+      "reason": "missing-independent-vote-files",
+      "panel_source": "votes-json",
+      "missing_vote_files": [],
+      "candidates_in": 0,
+      "require_vote_files": true
+    }
+  },
+  {
+    "case": "sequential security ID reused after new higher severity",
+    "findings": [
+      {
+        "id": "SEC-CER-001",
+        "path": "new.js",
+        "severity": "CRITICAL",
+        "status": "refuted",
+        "refuted_by": "old.js guard proves the old premise false"
+      },
+      {
+        "id": "SEC-CER-001",
+        "path": "old.js",
+        "severity": "LOW",
+        "status": "refuted",
+        "refuted_by": "old.js guard proves the old premise false"
+      }
+    ],
+    "gate": {
+      "status": 2,
+      "stdout": "lint-findings: 2 achados · 0 aberto · 0 resolvido · 2 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 1 · HIGH 0 · MEDIUM 0 · LOW 1 · INFO 0",
+      "stderr": "⚠ SEC-CER-001: sem `impact` — severidade sem impacto declarado é palpite.\n  ⚠ SEC-CER-001: sem `impact` — severidade sem impacto declarado é palpite.\n  ✗ SEC-CER-001: id duplicado.\nlint-findings: 1 violação(ões)."
+    }
+  },
+  {
+    "case": "all reviews approve without reversal",
+    "review": {
+      "status": 0,
+      "stdout": "review-verify: ✓ BUG-ART-001 → approved (CORRECTNESS:APROVA · QUALITY:APROVA · SCOPE:APROVA)\nreview-verify: 1 revisada(s) · 1 aprovada(s) · 0 com mudanças · 0 reprovada(s)",
+      "stderr": ""
+    },
+    "reversal_checked": false,
+    "done_status": 0,
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 1 achados · 0 aberto · 1 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 1 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": ""
+    }
+  },
+  {
+    "case": "invalid review rerun retains approval",
+    "retry": {
+      "status": 2,
+      "stdout": "",
+      "stderr": "review-verify: ✗ BUG-ART-001 — painel inválido:\n    · voto ausente: reviews/votes/BUG-ART-001-QUALITY.json (Hígia não votou)."
+    },
+    "stored_review": "approved",
+    "reclose_status": 0,
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 1 achados · 0 aberto · 1 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 1 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": ""
+    }
+  },
+  {
+    "case": "remerge loses valid review outcome",
+    "remerge": {
+      "status": 0,
+      "stdout": "merge-findings: 1 cru → 1 único (1 agentes) → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/stale-review/FINDINGS.json\n  roster: 🏹 Artemis",
+      "stderr": ""
+    },
+    "review_in_findings": null,
+    "status_in_findings": "resolved",
+    "gate": {
+      "status": 2,
+      "stdout": "lint-findings: 1 achados · 0 aberto · 1 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 1 · MEDIUM 0 · LOW 0 · INFO 0",
+      "stderr": "✗ BUG-ART-001: resolvido sem revisão de código. Rode o painel (Nêmesis/Hígia/Jano) + review-verify.mjs --id BUG-ART-001, ou registre --review-waived \"motivo\".\nlint-findings: 1 violação(ões)."
+    }
+  },
+  {
+    "case": "invalid agent output erases known high finding",
+    "result": {
+      "status": 0,
+      "stdout": "merge-findings: 0 cru → 0 único (0 agentes) → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/corrupt-agent/FINDINGS.json",
+      "stderr": "merge-findings: ignorando agent-artemis.json (JSON inválido)"
+    },
+    "findings": [],
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 0 achados · 0 aberto · 0 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": ""
+    }
+  },
+  {
+    "case": "empty full pack with no detectors or panel passes gate",
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 0 achados · 0 aberto · 0 resolvido · 0 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": ""
+    }
+  },
+  {
+    "case": "two branches same day share pack",
+    "same_path": true,
+    "new_meta_branch": "feature/two",
+    "old_agent_still_present": true
+  },
+  {
+    "case": "invalid delta base silently empty",
+    "run": {
+      "status": 0,
+      "stdout": "OUT=\"/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/invalid-base\"\nAPP=\"fixture\"\nVERSION=\"1.0.0\"\nBRANCH=\"feature/two\"\nMODE=delta\nDEPTH=fast\nEFFORT=n/a\nBASE=\"origin/nonexistent\"\nSEC_DIR=\"/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/invalid-base/sec-deep\"",
+      "stderr": "init-run: app=fixture v=1.0.0 (package.json) branch=feature/two mode=delta depth=fast effort=n/a base=origin/nonexistent changed=0 → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/invalid-base"
+    },
+    "meta": {
+      "generated_at": "2026-10-23 01:22:41 UTC",
+      "root": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/repo",
+      "app": "fixture",
+      "version": "1.0.0",
+      "version_source": "package.json",
+      "mode": "delta",
+      "depth": "fast",
+      "effort": "n/a",
+      "base": "origin/nonexistent",
+      "head": "1bc2d97",
+      "branch": "feature/two",
+      "only": [],
+      "scope": [],
+      "changed_files": [],
+      "changed_file_count": 0,
+      "history": [
+        {
+          "at": "2026-10-23 01:22:41 UTC",
+          "mode": "delta",
+          "depth": "fast",
+          "effort": "n/a",
+          "head": "1bc2d97",
+          "event": "init"
+        }
+      ]
+    }
+  },
+  {
+    "case": "init shell output evaluates untrusted package metadata",
+    "init_status": 0,
+    "app_assignment": "APP=\"$(printf EXECUTED_BY_INIT)\"",
+    "shell_stdout": "EXECUTED_BY_INIT",
+    "shell_status": 0
+  },
+  {
+    "case": "new single candidate inherits refutation of absent old one",
+    "findings": [
+      {
+        "id": "SEC-CER-001",
+        "path": "new.js",
+        "severity": "CRITICAL",
+        "status": "refuted",
+        "refuted_by": "Guard in old.js disproves only the old finding"
+      }
+    ],
+    "gate": {
+      "status": 0,
+      "stdout": "lint-findings: 1 achados · 0 aberto · 0 resolvido · 1 refutado · 0 aceito · 0 bloqueando PR\n  severidade: CRITICAL 1 · HIGH 0 · MEDIUM 0 · LOW 0 · INFO 0\nlint-findings: OK (gate de fechamento passou)",
+      "stderr": "⚠ SEC-CER-001: sem `impact` — severidade sem impacto declarado é palpite."
+    }
+  },
+  {
+    "case": "concurrent progress updates lose one finding update",
+    "both_read_before_write": true,
+    "exit_statuses": [
+      0,
+      0
+    ],
+    "findings": [
+      {
+        "id": "BUG-ART-001",
+        "in_progress": true,
+        "progress": [
+          "2026-10-23: progress 1"
+        ]
+      },
+      {
+        "id": "BUG-ART-002"
+      }
+    ]
+  },
+  {
+    "case": "repeated sync duplicates progress banner",
+    "banner_count": 2
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "scan_failure": {
+    "exit": 0,
+    "scanner_failed": true,
+    "reports_gate_ok": true,
+    "log": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-review-rk_ngizu/scan-failed.log"
+  },
+  "password_recovery": {
+    "errors": [
+      "synthetic disk failure",
+      "synthetic API HTTP 401"
+    ],
+    "remote_changed": true,
+    "password_missing_locally": true
+  },
+  "token_alias": {
+    "keys": [
+      "app-a",
+      "app.a"
+    ],
+    "same_env_key": true,
+    "generated_token_for_second_project": false
+  },
+  "file_mode": {
+    "after_write_before_chmod": [
+      "0o644"
+    ],
+    "final_mode": "0o600"
+  },
+  "lcov": {
+    "checksum": {
+      "exit": 0,
+      "lines": 0,
+      "xml": "<?xml version='1.0' encoding='utf-8'?>\n<coverage version=\"1\"><file path=\"Sources/App.swift\" /></coverage>",
+      "stderr": "1 arquivos convertidos\n"
+    },
+    "normal": {
+      "exit": 0,
+      "lines": 1,
+      "xml": "<?xml version='1.0' encoding='utf-8'?>\n<coverage version=\"1\"><file path=\"Sources/App.swift\"><lineToCover lineNumber=\"1\" covered=\"true\" /></file></coverage>",
+      "stderr": "1 arquivos convertidos\n"
+    },
+    "alias": {
+      "exit": 1,
+      "lines": 0,
+      "xml": "",
+      "stderr": "nenhum arquivo do LCOV caiu dentro de ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-review-rk_ngizu/app\n"
+    }
+  }
+}

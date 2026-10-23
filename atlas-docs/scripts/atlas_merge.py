@@ -17,7 +17,9 @@ import argparse
 import copy
 import datetime
 import json
+from pathlib import Path
 import sys
+import uuid
 
 MASK = "****"
 
@@ -75,21 +77,21 @@ def upsert_list(old, new, key, full_mode):
     if full_mode:
         return copy.deepcopy(new)
     merged = copy.deepcopy(old)
-    index = {key_of(i, key): i for i in merged}
+    index = {key_of(item, key): pos for pos, item in enumerate(merged)}
     for item in new:
         k = key_of(item, key)
         if k in index:
-            merged[merged.index(index[k])] = copy.deepcopy(item)
+            merged[index[k]] = copy.deepcopy(item)
         else:
             merged.append(copy.deepcopy(item))
-            index[k] = item
+            index[k] = len(merged) - 1
     return merged
 
 
 def merge_dicts(old, new, full_mode, path=()):
     result = copy.deepcopy(old)
     for k, v in new.items():
-        if k.startswith("__"):
+        if k.startswith("__") or (not path and k in ("history", "score")):
             continue
         lk = None
         for keys, key in LIST_KEYS.items():
@@ -142,60 +144,48 @@ def main():
         die("scan precisa ser objeto JSON")
     full_mode = args.mode == "full"
 
-    if old is None:
-        merged = copy.deepcopy(scan)
-        merged.pop("__changelog", None)
-        merged.setdefault("app", {})
-        merged["app"]["commitPrev"] = None
-        hist = merged.setdefault("history", {})
-        hist.setdefault("scans", [])
-        hist["scans"].insert(0, {
-            "commit": args.commit or merged["app"].get("commit", "—"),
-            "when": args.when or datetime.datetime.now().strftime("%d/%m %H:%M"),
-            "title": args.title,
-            "detail": args.detail,
-            "delta": "—",
-            "deltaKind": "ok",
-        })
-    else:
-        prev_overall = (old.get("score") or {}).get("overall")
-        merged = merge_dicts(old, scan, full_mode)
-        # libs têm semântica própria (grupo + item)
+    if old is not None and not isinstance(old, dict):
+        die("modelo anterior precisa ser objeto JSON")
+    previous = old or {}
+    prev_overall = (previous.get("score") or {}).get("overall")
+    merged = merge_dicts(previous, scan, full_mode)
+    # Full already replaced the supplied groups/items. Delta merges within groups.
+    if not full_mode and "libs" in (scan.get("architecture") or {}):
         arch = merged.setdefault("architecture", {})
         arch["libs"] = merge_libs(
-            (old.get("architecture") or {}).get("libs") or [],
+            (previous.get("architecture") or {}).get("libs") or [],
             (scan.get("architecture") or {}).get("libs") or [],
         )
-        merged.setdefault("app", {})
-        merged["app"]["commitPrev"] = old.get("app", {}).get("commit")
-        if args.commit:
-            merged["app"]["commit"] = args.commit
-        if args.when:
-            merged["app"]["generatedAt"] = datetime.datetime.now().isoformat(timespec="seconds")
+    app = merged.setdefault("app", {})
+    app["commitPrev"] = previous.get("app", {}).get("commit")
+    if args.commit:
+        app["commit"] = args.commit
+    app["generatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
 
-        hist = merged.setdefault("history", {})
-        scans = hist.setdefault("scans", [])
-        old_commit = old.get("app", {}).get("commit")
-        scans.insert(0, {
-            "commit": args.commit or old_commit or "—",
-            "when": args.when or datetime.datetime.now().strftime("%d/%m %H:%M"),
-            "title": args.title,
-            "detail": args.detail,
-            "delta": "…" if prev_overall is not None else "—",
-            "deltaKind": "ok",
-            "__prevOverall": prev_overall,  # atlas_build apura o delta real e remove isto
-        })
-
-        chg_entries = scan.get("__changelog") or []
-        if chg_entries:
-            hist.setdefault("changelog", [])
-            for c in chg_entries:
-                tag = str(c.get("tag", "DOC")).upper()
-                if tag not in VALID_TAGS:
-                    die(f"tag de changelog inválida: {tag} (use {sorted(VALID_TAGS)})")
-                hist["changelog"].insert(0, {"tag": tag, "body": c.get("body", "")})
+    # Only the previous durable model owns history. Fresh extraction cannot erase it.
+    hist = copy.deepcopy(previous.get("history") or {})
+    for key in ("scans", "coverage", "changelog"):
+        if not isinstance(hist.setdefault(key, []), list):
+            die(f"history.{key} anterior precisa ser lista")
+    merged["history"] = hist
+    hist["scans"].insert(0, {
+        "id": uuid.uuid4().hex,
+        "commit": app.get("commit", "—"),
+        "when": args.when or app["generatedAt"],
+        "title": args.title, "detail": args.detail,
+        "delta": "…" if prev_overall is not None else "—", "deltaKind": "ok",
+        "previousScore": prev_overall,
+    })
+    additions = []
+    for c in scan.get("__changelog") or []:
+        tag = str(c.get("tag", "DOC")).upper()
+        if tag not in VALID_TAGS:
+            die(f"tag de changelog inválida: {tag} (use {sorted(VALID_TAGS)})")
+        additions.append({"tag": tag, "body": c.get("body", "")})
+    hist["changelog"] = additions + hist["changelog"]
 
     out = args.out or args.old
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         json.dump(merged, fh, ensure_ascii=False, indent=1)
         fh.write("\n")

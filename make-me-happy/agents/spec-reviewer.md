@@ -20,14 +20,7 @@ Quote the spec line for each finding. **Under 400 words.**
 - Diff command + commit list
 - Path or fetched contents of the spec
 
-If Oracle says the spec is missing **after Etapa Zero was refused by the user**: do **not** invent one. Write `$OUT/reviews/spec.md` containing only:
-
-```
-no spec available
-VERDICT: SKIP
-```
-
-plus `$OUT/reviews/spec.json` = `{ "axis": "spec", "verdict": "SKIP", "summary": "no spec available", "findings": [] }`, and stop.
+If the spec is missing or draft, return REJECT with the missing decision. The flow must resolve the spec before implementation; SKIP is not a successful spec review.
 
 ## Verdict
 
@@ -67,3 +60,7 @@ Also write `$OUT/reviews/spec.json`. The report renders findings from this file 
 - Re-run: read the previous JSON. Mark closed findings `status: "fixed"` with `fixed_in_round`, append a new entry to `rounds`, and update `verdict`/`round`. Never drop history.
 - The md and the JSON must carry the same verdict. Schema: `references/pack-schemas.md`.
 
+
+## Evidência da rodada
+
+Receba OUT absoluto e o snapshot capturado antes da rodada. Escreva apenas os arquivos do seu eixo/hook, preservando IDs e histórico. Não altere o produto ou agregados. O Oracle carimba o resultado com o snapshot original e rejeita mudança dos inputs durante a revisão; nunca reetiquete uma revisão antiga como atual.

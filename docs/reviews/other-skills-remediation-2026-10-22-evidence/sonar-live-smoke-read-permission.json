@@ -1,0 +1,55 @@
+{
+  "status": "failed",
+  "steps": [
+    {
+      "step": "git-0",
+      "exit": 0
+    },
+    {
+      "step": "git-1",
+      "exit": 0
+    },
+    {
+      "step": "git-2",
+      "exit": 0
+    },
+    {
+      "step": "git-3",
+      "exit": 0
+    },
+    {
+      "step": "git-4",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-db",
+      "exit": 0
+    },
+    {
+      "step": "image-1",
+      "exit": 0
+    },
+    {
+      "step": "image-2",
+      "exit": 0
+    },
+    {
+      "step": "start-legacy",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-project",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-idempotent",
+      "exit": 0
+    },
+    {
+      "step": "scan-before-upgrade",
+      "exit": 1
+    }
+  ],
+  "error": "scan-before-upgrade falhou; log ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/skill-sonar-test-c1a575bf53-8me3v9rw/logs/scan-before-upgrade.log",
+  "logs": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/skill-sonar-test-c1a575bf53-8me3v9rw/logs"
+}

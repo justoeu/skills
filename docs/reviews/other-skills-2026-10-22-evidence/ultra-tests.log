@@ -1,0 +1,440 @@
+✔ rejeita line fora do contrato numérico antes de publicar HTML ou metadados (571.682583ms)
+✔ renderiza linhas válidas e contadores não confiáveis como texto no DOM do relatório (142.532916ms)
+✔ renderiza o schema lowercase do pack e distingue em progresso (124.890125ms)
+✔ sync-progress e write-pack preservam lowercase e contam somente estados abertos (222.055208ms)
+✔ sync-progress grava resolved e open no schema lowercase ao mudar status (389.294542ms)
+✔ the old <dependency>-only parser really does miss BOM property pins (1.133042ms)
+✔ property-only pins become inventory rows with real Maven coordinates (0.348125ms)
+✔ the rationale comment above a pin is carried into the record (0.1365ms)
+✔ a pin already backed by a <dependency> is not double-counted (0.301167ms)
+✔ non-dependency properties are not turned into fake packages (0.7295ms)
+✔ an unmappable pin is reported as skipped-with-reason, never dropped (0.131541ms)
+✔ an unresolvable ${property} in a <plugin> is skipped, not compared as a literal (0.077417ms)
+✖ every BOM-property pin in backend/pom.xml is mapped and justified (0.171542ms)
+✔ the coordinate table only holds group:artifact pairs (0.166208ms)
+✔ dependency findings use the lowercase lifecycle schema consumed by report generators (0.534833ms)
+✔ Compose digest pins are immutable without claiming their contents are current (183.516083ms)
+✔ MySQL LTS policy compares only the selected 8.4 release line (1.659833ms)
+✔ MySQL LTS policy still detects a patch inside the selected line (0.093833ms)
+✔ Docker images without a release policy retain global stable-tag comparison (0.06175ms)
+✔ expired Docker release policy fails closed instead of hiding future upgrades (0.18725ms)
+✔ CLI exits nonzero when the release policy is expired (157.842458ms)
+✔ APP_VERSION compose images are release-managed first-party artifacts (0.143417ms)
+✖ checked-in hardened runtime builds are release-managed first-party artifacts (0.613333ms)
+✔ npm aliases check the actual registry package and preserve the alias in upgrade commands (2.251708ms)
+✔ npm freshness respects the repository min-release-age before opening an update finding (2.274791ms)
+✔ npm maturity selects only stable releases at or before the exact cutoff (0.7135ms)
+✔ npm maturity never selects a stable release above the latest dist-tag (0.091958ms)
+✔ npm maturity excludes stable versions without publication timestamps (0.0465ms)
+✔ the checked-in CLI includes its stack detector instead of silently returning an empty stack (143.6955ms)
+node:fs:624
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '~/Developer/scripts/ci-local.sh'
+    at readFileSync (node:fs:624:20)
+    at file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:12:17
+    at #evaluateSync (node:internal/modules/esm/module_job:702:24)
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:717:43)
+    at node:internal/modules/esm/loader:383:11
+    at TracingChannel.traceSync (node:diagnostics_channel:557:14)
+    at ModuleLoader.importForEntryPoint (node:internal/modules/esm/loader:372:21)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:184:34)
+    at node:internal/main/run_main_module:33:47 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '~/Developer/scripts/ci-local.sh'
+}
+
+Node.js v26.12.0
+✖ ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs (109.85725ms)
+✔ sees a Java hotspot nested 9 directories deep (real backend layout) (108.490959ms)
+✔ reports truncated directories instead of dropping them in silence (68.537292ms)
+✔ --strict turns an incomplete traversal into a non-zero exit (136.061834ms)
+✔ flags test sources so production hotspots can be ranked apart (69.012625ms)
+✔ skip-list exclusions are recorded, not invisible (68.69375ms)
+✖ runtime image gate rejects a required image without immutable digest (19.619208ms)
+✖ runtime image gate rejects an incomplete required image set (13.844083ms)
+✖ runtime image gate resolves release env references to the checked-in runtime images (14.936083ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:-attacker.example/runtime:latest} (16.45175ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:+attacker.example/runtime:latest} (14.290542ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE} (20.848541ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest} (9.896667ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest} (8.971125ms)
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE} (8.577667ms)
+✖ runtime image gate accepts the checked-in development and deployment compose files (7.890416ms)
+✖ runtime image gate scans four images on two platforms and emits eight CycloneDX SBOMs (8.568584ms)
+✖ runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure (8.087959ms)
+✖ runtime image gate executes both checked-in Dockerfiles for both local platforms (9.163916ms)
+✖ release mode publishes each local runtime once and scans the published multiarch digest (9.084459ms)
+✖ publish mode exposes runtime-images.env only after every vulnerability scan passes (8.581083ms)
+✔ cada agente da bancada existe e o SKILL aponta o arquivo (3.568375ms)
+✔ merge atribui id da bancada e só bloqueia PR com confidence high ou panel (109.281792ms)
+✔ roadmap coloca a bancada de segurança na wave 1 e o Mirage nos imports (160.099917ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 35
+ℹ fail 18
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1555.1355
+
+✖ failing tests:
+
+test at ultra-deep-audit/scripts/tests/check-deps-latest.test.mjs:134:1
+✖ every BOM-property pin in backend/pom.xml is mapped and justified (0.171542ms)
+  Error: ENOENT: no such file or directory, open '~/Developer/backend/pom.xml'
+      at Object.readFileSync (node:fs:624:20)
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/check-deps-latest.test.mjs:136:42)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '~/Developer/backend/pom.xml'
+  }
+
+test at ultra-deep-audit/scripts/tests/check-deps-latest.test.mjs:328:1
+✖ checked-in hardened runtime builds are release-managed first-party artifacts (0.613333ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/check-deps-latest.test.mjs:329:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:1:1
+✖ ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs (109.85725ms)
+  'test failed'
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:74:1
+✖ runtime image gate rejects a required image without immutable digest (19.619208ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /digest/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:85:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /digest/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:91:1
+✖ runtime image gate rejects an incomplete required image set (13.844083ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /redis/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:101:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /redis/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:107:1
+✖ runtime image gate resolves release env references to the checked-in runtime images (14.936083ms)
+  AssertionError [ERR_ASSERTION]: bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:126:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:-attacker.example/runtime:latest} (16.45175ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /MYSQL/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /MYSQL/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:+attacker.example/runtime:latest} (14.290542ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /MYSQL/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /MYSQL/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE} (20.848541ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /MYSQL/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /MYSQL/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest} (9.896667ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /REDIS/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /REDIS/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest} (8.971125ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /REDIS/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /REDIS/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:141:5
+✖ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE} (8.577667ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /REDIS/i. Input:
+  
+  'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:161:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory\n',
+    expected: /REDIS/i,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:170:1
+✖ runtime image gate accepts the checked-in development and deployment compose files (7.890416ms)
+  AssertionError [ERR_ASSERTION]: bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:187:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:195:1
+✖ runtime image gate scans four images on two platforms and emits eight CycloneDX SBOMs (8.568584ms)
+  AssertionError [ERR_ASSERTION]: bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:215:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:225:1
+✖ runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure (8.087959ms)
+  Error: ENOENT: no such file or directory, open '/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/runtime-images-fail-y9JuRi/trivy.log'
+      at Object.readFileSync (node:fs:624:20)
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:256:22)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/runtime-images-fail-y9JuRi/trivy.log'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:264:1
+✖ runtime image gate executes both checked-in Dockerfiles for both local platforms (9.163916ms)
+  AssertionError [ERR_ASSERTION]: bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:283:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:296:1
+✖ release mode publishes each local runtime once and scans the published multiarch digest (9.084459ms)
+  AssertionError [ERR_ASSERTION]: bash: ~/Developer/scripts/runtime-images-supply-chain-gate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:319:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:345:1
+✖ publish mode exposes runtime-images.env only after every vulnerability scan passes (8.581083ms)
+  AssertionError [ERR_ASSERTION]: failed publish scan must not expose a stale or partially generated deploy artifact
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:384:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

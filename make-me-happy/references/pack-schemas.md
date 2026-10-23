@@ -1,295 +1,171 @@
-# Pack schemas — `docs/impl/make-me-happy/<run>/`
+# Pack schemas — versão 2
 
-`build-report.mjs` reads these files. It never fails on a missing or malformed file. It shows an empty state that names the file and the agent that should have written it, and it prints `WARN <file>: …` for schema drift. Older packs are adapted, not rejected. A warning still means the pack is incomplete: fix the writer, not the reader.
+OUT é absoluto e exclusivo por run. Todos os escritores usam JSON UTF-8 e timestamps
+ISO-8601. A compatibilidade de leitura do HTML com packs antigos **não** os qualifica
+para fechamento: adote a run e reexecute suas verificações.
 
-| File | Writer | Required |
-|------|--------|----------|
-| `run-meta.json` | Oracle (§0) + `scripts/run-meta.mjs step` | yes |
-| `spec-summary.md` | planner / explorer | yes |
-| `TASKS.json` / `TASKS.md` | planner, then implementer per task | yes |
-| `flow.mmd` | planner | yes |
-| `diagrams/<T-xxx>.mmd` | planner (optional, per-task `sequenceDiagram`) | no |
-| `payloads.json` | planner | yes (`[]` when the spec defines no contract) |
-| `worktrees.json` | `scripts/worktrees.mjs` | yes |
-| `immutability.json` | immutability | yes |
-| `tests.json` | Oracle, after the final merge | yes |
-| `coverage.json` | implementer / Oracle | yes |
-| `reviews/<axis>.json` + `reviews/<axis>.md` | each reviewer | yes |
-| `hooks/arch-map.json` | `hooks.mjs arch-map` (atlas) or explorer (manual) | yes (`{"source":"greenfield"}` counts) |
-| `hooks/diff-facts.json` | `hooks.mjs diff-facts` | yes |
-| `hooks/<hook>.json` (5 semânticos) | each hook agent (`agents/hook-*.md`) | yes |
-| `hooks/deps-freshness.json` | `hooks.mjs deps-freshness` | yes |
-| `hooks/ui-scope.json` | `ui-acceptance.mjs scope` | yes |
-| `hooks/ui-acceptance.json` | Motorista (`agents/ui-acceptance.md`) — `SKIP` when `ui_touched=false` | yes |
-| `ui/boot.json` (+`boot.log`) | `ui-acceptance.mjs boot` | UI packs |
-| `ui/journeys/<tela>.json` | Motorista / driver headless | UI packs |
-| `ui/drive/<tela>.spec.json` (+`.driver.cjs`) | Motorista escreve; driver gerado | UI packs |
-| `ui/e2e.json` | `ui-acceptance.mjs run-e2e` | com runner no repo |
-| `ui/screenshots/*.png` | driver headless (cap 20/jornada; report embute ≤12) | UI packs |
-| `hooks/waivers.json` | `hooks.mjs waive` (user decision) | no |
-| `hooks/verdict.json` | `hooks.mjs verdict` | yes |
-| `score.json` | `scripts/score.mjs` | yes |
-| `project-gates.json` | Oracle (§8) | yes |
-
-Timestamps are ISO-8601 UTC (`2026-10-01T00:40:00Z`).
+| Arquivo | Escritor |
+|---|---|
+| run-meta.json | Oracle via run-meta init/adopt/step/close |
+| TASKS.json / TASKS.md | Planner inicialmente; depois Oracle via task/sync |
+| flow.mmd, payloads.json, spec-summary.md | Planner |
+| results/T-id-version.json | Implementer proprietário da task; Oracle aplica |
+| worktrees.json | worktrees.mjs; nunca reconstruir sem conciliar Git |
+| tests.json, coverage.json, immutability.json | Oracle a partir da execução final |
+| reviews/axis.json + .md | Reviewer do eixo; Oracle carimba |
+| hooks/arch-map.json | init/Atlas ou explorer manual |
+| hooks/diff-facts.json, deps-freshness.json | hooks.mjs |
+| hooks/ui-scope.json, ui/runs/*, ui/journeys/*, ui/boot.json | ui-acceptance.mjs |
+| hooks/hook.json | Agente daquele hook; Oracle carimba |
+| hooks/waivers.json | hooks.mjs waive, somente por decisão do usuário |
+| hooks/verdict.json, score.json | Derivados; não são autoridade sobre o estado atual |
+| project-gates.json, tracking.json | Oracle; carimbo da revisão verificada |
+| closure.json | run-meta close após verificação; selo histórico |
 
 ## run-meta.json
 
 ```json
-{
-  "app": "Prontyx Receitas", "branch": "feat/x", "into": "feature/x", "head": "360eb8da", "base": "5fdc9065",
-  "kind": "feature", "loop": "full", "worktree_n": 3,
-  "spec": "docs/SDD/x.md", "spec_status": "confirmed", "coverage_floor": 90,
-  "status": "in_progress", "test_cmd": "make test",
-  "started_at": "…", "finished_at": "…",
-  "steps": {
-    "planner":   { "status": "done", "started_at": "…", "finished_at": "…", "note": "24 tasks" },
-    "implement": { "status": "in_progress", "started_at": "…" }
-  }
-}
+{"schema_version":2,"run_id":"UUID","repo_root":"/abs/repo","app":"app",
+ "branch":"feature/cart","base":"initial SHA","head":"initial SHA",
+ "kind":"feature","loop":"full","worktree_n":2,"worktree_prefix":"mmh-uuid",
+ "spec":"/abs/repo/docs/cart.md","spec_status":"confirmed","coverage_floor":95,
+ "ui_drive":"fast","test_cmd":"npm test","status":"in_progress",
+ "started_at":"ISO","updated_at":"ISO","steps":{}}
 ```
 
-`status`: `in_progress` | `closed`. Step ids: `explore planner worktrees implement immutability review score clean project-gates`. Step status: `in_progress` | `done` | `failed` | `skipped`. Write steps with the helper; do not hand-edit timestamps:
-
-```bash
-node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step implement --status in_progress
-node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step implement --status done --note "3 slices merged"
-```
-
-Without `steps`, the report infers the timeline from which files exist and labels it `inferido`.
+spec_status: draft|confirmed. Status: in_progress|closed. Somente close grava closed.
+Steps: explore, planner, worktrees, implement, immutability, ui-acceptance, review,
+score, clean, project-gates. Cada passo tem status in_progress|done|failed|skipped,
+started_at, finished_at quando aplicável e note opcional. Use `run-meta step`.
 
 ## TASKS.json
 
 ```json
-{
-  "kind": "feature",
-  "spec": "docs/SDD/x.md",
-  "tasks": [
-    {
-      "id": "T-001",
-      "title": "short",
-      "slice": "what this worktree owns",
-      "worktree": 1,
-      "status": "DONE",
-      "depends_on": [],
-      "refs": ["RF-02", "SEC-SEN-001"],
-      "tests_added": 2,
-      "red_green": true,
-      "immutability": false,
-      "red": {
-        "test": "TestJobsDeleteRejectsAbove200",
-        "file": "backend/internal/httpserver/jobs_delete_cap_test.go",
-        "command": "go test ./internal/httpserver -run TestJobsDeleteRejectsAbove200",
-        "output_excerpt": "expected 400, got 200",
-        "at": "…"
-      },
-      "green": { "command": "go test ./internal/httpserver -run TestJobsDelete", "output_excerpt": "ok  0.41s", "at": "…" },
-      "reversal": { "done": true, "output_excerpt": "reverted jobs.go:88 → FAIL expected 400, got 200" },
-      "tests": ["TestJobsDeleteRejectsAbove200", "TestJobsDeleteAccepts200"],
-      "files": ["backend/internal/services/jobs.go"],
-      "commits": [{ "sha": "5fdc9065", "message": "fix(jobs): cap ids at 200" }],
-      "notes": ""
-    }
-  ]
-}
+{"kind":"feature","spec":"/abs/repo/docs/cart.md","tasks":[
+ {"id":"T-001","title":"Reject invalid quantity","worktree":1,"version":0,
+  "status":"OPEN","validation":"red-green","depends_on":[],"refs":["RF-1"],
+  "tests_added":0,"red_green":false,"immutability":false}]}
 ```
 
-- `status`: `OPEN` | `IN_PROGRESS` | `DONE` | `BLOCKED`. The planner emits only `OPEN`.
-- The planner writes the first block (`id` to `immutability`). The implementer fills `red`, `green`, `reversal`, `tests`, `files`, `commits` and flips `status`.
-- `output_excerpt` holds the assertion or failure message, 20 lines at most. Do not paste the whole log.
-- `reversal.done: false` with a `note` explains why reversal was not viable.
-- Legacy fields still read: `red_test`, `test`, `red` (string), `evidence`, `findings`, `rf`, `spec_refs`, `results/<id>.json`.
+IDs únicos, dependências existentes e acíclicas. Estados: OPEN|IN_PROGRESS|DONE|BLOCKED.
+Peça estrutural leva structural:true e refs do requisito correspondente.
 
-## payloads.json
+Modos de validação e campos de conclusão:
+
+- red-green: tests_added≥1, red_green:true, red e green com command e output_excerpt
+  reais. tests[], files[], commits:[{sha,message}], reversal:{done,output_excerpt|note}.
+- characterization: before e after com ok:true, command e output_excerpt; caracterização
+  já verde antes do refactor. Não afirmar que houve RED.
+- check: kind:docs|config, validation_reason e checks:[{ok:true,command,output_excerpt}].
+  Apenas mudanças sem novo comportamento; reviewer avalia a adequação.
+
+Resultados individuais usam `{id, expected_version, patch}`. O helper não permite
+alterar id/worktree/depends_on via resultado; aplica somente a task e incrementa a
+versão, sem sobrescrever outras. Documentação completa em [lifecycle.md](lifecycle.md).
+
+## Evidência obrigatória para resultados de verificação
 
 ```json
-[
-  {
-    "name": "delete runs above the cap",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/jobs/{key}/runs/delete",
-    "request": { "ids": [1, 2, 3] },
-    "responses": [
-      { "status": 400, "body": { "error": "validacao" }, "note": "201 ids" },
-      { "status": 200, "body": { "deleted": 200 } }
-    ],
-    "notes": ["no DELETE runs when the cap trips"],
-    "tasks": ["T-002"],
-    "spec_ref": "§4.2"
-  }
-]
+{"evidence":{"run_id":"UUID","head":"SHA informativo","source_hash":"sha256",
+ "input_hash":"sha256","result_hash":"sha256","at":"ISO"}}
 ```
 
-`kind`: `http` | `cli` | `event` | `ui`. For CLI, put args in `request` and stdout in `responses[].body`. Use `[]` when the spec defines no contract. Do not use a dict keyed by name, and do not use `response_201` keys. The report adapts both, but warns.
+Gerada por snapshot **antes** da verificação e stamp **depois**. Fonte/inputs alterados
+impedem stamp e fechamento. Não preencher manualmente para reaproveitar evidência velha.
+Aplicável a tests, coverage, immutability, reviews, hooks, ui-scope, project-gates e
+tracking. deps-freshness e scope carimbam a própria execução quando o pack tem run_id.
+Os outros resultados recebem `run-meta stamp` do Oracle.
+input_hash inclui o conteúdo da spec; result_hash detecta alteração posterior do
+resultado carimbado. O snapshot inicial não possui result_hash: ele é gerado no stamp.
 
-## tests.json
-
-```json
-{ "cmd": "make test-ci", "ok": true, "total": 812, "passed": 806, "failed": 0, "skipped": 6, "duration_s": 94.2,
-  "at": "…", "suites": [{ "name": "backend", "passed": 640, "failed": 0, "skipped": 2 }], "log": "last 40 lines" }
-```
-
-## coverage.json
-
-```json
-{ "pct": 92.4, "floor": 90, "tool": "c8", "report": "coverage/index.html", "scope": "diff-touched product code",
-  "covered": 390, "total": 410, "measured_at": "…",
-  "modules": [{ "name": "backend/internal/services", "pct": 94.1, "covered": 318, "total": 338 }] }
-```
-
-`modules[]` (or `files[]`) feeds the per-module bar chart against the floor.
-
-## immutability.json
+## Testes, cobertura e imutabilidade
 
 ```json
-{ "green": true, "command": "go test ./... -run Contract",
-  "tests": [{ "name": "OrderPayloadIT#listShape", "task": "T-002", "file": "…", "kind": "golden", "green": true }],
-  "tasks_covered": ["T-002"], "notes": "what could not be proven" }
-```
-
-`suite: ["A#b", …]` (list of names) is still accepted. `score.json` keeps only a count in the gate detail and the list in `gates[].items`.
-
-## reviews/<axis>.json (`standards` | `spec` | `correctness`)
-
-```json
-{
-  "axis": "correctness",
-  "verdict": "APPROVE",
-  "round": 2,
-  "summary": "one paragraph",
-  "findings": [
-    { "id": "C-1", "severity": "high", "kind": "hard", "title": "DONE task without a red test",
-      "description": "…", "file": "src/a.ts", "line": 42, "rule": "AGENTS.md §3",
-      "status": "fixed", "round": 1, "fixed_in_round": 2, "fix": "commit abc123" }
-  ],
-  "rounds": [
-    { "round": 1, "verdict": "REJECT", "at": "…", "summary": "…", "findings": [ … ] },
-    { "round": 2, "verdict": "APPROVE", "at": "…", "findings": [] }
-  ]
-}
-```
-
-- `verdict`: `APPROVE` | `REJECT` | `SKIP`. `severity`: `critical` | `high` | `medium` | `low` | `info`. `status`: `open` | `fixed` | `wontfix`. `kind` (standards): `hard` | `judgement`.
-- `findings` = the state after the latest round, including findings fixed in earlier rounds. On a re-run, append to `rounds`; never overwrite history.
-- Keep writing `reviews/<axis>.md` too (human prose, ending in `VERDICT: …`). `score.mjs` and `resume.mjs` prefer the JSON verdict and fall back to the md.
-
-## project-gates.json (§8)
-
-```json
-{ "gates": [
-  { "name": "security-review skill", "source": "CLAUDE.md §2", "status": "DONE", "evidence": "reviews/repo-security.md" },
-  { "name": "docs + i18n sweep", "source": "AGENTS.md", "status": "OPEN", "evidence": "not run by this host" }
-] }
-```
-
-`status`: `DONE` | `OPEN` | `FAILED` | `N/A`. Without this file, the report lists extra `reviews/*.md` as inferred gates.
-
-## hooks/ (§5 hooks de verificação)
-
-Semântica de bloqueio: achado `open` com severity ≥ high (default; `hooks.mjs verdict --fail-severity`) e **sem waiver** → pack não fecha — mesma régua da cobertura. `verdict: "OPEN"` (registry sem rede, hook não aplicável) nunca derruba.
-
-### hooks/arch-map.json — mapa da arquitetura da app
-
-```json
-{ "source": "atlas | manual | greenfield", "style": "hexagonal + saga",
-  "layers": [{ "name": "api", "group": "borda", "sub": "Go · chi" }],
-  "libs": [{ "name": "chi", "ver": "5.0", "use": "router" }],
-  "adrs": [{ "id": "ADR-004", "title": "Sem ORM", "status": "aceito" }],
-  "containers": [{ "id": "api", "name": "billing-api", "group": "borda", "tech": "Go 1.23" }],
-  "notes": "…", "at": "…" }
-```
-
-`source: "atlas"` = derivado de `docs/atlas/app-model.json` pelo `hooks.mjs arch-map`. `greenfield` = sem arquitetura prévia.
-
-### hooks/diff-facts.json — fatos determinísticos do diff (`hooks.mjs diff-facts --base <sha>`)
-
-```json
-{ "base": "5fdc906", "head": "360eb8d", "commits": ["…"],
-  "files": [{ "status": "A", "file": "internal/pack/zip.go" }],
-  "manifests": [{ "file": "package.json", "ecosystem": "npm",
-    "added": [{ "name": "undici", "version": "7.1.0", "dev": false }],
-    "removed": [], "changed": [] }],
-  "migrations": ["db/migrations/0001.sql"],
-  "suspicious_files": ["internal/pack/zip.go"],
-  "routes": [{ "file": "routes.go", "line": 12, "snippet": "router.GET(\"/v1/jobs\", h.list)" }],
-  "at": "…" }
-```
-
-`suspicious_files` = nomes que denunciam reescrita de capacidade canônica (zip/crypto/jwt/base64/…) — insumo do hook `reinvention`, não achado por si.
-
-### hooks/<hook>.json — os 5 semânticos + deps-freshness
-
-`<hook>`: `arch-alignment` | `reinvention` | `security` | `performance` | `overengineering` | `deps-freshness`. Mesmo shape dos `reviews/<axis>.json`, sem md:
-
-```json
-{ "hook": "reinvention", "verdict": "REJECT", "round": 1, "summary": "one paragraph",
-  "findings": [
-    { "id": "R-1", "severity": "high", "title": "…", "description": "…",
-      "file": "internal/pack/zip.go", "line": 88, "canonical": "stdlib archive/zip",
-      "spec_ref": null, "status": "open", "round": 1 }
-  ],
-  "rounds": [{ "round": 1, "verdict": "REJECT", "at": "…", "summary": "…", "findings": [] }] }
-```
-
-- `verdict`: `APPROVE` | `REJECT` | `SKIP` | `OPEN`. Campos extras por hook (`canonical`, `owasp`, `catalog`, `kind`, `source`, `spec_ref`, `arch_ref`, `count`) são renderizados como contexto do achado.
-- `deps-freshness` acrescenta `scope: "new"|"all"`, `registry: "live"|"fake"|"not-needed"` e `deps[]: [{name, current, latest, state, ecosystem, dev, isNew}]` — `state`: `ok | range | range-behind | minor-behind | major-behind | deprecated | unknown | registry-error`. Achados com `followup: true` (dep pré-existente) **não** bloqueiam: viram proposta de task.
-- Re-run: leia o JSON anterior, marque `fixed`, anexe rodada. Histórico não se apaga.
-
-### hooks/waivers.json e hooks/verdict.json
-
-```json
-{ "waivers": [{ "hook": "deps-freshness", "finding": "D-1", "reason": "usuário aprovou o pin", "at": "…" }] }
+{"cmd":"npm test","ok":true,"total":12,"passed":12,"failed":0,"skipped":0,
+ "duration_s":1.2,"log":"últimas 40 linhas","evidence":{}}
 ```
 
 ```json
-{ "verdict": "PASS|FAIL", "at": "…",
-  "hooks": [{ "hook": "security", "verdict": "APPROVE", "open": 0, "worst": null, "blocking": false }],
-  "waivers": 1 }
+{"pct":96.2,"floor":95,"tool":"c8","scope":"lines in touched product modules",
+ "report":"coverage/index.html","covered":481,"total":500,"measured_at":"ISO",
+ "modules":[{"name":"cart","pct":96.2}],"evidence":{}}
 ```
 
-### ui/ (§4z aceitação de UI em runtime)
-
-7º hook: `hooks/ui-acceptance.json` segue o schema dos hooks (`verdict` inclui `SKIP`
-para pack sem UI e `OPEN` para host sem browser). Extras:
+Piso efetivo é o máximo entre 90 e todos os pisos solicitados. pct é medição finita
+entre 0 e 100, sobre o produto **integrado**, não sobre a última slice.
 
 ```json
-// hooks/ui-scope.json — ui-acceptance.mjs scope
-{ "ui_touched": true, "how": "3 arquivo(s) de frontend no diff",
-  "frontend_files": ["src/Checkout.tsx"], "screens": [{ "name": "checkout", "spec_ref": "§4.2" }],
-  "frameworks": ["react"], "e2e_runner": null, "at": "…" }
-// run-meta.ui_drive="off" → scope acrescenta { "bypass": true, "bypass_reason": "…" }:
-// decisão do usuário no setup; o verdict do hook sai SKIP automático com o motivo.
-
-// ui/boot.json — ui-acceptance.mjs boot
-{ "cmd": "npm run dev", "pid": 1234, "url": "http://localhost:3000/", "port": 3000,
-  "healthcheck": "/", "health": { "ok": true, "status": 200 }, "started_ms": 3120, "at": "…" }
-
-// ui/drive/<tela>.spec.json — o Motorista escreve (credenciais NUNCA aqui: --user/--pass ou env)
-{ "screen": "checkout", "spec_ref": "§4.2", "base_url": "http://localhost:3000",
-  "auth": { "url": "/login", "fields": { "user": "#email", "pass": "#password" }, "submit": "button[type=submit]" },
-  "steps": [
-    { "action": "goto", "path": "/checkout" },
-    { "action": "assert_visible", "selector": "h1", "text": "Checkout" },
-    { "action": "click", "selector": "#pay" },
-    { "action": "assert_text", "selector": ".toast", "text": "Pedido confirmado" },
-    { "action": "screenshot", "name": "pos-submit" }
-  ] }
-// ações: goto · click · fill · assert_visible · assert_text · wait · screenshot
-// block_external (default true): aborta requests fora de localhost — mais rápido, menos ruído
-
-// ui/journeys/<tela>.json — produzido pelo driver headless (ou preenchido à mão em mode browser-host)
-{ "screen": "checkout", "spec_ref": "§4.2", "mode": "drive", "base_url": "…",
-  "steps": [{ "n": 1, "action": "goto", "ok": true, "url": "/checkout" }],
-  "console_errors": [], "network_errors": [],
-  "screenshots": ["ui/screenshots/checkout-05-pos-submit.png"],
-  "assertions": { "ok": 5, "total": 5, "failed": [] }, "verdict": "APPROVE", "at": "…" }
-
-// ui/e2e.json — run-e2e (runner do repo)
-{ "cmd": "npx playwright test", "ok": true, "exit": 0, "duration_s": 41.2, "log": "últimas 40 linhas", "at": "…" }
+{"green":true,"command":"node --test contract.test.js",
+ "tests":[{"name":"existing cart payload","task":"T-001","file":"contract.test.js","green":true}],
+ "tasks_covered":["T-001"],"evidence":{}}
 ```
 
-Modos do drive (flag `--ui-drive fast|guided`, ou pergunta do Oracle): **fast** =
-spec direto do código → driver headless (segundos); **guided** = Playwright MCP
-(`npx -y @playwright/mcp@latest`) explora a tela viva 1× e destila o spec.
-Re-execução pós-correção é **sempre** pelo driver headless.
+Suite vazia não paga imutabilidade. Campo evidence vazio nos exemplos é placeholder
+ilustrativo: o helper precisa gravar a evidência real.
+
+## Reviews e hooks
+
+```json
+{"axis":"correctness","verdict":"APPROVE","round":2,"summary":"checked",
+ "findings":[{"id":"C-1","severity":"high","title":"...","description":"...",
+ "file":"src/cart.js","line":12,"status":"fixed","round":1,"fixed_in_round":2}],
+ "rounds":[{"round":1,"verdict":"REJECT","findings":[]},{"round":2,"verdict":"APPROVE","findings":[]}],
+ "evidence":{}}
+```
+
+Eixos: standards|spec|correctness. Todos precisam APPROVE. Spec ausente/draft não é
+SKIP aceitável. Continue escrevendo Markdown com o mesmo verdict para leitura humana.
+
+Hook usa `hook` em vez de axis. IDs: arch-alignment, reinvention, security, performance,
+overengineering, deps-freshness, ui-acceptance. Verdict: APPROVE|REJECT|SKIP|OPEN.
+Findings: id estável, severity critical|high|medium|low|info, status open|fixed|wontfix.
+High/critical não resolvido exige correção ou waiver concreto, inclusive wontfix.
+JSON malformado/incoerente não aprova. Histórico nunca é apagado em reruns.
+
+OPEN registra falta de execução/infraestrutura; não equivale a ausência de finding.
+Achado ≥high continua bloqueando em qualquer verdict. Tool obrigatória do projeto
+indisponível também entra como OPEN em project-gates e impede conclusão final.
+
+Waivers são produzidos pelo CLI: hook, finding, fingerprint, reason do usuário e at.
+`--finding '*'` expande os findings existentes naquele instante; não autoriza futuros.
+ID estável não basta se a condição mudou: fingerprint também deve corresponder.
+
+Deps: preservar manifest, ecosystem, name, current e condição. Defasagem cronológica
+é advisory; depreciação comprovada da versão selecionada pode bloquear. `--mode new`
+verifica novas deps; `all` inclui as existentes como follow-up, sem bump automático.
+
+## UI
+
+Scope: ui_touched true|false|null. null significa apuração insuficiente e nunca vira
+backend-only SKIP. bypass:true só corresponde ao ui_drive:off escolhido pelo usuário.
+
+```json
+{"screen":"checkout","base_url":"http://localhost:3000","spec_ref":"RF-1",
+ "expected_network_errors":[{"status":422,"path":"/api/checkout"}],
+ "steps":[{"action":"goto","path":"/checkout"},{"action":"assert_text","selector":"h1","text":"Checkout"}]}
+```
+
+screen é slug sem barras. Credenciais ficam em env. Ações: goto, click, fill,
+assert_visible, assert_text, wait, screenshot. Erros inesperados rejeitam a jornada;
+expectativas de rede são pares exatos status/pathname. Limite 20 screenshots por jornada.
+
+Cada drive tem execution_id e documento próprio em ui/runs; ui/journeys/screen.json
+representa a última tentativa, incluindo falha. Não retorna arquivo APPROVE antigo.
+boot.json conserva pid_identity, health, started_ms, status e stopped_at após teardown.
+
+## Gates do projeto e acompanhamento
+
+```json
+{"gates":[{"name":"local CI","source":"AGENTS.md","status":"DONE","evidence":"make ci: exit 0"}],"evidence":{}}
+```
+
+Status: DONE|OPEN|FAILED|N/A. N/A precisa justificativa em evidence. Sem gates adicionais:
+`{gates:[],reason:"nenhum gate adicional no repo",evidence:{...}}`.
+
+```json
+{"files":[{"path":".planning/STATE.md","status":"DONE","evidence":"RF-1 entregue; demais itens preservados"}],"evidence":{}}
+```
+
+Atualize primeiro o arquivo canônico real, depois registre. Sem arquivos de acompanhamento:
+`{files:[],reason:"repo não possui acompanhamento canônico",evidence:{...}}`.
+Não declarar progresso de tarefas cuja entrega não foi validada.

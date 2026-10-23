@@ -1,2 +1,6 @@
 AGENTS.md
 .DS_Store
+
+# Local Python helpers and test imports
+__pycache__/
+*.py[cod]

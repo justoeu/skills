@@ -24,8 +24,8 @@ código da app  →  agente extrai (semântica)  →  app-model.json
   JSON numa ilha `<script id="atlas-data">`. Layout idêntico em qualquer app, stack
   ou LLM.
 - **Apuração por código, não pelo modelo.** Cobertura por fluxo, score geral
-  (fluxos 45% · modelo & contratos 20% · env 10% · quality gates 25%; bucket
-  ausente renormaliza) e delta entre scans são calculados por script.
+  (fluxos 45% · modelo & contratos 20% · env 10% · quality gates 25%; gates/env
+  ausentes renormalizam) e delta entre scans são calculados por script.
 - **Deep por contrato, não por preferência.** O scan levanta **TODOS** os fluxos
   do sistema: o inventário de `entrypoints` (toda rota, consumer, cron, webhook,
   worker, CLI) é a régua de fechamento — cada item termina `mapeado` num fluxo ou
@@ -33,7 +33,7 @@ código da app  →  agente extrai (semântica)  →  app-model.json
   "Inventário de entrypoints" no dashboard deixa a prova visível.
 - **Provenância honesta.** Borda cheia = derivado do código; tracejada = exigiria
   fonte externa (telemetria). Número de runtime sem fonte aparece como `—`, nunca
-  inventado. Segredos viram `****` (na extração e de novo no build, por regex).
+  inventado. Segredos viram `****` (na extração e de novo no build, por sanitização).
 - **Diagrama de classes por fluxo, apurado pelo template.** Cada fluxo declara
   `flows[].classes` (classes por estereótipo, métodos acionados naquele fluxo e
   `methods[].calls` no formato `Classe.metodo`); o dashboard desenha as caixas UML
@@ -46,7 +46,7 @@ código da app  →  agente extrai (semântica)  →  app-model.json
   build; sem `c4`, a página mostra a lacuna.
 - **Incremental de verdade.** Upsert por chave natural (`flows.id`,
   `endpoints.m+path`, `c4.containers.id`, …), `history.scans`/`coverage`/`changelog` só crescem,
-  changelog com tags `NOVO`/`BREAK`/`DDL`/`DOC`.
+  changelog com tags `NOVO`/`BREAK`/`DDL`/`DOC`/`REMOVE`. Full substitui listas fornecidas, incluindo libs; links órfãos bloqueiam o build.
 
 ## Estrutura
 
@@ -55,6 +55,7 @@ atlas-docs/
 ├── SKILL.md               # workflow completo + schema do app-model (flows[].classes, c4, brief)
 ├── assets/template.html   # dashboard (sidebar · 13 páginas · card de brief · diagrama de classes · C4 · inspetor · SVG)
 └── scripts/
+    ├── atlas_delta.py     # inventário Git desde app.commit, incluindo worktree/untracked
     ├── atlas_merge.py     # merge delta|full + changelog + registro de scan (inclui listas de c4)
     ├── atlas_build.py     # valida · apura cobertura/score · mascara · injeta no template
     └── tests/
@@ -62,11 +63,19 @@ atlas-docs/
         └── classes-c4.test.mjs
 ```
 
-`node --test scripts/tests/brief-card.test.mjs scripts/tests/classes-c4.test.mjs` cobre o
-card do topo (o que é, o que faz, caminhos felizes/não felizes, fallback só quando existe)
-e as novidades: diagrama de classes por fluxo (arestas derivadas de `methods[].calls`,
-detalhe do método selecionado) e a página C4 (grafo de contexto com hub `system`,
-containers por grupo, build quebrando com edge/call inválida e merge incremental de `c4`).
+`node --test scripts/tests/*.test.mjs` valida o pipeline, segurança dos dados,
+score derivado, evolução em duas atualizações, referências e componentes de UI.
+O teste real de browser é opt-in: `ATLAS_REAL_BROWSER=1 node --test scripts/tests/browser-runtime.test.mjs`.
+Ele usa Playwright/Chromium já instalados, arquivos temporários e bloqueia rede;
+sem instalação local a execução opt-in falha em vez de baixar dependências.
+`ATLAS_PLAYWRIGHT_PATH` permite indicar o módulo local. O teste padrão informa o skip.
+
+Versão **2.0.0 / atlas-docs/2**: [migração e contrato](SKILL.md#contrato-2-e-migração).
+Modelos v1 são aceitos com validação mais estrita: inventário obrigatório,
+proveniência declarada para métricas e referências existentes. Cov/score são
+recalculados; histórico do scan recebido não substitui o histórico durável.
+As observações de score preservam mudanças no mesmo dia. A base delta é
+`app.commit`; `commitPrev` continua apenas como registro do snapshot anterior.
 
 ## Páginas do dashboard
 

@@ -72,8 +72,8 @@ const FULL = {
       {
         id: 'T-002', title: 'Document the cap', slice: 'docs', worktree: 2, status: 'DONE', depends_on: ['T-001'], refs: [],
         tests_added: 1, red_green: true, immutability: false,
-        red: { test: 'TestDocMentionsCap', output_excerpt: 'doc lacks "200"' },
-        green: { output_excerpt: 'ok' },
+        red: { command:'test docs', test: 'TestDocMentionsCap', output_excerpt: 'doc lacks "200"' },
+        green: { command:'test docs', output_excerpt: 'ok' },
         reversal: { done: false, note: 'pure addition' },
         tests: ['TestDocMentionsCap'], files: ['docs/api.md'], commits: [{ sha: 'cafebabe02', message: 'docs: cap' }],
       },
@@ -211,7 +211,8 @@ test('full canonical pack: every section uses the data, zero schema warnings', (
 
   const sc = panel(html, 'score');
   assert.equal((sc.match(/class="card gate ok"/g) || []).length, 5);
-  assert.match(sc, /Fecha: score 10/);
+  assert.match(sc, /Não fecha/);
+  assert.equal(loadPack(dir).score.closable, false);
   assert.match(sc, /aria-label="Score: 10 de 10"/);
 
   const gt = panel(html, 'gates');
@@ -228,7 +229,7 @@ test('legacy pack shapes are adapted with warnings instead of rendering empty', 
     'immutability.json': { green: true, suite: longSuite },
     'reviews/standards.md': '# S\n\n## Hard\n\n1. thing\n\nVERDICT: APPROVE\n',
     'reviews/repo-security.md': '# Security\n\nOverall: PASS\n',
-    'score.json': { score: 10, max: 10, closable: true, coverage: { pct: 95, floor: 90, ok: true }, gates: [{ id: 'immutability', ok: true, detail: longSuite.join(', ') }] },
+    'score.json': { score: 10, max: 10, closable: true, coverage: { pct: 95, floor: 90, ok: true }, gates: [{ id: 'immutability', ok: true, detail: 'CachedContractA, CachedContractB', items: ['CachedContractA', 'CachedContractB'] }] },
   });
   const { html, warnings } = build(dir);
   assert.ok(warnings.some((w) => w.file === 'payloads.json'));
@@ -237,13 +238,106 @@ test('legacy pack shapes are adapted with warnings instead of rendering empty', 
   assert.match(pl, /schedule_update_payload/);
   assert.match(pl, /compose keeps network/);
   const sc = panel(html, 'score');
-  assert.match(sc, /40 item\(ns\)/);
+  const pack = loadPack(dir);
+  assert.deepEqual(pack.immutability.names, longSuite);
+  assert.deepEqual(pack.score.gates.find((g) => g.id === 'immutability').items, longSuite);
+  assert.equal(pack.score.closable, false);
+  assert.notEqual(pack.score.score, 10);
+  assert.equal(pack.coverage.pct, null);
+  assert.match(sc, /Não fecha/);
+  assert.match(sc, /40 contract test\(s\) green/);
   assert.match(sc, /mostrar todos os 40/);
+  assert.doesNotMatch(sc, /CachedContract/);
   assert.doesNotMatch(sc, /LegacyContractTest0, LegacyContractTest1/);
   assert.match(panel(html, 'testes'), /mostrar todos os 40 testes de imutabilidade/);
   assert.match(panel(html, 'review'), /Review completo \(markdown\)/);
   assert.match(panel(html, 'gates'), /Security[\s\S]*DONE/);
   assert.match(panel(html, 'impl'), /TestOld/);
+});
+
+test('check and characterization tasks render their own evidence and agree with the score', () => {
+  const dir = makePack({
+    'run-meta.json': { app: 'Modes', branch: 'feature/cart', kind: 'feature', status: 'in_progress' },
+    'TASKS.json': { tasks: [
+      { id: 'T-DOCS', title: 'Document cart total', kind: 'docs', status: 'DONE', validation: 'check', tests_added: 0,
+        validation_reason: 'Runnable documentation example, no product behavior change',
+        checks: [{ command: 'node example.mjs', output_excerpt: 'total = 2500', ok: true }] },
+      { id: 'T-REFACTOR', title: 'Move existing subtotal', kind: 'refactor', status: 'DONE', validation: 'characterization', tests_added: 1,
+        before: { command: 'npm test -- subtotal', output_excerpt: 'before: 3 contracts pass', ok: true },
+        after: { command: 'npm test -- subtotal', output_excerpt: 'after: 3 contracts pass', ok: true } },
+    ] },
+  });
+  const { html, warnings } = build(dir);
+  const pack = loadPack(dir);
+  assert.equal(pack.score.gates.find((g) => g.id === 'red-green').ok, true);
+  assert.ok(pack.tasks.every((t) => t.validation_ok));
+  assert.deepEqual(warnings.filter((w) => w.file === 'TASKS.json'), []);
+  for (const id of ['impl', 'testes']) {
+    const body = panel(html, id);
+    assert.match(body, /Runnable documentation example/);
+    assert.match(body, /node example\.mjs/);
+    assert.match(body, /total = 2500/);
+    assert.match(body, /ANTES/);
+    assert.match(body, /DEPOIS/);
+    assert.match(body, /before: 3 contracts pass/);
+    assert.match(body, /after: 3 contracts pass/);
+    assert.doesNotMatch(body, /R→G ✗|sem evidência estruturada|>RED<|>GREEN</);
+  }
+  assert.match(panel(html, 'impl'), /Checks ✓/);
+  assert.match(panel(html, 'impl'), /Caracterização ✓/);
+});
+
+test('invalid check and characterization evidence warns without requesting a synthetic RED', () => {
+  const dir = makePack({
+    'TASKS.json': { tasks: [
+      { id: 'T-DOCS', kind: 'docs', status: 'DONE', validation: 'check', checks: [{ command: 'check', output_excerpt: 'ok', ok: true }] },
+      { id: 'T-REFACTOR', status: 'DONE', validation: 'characterization',
+        before: { command: 'test', output_excerpt: 'failed', ok: false }, after: { command: 'test', output_excerpt: 'passed', ok: true } },
+    ] },
+  });
+  const { html, warnings } = build(dir);
+  assert.equal(loadPack(dir).score.gates.find((g) => g.id === 'red-green').ok, false);
+  const taskWarnings = warnings.filter((w) => w.file === 'TASKS.json');
+  assert.equal(taskWarnings.length, 2);
+  assert.ok(taskWarnings.some((w) => /checks válidos/.test(w.msg)));
+  assert.ok(taskWarnings.some((w) => /caracterização válida/.test(w.msg)));
+  assert.ok(taskWarnings.every((w) => !/RED/.test(w.msg)));
+  assert.match(panel(html, 'impl'), /Checks ✗/);
+  assert.match(panel(html, 'impl'), /Caracterização ✗/);
+});
+
+test('unapplied result files cannot override or enrich canonical task state', () => {
+  const dir = makePack({
+    'TASKS.json': { tasks: [
+      { id: 'T-001', title: 'Current task', version: 2, status: 'OPEN', tests_added: 0, red_green: false, commits: [] },
+      { id: 'T-002', title: 'Current docs task', version: 2, kind: 'docs', validation: 'check', status: 'DONE',
+        validation_reason: 'Docs only', checks: [{ command: 'check current docs', output_excerpt: 'current example passed', ok: true }] },
+    ] },
+    'results/T-001.json': { id: 'T-001', status: 'DONE', tests_added: 99, red_green: true,
+      red: { command: 'old command', output_excerpt: 'STALE RED' }, green: { command: 'old command', output_excerpt: 'STALE GREEN' }, commits: ['stalecommit'] },
+    'results/T-002-0.json': { id: 'T-002', expected_version: 0, patch: { status: 'BLOCKED', checks: [] } },
+  });
+  const pack = loadPack(dir);
+  const first = pack.tasks[0];
+  assert.equal(first.status, 'OPEN');
+  assert.equal(first.tests_added, 0);
+  assert.equal(first.red_green, false);
+  assert.equal(first.red, null);
+  assert.equal(first.green, null);
+  assert.deepEqual(first.commits, []);
+  assert.equal(pack.tasks[1].status, 'DONE');
+  assert.equal(pack.tasks[1].validation_ok, true);
+  const { html } = build(dir);
+  assert.doesNotMatch(html, /STALE RED|STALE GREEN|stalecommit/);
+  assert.match(panel(html, 'impl'), /current example passed/);
+});
+
+test('review KPI does not count SKIP as approval', () => {
+  const dir = makePack({ ...FULL, 'reviews/spec.json': { axis: 'spec', verdict: 'SKIP', findings: [] } });
+  const { html } = build(dir);
+  assert.match(panel(html, 'overview'), /Review<\/div><div class="kpi-value">2<span class="of">\/3<\/span>/);
+  assert.doesNotMatch(panel(html, 'score'), /Spec SKIP só/);
+  assert.equal(loadPack(dir).score.gates.find((g) => g.id === 'review').ok, false);
 });
 
 test('malformed JSON warns and never crashes', () => {

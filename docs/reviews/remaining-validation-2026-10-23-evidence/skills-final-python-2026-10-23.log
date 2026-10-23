@@ -1,0 +1,32 @@
+test_colliding_project_keys_generate_distinct_tokens (test_regressions.BootstrapTests.test_colliding_project_keys_generate_distinct_tokens) ... ok
+test_failure_before_pending_write_does_not_change_remote_password (test_regressions.BootstrapTests.test_failure_before_pending_write_does_not_change_remote_password) ... ok
+test_file_created_private_before_replace_and_old_survives_failure (test_regressions.BootstrapTests.test_file_created_private_before_replace_and_old_survives_failure) ... ok
+test_lock_serializes_real_process_updates (test_regressions.BootstrapTests.test_lock_serializes_real_process_updates) ... ok
+test_recovers_password_changed_before_final_write (test_regressions.BootstrapTests.test_recovers_password_changed_before_final_write) ... ok
+test_retry_reuses_valid_token_and_creates_case_distinct_key (test_regressions.BootstrapTests.test_retry_reuses_valid_token_and_creates_case_distinct_key) ... ok
+test_canonical_and_alias_records_merge_into_one_file (test_regressions.CoverageTests.test_canonical_and_alias_records_merge_into_one_file) ... ok
+test_checksum_and_duplicate_lines (test_regressions.CoverageTests.test_checksum_and_duplicate_lines) ... ok
+test_external_file_still_rejected (test_regressions.CoverageTests.test_external_file_still_rejected) ... ok
+test_no_valid_lines_is_failure (test_regressions.CoverageTests.test_no_valid_lines_is_failure) ... ok
+test_symlink_alias_is_normalized (test_regressions.CoverageTests.test_symlink_alias_is_normalized) ... ok
+test_ambiguous_build_is_reported_without_coverage (test_scan.ScanTests.test_ambiguous_build_is_reported_without_coverage) ... ok
+test_authenticated_clients_reject_redirects (test_scan.ScanTests.test_authenticated_clients_reject_redirects) ... ok
+test_custom_port_is_forwarded_to_compose (test_scan.ScanTests.test_custom_port_is_forwarded_to_compose) ... ok
+test_explicit_xcresult_imports_coverage_without_rerunning_swift (test_scan.ScanTests.test_explicit_xcresult_imports_coverage_without_rerunning_swift) ... ok
+test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) ... ok
+test_invalid_explicit_xcresult_fails_before_scanner (test_scan.ScanTests.test_invalid_explicit_xcresult_fails_before_scanner) ... ok
+test_operational_failures_do_not_claim_success (test_scan.ScanTests.test_operational_failures_do_not_claim_success) ... ok
+test_private_metrics_use_read_access_without_giving_admin_to_scanner (test_scan.ScanTests.test_private_metrics_use_read_access_without_giving_admin_to_scanner) ... ok
+test_red_gate_is_advisory_after_successful_analysis (test_scan.ScanTests.test_red_gate_is_advisory_after_successful_analysis) ... ok
+test_scanner_does_not_inherit_local_credentials (test_scan.ScanTests.test_scanner_does_not_inherit_local_credentials) ... ok
+test_scanner_failure_never_reads_old_gate (test_scan.ScanTests.test_scanner_failure_never_reads_old_gate) ... ok
+test_success_is_correlated_to_analysis_and_token_not_in_argv (test_scan.ScanTests.test_success_is_correlated_to_analysis_and_token_not_in_argv) ... ok
+test_two_scans_use_isolated_current_coverage (test_scan.ScanTests.test_two_scans_use_isolated_current_coverage) ... ok
+test_aliases_aggregate_and_preserve_uncovered_lines (test_xccov.XccovTests.test_aliases_aggregate_and_preserve_uncovered_lines) ... ok
+test_external_and_empty_reports_do_not_claim_measurement (test_xccov.XccovTests.test_external_and_empty_reports_do_not_claim_measurement) ... ok
+test_invalid_schema_or_counts_do_not_publish_partial_report (test_xccov.XccovTests.test_invalid_schema_or_counts_do_not_publish_partial_report) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 12.590s
+
+OK

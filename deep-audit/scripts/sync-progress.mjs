@@ -34,6 +34,9 @@
  *   node sync-progress.mjs --dir <pack> --publish docs/audits
  */
 import fs from 'node:fs';
+import { acquireLock, atomicWrite, metaFor, findingsArray, sourceState, findingHash } from './pack-state.mjs';
+import { approval } from './review-evidence.mjs';
+import { closureErrors } from './closure.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -67,6 +70,9 @@ if (!dir) {
   process.exit(1);
 }
 
+const release = acquireLock(dir);
+const runMeta = metaFor(dir);
+const dispositionEvidence = () => ({ source_hash: sourceState(runMeta, dir).source_hash, finding_hash: null });
 const findingsPath = path.join(dir, 'FINDINGS.json');
 const tasksPath = path.join(dir, 'TASKS.md');
 const htmlPath = path.join(dir, 'report.html');
@@ -79,7 +85,7 @@ if (!fs.existsSync(findingsPath)) {
 }
 
 let findings = JSON.parse(fs.readFileSync(findingsPath, 'utf8'));
-if (!Array.isArray(findings)) findings = findings.findings ?? [];
+findings = findingsArray(findings);
 
 const byId = new Map(findings.map((f) => [f.id, f]));
 const now = nowStamp();
@@ -106,6 +112,7 @@ function pick(ids) {
 
 function addProgress(f, text) {
   f.progress = f.progress || [];
+  if (f.progress[0]?.endsWith(`: ${text}`)) return;
   f.progress.unshift(`${now.slice(0, 10)}: ${text}`);
   f.progress = f.progress.slice(0, 20);
 }
@@ -117,13 +124,8 @@ function addProgress(f, text) {
 const reviewWaived = cliArg('review-waived', '');
 
 function readReview(id) {
-  const p = path.join(dir, 'reviews', `${id}.json`);
-  if (!fs.existsSync(p)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
-  } catch {
-    return null;
-  }
+  try { return approval(dir, byId.get(id)); }
+  catch (e) { return { verdict: 'invalid', required_changes: [e.message] }; }
 }
 
 // ---- resolvido --------------------------------------------------------------
@@ -154,6 +156,7 @@ if (doneArg) {
         );
         continue;
       }
+      if (f.status === 'resolved' && f.resolved_test === testNote.trim() && f.review?.round_id === review.round_id && !reviewWaived.trim() && (!note || note === f.resolved_note)) continue;
       f.status = 'resolved';
       f.resolved_test = testNote.trim();
       f.resolved_at = now;
@@ -163,6 +166,9 @@ if (doneArg) {
       if (review) {
         f.review = {
           verdict: review.verdict,
+          round_id: review.round_id,
+          source_hash: review.source_hash,
+          finding_hash: review.finding_hash,
           reviewed_at: review.reviewed_at,
           panel_source: review.panel_source,
           voters: review.voters,
@@ -192,8 +198,10 @@ if (refuteArg) {
     fatal.push('--refute exige --evidence "...": refutar é provar que o defeito NÃO existe.');
   } else {
     for (const f of pick(refuteArg)) {
+      if (f.status === 'refuted' && f.refuted_by === evidence.trim() && f.disposition_evidence?.source_hash === dispositionEvidence().source_hash) continue;
       f.status = 'refuted';
       f.refuted_by = evidence.trim();
+      f.disposition_evidence = { ...dispositionEvidence(), finding_hash: findingHash(f) };
       f.refuted_at = now;
       f.blocks_pr = false;
       addProgress(f, `refutado · ${evidence.trim()}`);
@@ -231,8 +239,10 @@ if (acceptArg) {
         );
         continue;
       }
+      if (f.status === 'accepted' && JSON.stringify(f.accept) === JSON.stringify(accept) && f.disposition_evidence?.source_hash === dispositionEvidence().source_hash) continue;
       f.status = 'accepted';
       f.accept = accept;
+      f.disposition_evidence = { ...dispositionEvidence(), finding_hash: findingHash(f) };
       f.accepted_at = now;
       f.blocks_pr = false;
       addProgress(f, `aceito (${accept.type}) · ratificado por ${accept.ratified_by}`);
@@ -252,6 +262,8 @@ if (openArg) {
     delete f.refuted_at;
     delete f.accept;
     delete f.accepted_at;
+    delete f.review;
+    delete f.disposition_evidence;
     addProgress(f, `reaberto${note ? ` · ${note}` : ''}`);
     journal.push(`reaberto ${f.id}`);
   }
@@ -262,6 +274,7 @@ if (progressArg) {
   if (!note.trim()) fatal.push('--progress exige --note "o que avançou".');
   else {
     for (const f of pick(progressArg)) {
+      if (f.in_progress && f.progress?.[0]?.endsWith(`: ${note.trim()}`)) continue;
       f.in_progress = true;
       addProgress(f, note.trim());
       journal.push(`progresso ${f.id}`);
@@ -289,14 +302,15 @@ findings.sort(
     (SEV_RANK[normalizeSeverity(a.severity)] ?? 9) - (SEV_RANK[normalizeSeverity(b.severity)] ?? 9) ||
     String(a.id).localeCompare(String(b.id)),
 );
-fs.writeFileSync(findingsPath, JSON.stringify(findings, null, 2) + '\n');
+atomicWrite(findingsPath, JSON.stringify(findings, null, 2) + '\n');
 
 // ---- TASKS.md ---------------------------------------------------------------
 const c = counts(findings);
 const closed = c.resolved + c.refuted + c.accepted;
 const pct = c.total ? Math.round((closed / c.total) * 100) : 0;
 const inProgress = findings.filter((f) => f.status === 'open' && f.in_progress).length;
-const complete = c.open === 0 && c.total > 0;
+const gateErrors = closureErrors(dir, findings);
+const complete = c.open === 0 && gateErrors.length === 0;
 
 const meta = fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf8')) : {};
 const lensesUsed = [...new Set(findings.map((f) => normalizeLens(f)))].map((l) => LENS_LABEL[l] || l);
@@ -510,7 +524,7 @@ if (complete) {
   L.push('');
 }
 
-fs.writeFileSync(tasksPath, L.join('\n'));
+atomicWrite(tasksPath, L.join('\n'));
 console.log(`sync-progress: ${tasksPath} (${pct}% fechado · ${c.resolved}/${c.total} resolvidos)`);
 for (const e of labelErrors) console.warn(`  ⚠ rótulo rebaixado — ${e}`);
 
@@ -554,10 +568,12 @@ if (fs.existsSync(reportPath)) {
   const banner =
     `> **Progresso:** ${c.resolved} resolvidos · ${c.refuted} refutados · ${c.accepted} aceitos · ` +
     `${c.open} abertos (${pct}% fechado) · atualizado ${now}${complete ? ' · ✅ FECHADA' : ''}\n\n`;
-  rep = rep.startsWith('> **Progresso:**')
-    ? rep.replace(/^> \*\*Progresso:\*\*[^\n]*\n\n/, banner)
-    : rep.replace(/^(#[^\n]*\n\n)/, `$1${banner}`);
-  fs.writeFileSync(reportPath, rep);
+  const block = `<!-- deep-audit-progress:start -->\n${banner}<!-- deep-audit-progress:end -->\n`;
+  rep = rep.replace(/<!-- deep-audit-progress:start -->[\s\S]*?<!-- deep-audit-progress:end -->\n?/g, '')
+    .replace(/^> \*\*Progresso:\*\*[^\n]*\n\n?/gm, '');
+  const heading = rep.match(/^(#[^\n]*)/);
+  rep = heading ? `${heading[1]}\n\n${block}\n${rep.slice(heading[1].length).trimStart()}` : block + rep.trimStart();
+  atomicWrite(reportPath, rep);
 }
 
 // ---- cópias estáveis --------------------------------------------------------
@@ -565,9 +581,9 @@ const publish = cliArg('publish', '');
 if (publish) {
   const pub = path.resolve(publish);
   fs.mkdirSync(pub, { recursive: true });
-  fs.copyFileSync(htmlPath, path.join(pub, 'deep-audit-report.html'));
-  fs.copyFileSync(tasksPath, path.join(pub, 'deep-audit-tasks.md'));
-  fs.copyFileSync(findingsPath, path.join(pub, 'deep-audit-findings.json'));
+  atomicWrite(path.join(pub, 'deep-audit-report.html'), fs.readFileSync(htmlPath));
+  atomicWrite(path.join(pub, 'deep-audit-tasks.md'), fs.readFileSync(tasksPath));
+  atomicWrite(path.join(pub, 'deep-audit-findings.json'), fs.readFileSync(findingsPath));
   console.log(`sync-progress: publicado em ${pub}/deep-audit-{report.html,tasks.md,findings.json}`);
 }
 
@@ -578,7 +594,7 @@ console.log(
 );
 if (!meta.version) {
   console.warn(
-    'sync-progress: ⚠ run-meta.json sem `version` — rode init-run.mjs (ou passe --version) ' +
+    'sync-progress: ⚠ run-meta.json sem `version` — rode run-state.mjs metadata --dir PACK --version X ' +
       'para o report dizer QUAL versão foi auditada.',
   );
 }
@@ -589,3 +605,6 @@ if (!depsData) {
   );
 }
 console.log(`report.html: ${path.resolve(htmlPath)}`);
+
+if (gateErrors.length) console.warn('Gate pendente: ' + gateErrors.join('; '));
+release();

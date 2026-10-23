@@ -1,0 +1,14 @@
+{
+  "invalid_coverage_rejected": {
+    "error": "Relat\u00f3rio de cobertura enviado, mas medi\u00e7\u00e3o v\u00e1lida n\u00e3o confirmada pela an\u00e1lise atual.",
+    "type": "ScanError"
+  },
+  "lcov_alias": {
+    "root": "/tmp/sonar-independent-jklbos_m",
+    "exit": 0,
+    "xml": "<?xml version='1.0' encoding='utf-8'?>\n<coverage version=\"1\"><file path=\"Sources/App.swift\"><lineToCover lineNumber=\"1\" covered=\"true\" /></file></coverage>",
+    "stderr": "1 arquivos convertidos\n",
+    "uniqueFiles": 1,
+    "covered": "true"
+  }
+}

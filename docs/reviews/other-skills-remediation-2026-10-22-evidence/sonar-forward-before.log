@@ -1,0 +1,93 @@
+test_colliding_project_keys_generate_distinct_tokens (test_regressions.BootstrapTests.test_colliding_project_keys_generate_distinct_tokens) ... ok
+test_failure_before_pending_write_does_not_change_remote_password (test_regressions.BootstrapTests.test_failure_before_pending_write_does_not_change_remote_password) ... ok
+test_file_created_private_before_replace_and_old_survives_failure (test_regressions.BootstrapTests.test_file_created_private_before_replace_and_old_survives_failure) ... ok
+test_lock_serializes_real_process_updates (test_regressions.BootstrapTests.test_lock_serializes_real_process_updates) ... ok
+test_recovers_password_changed_before_final_write (test_regressions.BootstrapTests.test_recovers_password_changed_before_final_write) ... ok
+test_retry_reuses_valid_token_and_creates_case_distinct_key (test_regressions.BootstrapTests.test_retry_reuses_valid_token_and_creates_case_distinct_key) ... ok
+test_canonical_and_alias_records_merge_into_one_file (test_regressions.CoverageTests.test_canonical_and_alias_records_merge_into_one_file) ... FAIL
+test_checksum_and_duplicate_lines (test_regressions.CoverageTests.test_checksum_and_duplicate_lines) ... ok
+test_external_file_still_rejected (test_regressions.CoverageTests.test_external_file_still_rejected) ... ok
+test_no_valid_lines_is_failure (test_regressions.CoverageTests.test_no_valid_lines_is_failure) ... ok
+test_symlink_alias_is_normalized (test_regressions.CoverageTests.test_symlink_alias_is_normalized) ... ok
+test_ambiguous_build_is_reported_without_coverage (test_scan.ScanTests.test_ambiguous_build_is_reported_without_coverage) ... ok
+test_custom_port_is_forwarded_to_compose (test_scan.ScanTests.test_custom_port_is_forwarded_to_compose) ... ok
+test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) ... 
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='not-a-number') ... FAIL
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='NaN') ... FAIL
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='Infinity') ... FAIL
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='-1') ... FAIL
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='101') ... FAIL
+  test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value=True) ... FAIL
+test_operational_failures_do_not_claim_success (test_scan.ScanTests.test_operational_failures_do_not_claim_success) ... ok
+test_red_gate_is_advisory_after_successful_analysis (test_scan.ScanTests.test_red_gate_is_advisory_after_successful_analysis) ... ok
+test_scanner_failure_never_reads_old_gate (test_scan.ScanTests.test_scanner_failure_never_reads_old_gate) ... ok
+test_success_is_correlated_to_analysis_and_token_not_in_argv (test_scan.ScanTests.test_success_is_correlated_to_analysis_and_token_not_in_argv) ... ok
+test_two_scans_use_isolated_current_coverage (test_scan.ScanTests.test_two_scans_use_isolated_current_coverage) ... ok
+
+======================================================================
+FAIL: test_canonical_and_alias_records_merge_into_one_file (test_regressions.CoverageTests.test_canonical_and_alias_records_merge_into_one_file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_regressions.py", line 146, in test_canonical_and_alias_records_merge_into_one_file
+    self.assertEqual(r.stdout.count('<file '),1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='not-a-number')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='NaN')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='Infinity')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='-1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value='101')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+======================================================================
+FAIL: test_invalid_coverage_is_not_published (test_scan.ScanTests.test_invalid_coverage_is_not_published) (value=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Developer/harness/skills/sonar-swift-local/scripts/tests/test_scan.py", line 153, in test_invalid_coverage_is_not_published
+    with self.assertRaises(scan.ScanError): scan.current_metrics('local','fixture','key','current',{'swift'},True)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: ScanError not raised
+
+----------------------------------------------------------------------
+Ran 19 tests in 13.413s
+
+FAILED (failures=7)

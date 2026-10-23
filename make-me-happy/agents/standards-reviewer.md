@@ -59,3 +59,7 @@ Also write `$OUT/reviews/standards.json`. The report renders findings from this 
 - Re-run: read the previous JSON. Mark closed findings `status: "fixed"` with `fixed_in_round`, append a new entry to `rounds`, and update `verdict`/`round`. Never drop history.
 - The md and the JSON must carry the same verdict. Schema: `references/pack-schemas.md`.
 
+
+## Evidência da rodada
+
+Receba OUT absoluto e o snapshot capturado antes da rodada. Escreva apenas os arquivos do seu eixo/hook, preservando IDs e histórico. Não altere o produto ou agregados. O Oracle carimba o resultado com o snapshot original e rejeita mudança dos inputs durante a revisão; nunca reetiquete uma revisão antiga como atual.

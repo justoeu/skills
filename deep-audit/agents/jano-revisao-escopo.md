@@ -42,6 +42,7 @@ Seu voto é **independente**: não tente adivinhar como Nêmesis (CORRECTNESS) o
 Somente JSON:
 ```json
 {
+  "context": "copie aqui o objeto CONTEXT inteiro recebido, sem alterar campos",
   "verdict": "APROVA",
   "lens": "SCOPE",
   "reasoning": "arquivo:linha e a borda que o diff cruzou",
@@ -57,3 +58,5 @@ ligar ao achado.
 
 O orquestrador grava seu voto em `reviews/votes/<ID>-SCOPE.json` e o **código**
 (`review-verify.mjs`) apura.
+
+Receba CONTEXT de review-start junto do diff. O voto contém esse objeto completo; mudança no produto exige nova revisão, nunca reutilize voto antigo. Consulte `../references/pack-contract.md`. Não execute reversão no checkout compartilhado.

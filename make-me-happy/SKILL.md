@@ -1,446 +1,283 @@
 ---
 name: make-me-happy
 description: >
-  Implementa feature, refactor ou greenfield. Se não houver SDD, Etapa Zero
-  explora com perguntas e escreve o spec. Com spec: TASKS rastreáveis, red→green em cada
-  tarefa, testes de imutabilidade, git worktrees (default 3, --worktree N),
-  review em 3 eixos (Standards/Fowler, Spec, Correctness) com consenso 3/3,
-  hooks de verificação (arquitetura↔SDD, não reinventar a roda, segurança,
-  performance, overengineering, deps na última ativa) e aceitação de UI em
-  runtime (sobe o app, loga, dirige as telas tocadas, confere console/rede,
-  contrato do SDD e padrão visual),
-  loop full ou por task, HTML interativo com fluxo, payloads e score 10.
-  Greenfield, feature ou refactor. Agnóstica de host e de stack.
-  Trigger: /make-me-happy, /mmh, mmh, implementar SDD, red to green,
-  worktree, --loop full|task, --worktree, --cobertura, make me happy.
-compatibility: Requires git and Node.js for scripts. Any coding agent that can read this SKILL.md, run bash/node, and spawn subagents (or run slices inline).
+  Implementa features, refactors ou greenfield a partir de um pedido ou SDD.
+  Produz tarefas rastreáveis, isolamento em worktrees, testes adequados à mudança,
+  review de spec/standards/correctness, hooks e aceitação de UI quando aplicável.
+  Mantém evidência verificável, retomada após interrupções e relatório HTML.
+  Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
+  não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.3.1
+  version: 1.4.0
   aliases: mmh
 ---
 
 # Make Me Happy
 
-Orquestra implementação de feature, refactor ou greenfield. Agnóstica de host (Claude, Grok, Codex, Cursor, opencode) e de stack.
+Implementa o escopo autorizado e mantém evidências verificáveis do resultado.
+`SKILL_ROOT` é o diretório deste arquivo, resolvendo symlinks. Requer Node.js e Git
+para os scripts; sem Git, use o fallback inline documentado abaixo. Os caminhos
+`ROOT`, `OUT` e do spec enviados aos agentes devem ser **absolutos**.
 
-`SKILL_ROOT` = diretório deste `SKILL.md` (seguir symlink). Alias de invocação: **`/mmh`**.
+## Contrato de trabalho
 
-Não é auditoria. **Não exige SDD na entrada.** Sem spec (feature nova ou refactor): **Etapa Zero** — perguntas, escrever o SDD, confirmar, só então Planner. Com `--spec` ou arquivo encontrado: pula a Etapa Zero. Depois que o SDD existe (achado ou escrito aqui), a regra **Só o SDD** vale.
+- Regras canônicas do projeto e instruções do usuário prevalecem. Leia-as no setup.
+- Preserve o comportamento e os limites pedidos no SDD. Escolhas locais reversíveis
+  seguem os padrões do repo; pergunte apenas quando faltar decisão material sobre
+  produto, contrato, arquitetura, persistência, custo ou autorização.
+- Um spec existente ou o pedido suficientemente definido pode ser usado diretamente.
+  Sem definição suficiente, explore o necessário e escreva um draft; só avance quando
+  as decisões materiais estiverem resolvidas. Recusa de qualquer spec encerra este
+  fluxo: não invente tarefas nem marque review de spec como SKIP.
+- Não repita confirmação que o usuário já deu. Uma mudança autorizada segue até a
+  conclusão ou um impedimento concreto. Perguntas mostram a decisão concreta em jogo.
+- Nunca descarte alterações locais, slices ou branches para fazer o fluxo passar.
+- Resultados são válidos para os inputs e código que verificaram. Alterar código,
+  contrato, plano ou mapa de arquitetura invalida as evidências afetadas; os helpers
+  recusam fechamento com evidência antiga. Um score numérico sozinho não autoriza fechar.
 
-## Flags
+## Opções
 
-| Flag | Efeito |
-|------|--------|
-| `--worktree N` | quantidade de git worktrees. Default **3** (faixa 3–4). Clamp 1..8 |
-| `--spec PATH` | spec/SDD explícito |
-| `--loop full` | implementa todas as tasks e só pergunta ao bloquear |
-| `--loop task` | pergunta se continua **após cada** task |
-| `--kind greenfield\|feature\|refactor` | senão o Planner detecta |
-| `--fresh` | ignora pack/worktrees abertos e começa uma run nova |
-| `--into feature/<name>` | branch-base das slices e alvo do merge. **Nunca** `main`/`master`/`trunk` |
-| `--cobertura N` | piso de cobertura. Default **90**. Só sobe (`--cobertura 95` ou `95%`). N < 90 → fica 90 |
-| `--ui-drive fast\|guided\|off` | aceitação de UI: `fast` = spec direto do código + driver headless; `guided` = Playwright MCP explora a tela antes de destilar o spec; **`off` = bypass do usuário** (não testa telas nesta run — SKIP registrado). Sem a flag e com telas no SDD, o Oracle pergunta **uma vez no setup**. Re-execução sempre pelo driver |
+| Opção | Comportamento |
+|---|---|
+| `--spec PATH` | Spec explícito; ainda lê regras e produz arch-map |
+| `--kind feature\|refactor\|greenfield` | Senão, derive do pedido e código |
+| `--loop full\|task` | Default full; task executa **uma tarefa por vez** e confirma antes da seguinte |
+| `--worktree N` | Default 3, limite 1..8; reduzir às slices realmente independentes |
+| `--into feature/<nome>` | Alvo de integração; nunca branch principal/protegida |
+| `--cobertura N` | Piso ≥90%; pode aumentar, nunca diminuir; rejeitar >100 |
+| `--ui-drive fast\|guided\|off` | Default fast quando houver UI; guided explora antes; off é bypass explícito |
+| `--fresh` | Nova run com ID único; preserva packs e slices anteriores, sem reutilizar seus resultados |
 
-`--mode` não existe nesta skill. `/mmh` = `/make-me-happy`. Worktree **não** é opcional: sempre tenta git worktree; se o repo não for git, implementa no working tree (`N=1`) e diz isso no REPORT.
+`/mmh` é alias. Não há `--mode`. Worktrees são o padrão de isolamento, não uma razão
+para criar paralelismo entre tarefas dependentes. Sem Git, registre `worktrees.json`
+com `{ "skipped": true, "reason": "repo sem Git" }`, `worktree_n:1` e trabalhe inline.
+Falha de Git não vira fallback silencioso: preserve o estado e resolva a causa.
 
-Se o working tree estiver em branch protegida (`main`/`master`/`trunk`) e `--into` não veio, `add` cria `feature/mmh-YYYYMMDD` e faz checkout nela **antes** de abrir slices. Merge recusa alvo protegido.
-
-## Dispatch
-
-Cada papel é um subagente. Use o que o host oferecer (`Task`, `spawn_subagent`, equivalente). Sem ferramenta: rode o prompt **inline**. Prompt = `agents/<id>.md` + contexto (`OUT`, spec, `WORKTREE_I`).
-
-## Início — resume (antes de qualquer pergunta)
-
-```bash
-node "$SKILL_ROOT/scripts/resume.mjs" --root . --prefix mmh
-```
-
-Se `resumable: true` e **não** veio `--fresh`:
-
-1. Diga ao usuário **qual pack** e **qual passo** (`next_step`) está sendo retomado. Não pergunte loop/seguir — reuse `loop`/`spec`/`worktree_n`/`ui_drive` do `run-meta.json`.
-2. `OUT` = `pack`. **Não** crie worktrees novos se `leftover_worktrees` não estiver vazio.
-3. Salte para o passo correspondente:
-
-| `next_step` | ir para |
-|-------------|---------|
-| `explore` | §0z Etapa Zero |
-| `planner` | §1 |
-| `worktrees-add` | §2 |
-| `implement` | §3 |
-| `immutability` | §4 |
-| `ui-acceptance` | §4z |
-| `review` | §5 |
-| `score` | §6 |
-| `clean` | §7 |
-| `closed` | mostrar HTML se existir; parar |
-
-Se `pack` é null mas há leftover worktrees (crash antes do pack): crie `OUT` do dia, grave `worktrees.json` a partir de `leftover_worktrees` (index pelo sufixo `mmh-<i>`), `next_step=implement`.
-
-`--fresh` com leftover: avise que vai **abandonar** as slices abertas (`worktrees.mjs remove`) e só então comece do zero.
-
-## Início — duas perguntas (só run nova)
-
-Obrigatório se flags omitidas **e** não está retomando:
-
-1. **Loop:** implementação completa (`full`) ou parar para confirmar **a cada task** (`task`)?
-2. **Seguir agora?** (sim / não). Não = gravar `$OUT/` com o plano e parar.
-3. **Vai testar as telas? (condicional — só se o spec envolve UI).** Pergunte logo no setup, não no fim: o SDD (achado, `--spec`, ou recém-escrito na Etapa Zero) cria/altera telas → *"aceitação de UI em runtime: `sim fast` (driver headless), `sim guided` (MCP explora 1×), ou `não` (bypass)?"*. Resposta vira `ui_drive` (`fast|guided|off`) no `run-meta.json`; resume não pergunta de novo. `--ui-drive` responde pela flag. `off` = §4z SKIP registrado (bypass explícito, nunca silêncio). Spec sem UI = sem pergunta, SKIP automático.
-
-Se o host tem pergunta estruturada, use. Senão, pergunte em texto e espere.
-
-## Só o SDD (inegociável)
-
-Implementar **exatamente** o que o SDD/spec pediu. Nada além, nada “melhor” no lugar.
-
-- Não inferir tomada de decisão. Se o spec admite **mais de um** caminho (lib, schema, API, nome, fluxo, persistência) e há dúvida — **pergunte e espere**. Não escolha “a mais razoável” em silêncio.
-- Buraco, conflito ou ambiguidade no spec → pergunta. Não preencher o buraco.
-- Planner com dúvida: pode escrever `TASKS.json`, **não** despacha implementer até a resposta.
-- Implementer com dúvida no meio da slice: **para**, pergunta; não commita a escolha.
-
-## Red → green (inegociável)
-
-Cada task:
-
-```
-teste que falha → RED
-fix mínimo → GREEN
-prova por reversão quando viável
-tests_added += N   (N = testes novos/alterados desta task)
-```
-
-Sem teste vermelho-antes, a task **não** é `DONE`.
-
-## Cobertura ≥ 90% (inegociável; só sobe)
-
-Piso **90%**. `--cobertura N` (ou `N%`) **só aumenta** o piso; `N < 90` é ignorado (fica 90). Grave `coverage_floor` no `run-meta.json`.
-
-Medida da ferramenta do repo (JaCoCo, c8/istanbul, go cover, coverage.py, …) sobre o código de produto tocado — **não** “90% das tasks têm teste”.
-
-Grave `$OUT/coverage.json`:
-
-```json
-{ "pct": 92.4, "tool": "c8", "report": "coverage/index.html", "floor": 90 }
-```
-
-`pct` ausente ou `< piso` → pack **não** fecha, mesmo com os 5 gates em 10. Falta medir = não cumpriu.
-
-## Baseline verde (inegociável)
-
-**Nunca empilhar trabalho sobre baseline vermelha.**
-
-A suite **já existente** em `into` (antes de escrever o RED da task) tem de estar verde.
-
-| | Baseline | RED da task |
-|---|----------|-------------|
-| O que é | testes que **já estavam** no repo | o teste **novo** que prova a task |
-| Se falha | **parar**. Não abrir slice, não implementar feature | esperado; aí o GREEN |
-
-Se `test_cmd` no `into` sai ≠ 0: não rode `add`, não despache implementer, não “consertar junto” com a feature. Primeiro a baseline; depois o pack. Resume: se a `into` ficou vermelha no meio, pare do mesmo jeito.
-
-## Score 10 (inegociável para fechar)
-
-`scripts/score.mjs` é a fonte. Cada gate vale 0 ou 2; fechar só com **10 e cobertura ≥ piso** (90, ou `--cobertura` se maior):
-
-| Gate | +2 se |
-|------|--------|
-| tasks | todas `DONE` |
-| red-green | cada DONE tem `tests_added >= 1` e `red_green` |
-| immutability | `$OUT/immutability.json` `green: true` |
-| review | 3 eixos `APPROVE` (Spec pode ser `SKIP` se o usuário disse que não há spec — conta como gate pago) |
-| worktrees | todas as slices mergeadas e `worktrees.mjs verify-clean` ok |
-
-Score < 10 **ou** cobertura < piso → corrigir e re-rodar. Não negociar 9 nem 89%. `--cobertura 80` não baixa o piso.
-
-**Hooks são a terceira condição de fechamento** (não entram no score): `hooks.mjs verdict` tem de sair `PASS` — achado aberto com severidade ≥ high e sem waiver bloqueia igual cobertura abaixo do piso. Ver §5.
-
-**Score 10 fecha o pack da skill, não o “done” do projeto.** Os 3 eixos (Standards / Spec / Correctness) **não** substituem gates que o repo documentar em `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` (ex.: trio code-reviewer + test-analyzer + security-review, sweep docs/i18n). Depois do HTML: listar esses gates e rodá-los, ou deixá-los OPEN no relatório. Não abrir PR só com score 10 se o repo exige o outro conjunto.
-
----
-
-## Passos
-
-### 0. Setup
+## Retomar antes de criar outra run
 
 ```bash
-DATE=$(date +%Y-%m-%d)
-BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo no-git)
-OUT=docs/impl/make-me-happy/${DATE}-${BRANCH}
-mkdir -p "$OUT/reviews" "$OUT/hooks"
-N=${WORKTREE_N:-3}
-# clamp 1..8
+node "$SKILL_ROOT/scripts/resume.mjs" --root "$ROOT" --prefix mmh
 ```
 
-`run-meta.json`: `app`, `branch`, `head`, `kind`, `loop`, `worktree_n`, `spec`, `coverage_floor`, `status` (`in_progress` | `closed`), `started_at`, `steps`. Atualize `status` ao avançar de passo; `closed` só com score 10 + cobertura ≥ piso + worktrees limpos. `coverage_floor` = `max(90, --cobertura)`.
+Mostre pack e próximo passo. Reuse loop/spec/ui_drive e o prefixo daquela run.
+`historical_pack` identifica a última execução concluída e seu relatório; `pack`
+identifica apenas a execução ativa.
+Packs com branches antigas contendo `/` também são descobertos. Se houver mais de
+um pack aberto sem contexto suficiente para escolher, apresente os candidatos; não
+misture os artefatos. `--fresh` cria outro ID sem remover a run anterior.
 
-**Spec.** Se `--spec` veio, use. Senão procure arquivo sob `docs/`, `Docs/`, `specs/`, `.scratch/`, `Docs/SDD/`, `.planning/` cujo nome case a branch ou o feature. Achou → `run-meta.spec`, pule §0z. **Não achou → §0z. Não pule para o Planner e não marque Spec SKIP.**
+| Próximo passo | Ação |
+|---|---|
+| `setup` | Adotar pack legado ou corrigir configuração incompleta |
+| `explore` | Resolver spec draft, mesmo que já existam tasks |
+| `planner` | Criar/validar plano |
+| `worktrees-add` | Criar ou completar slices com o mesmo OUT/prefixo |
+| `implement` | Reconciliar Git/JSON, sincronizar dependências e continuar tasks |
+| `immutability` | Testes finais, contratos e cobertura sobre código integrado |
+| `ui-acceptance` | Apurar escopo e evidência de runtime |
+| `review` | Refazer reviews/hooks ausentes, inválidos ou desatualizados |
+| `clean` | Remover apenas recursos integrados e limpos desta run |
+| `score` | Corrigir os blockers informados pelo verificador |
+| `project-gates` | Gates adicionais e acompanhamento canônico |
+| `close` | Executar close e reconstruir HTML |
+| `closed` | Mostrar relatório histórico; não tratar como validação de mudanças posteriores |
 
-**Timeline.** Ao entrar e ao sair de cada passo (§0z…§8), grave o carimbo. O HTML monta a linha do tempo a partir disso:
+Packs legados precisam de `run-meta.mjs adopt --root "$ROOT" --dir "$OUT"` e novas
+verificações antes do fechamento. Não carimbe resultados antigos como se tivessem
+acabado de ser executados. Se faltar estado de worktrees, reconstrua o vínculo com
+Git e a branch `into` antes de despachar; não invente tarefas para uma slice órfã.
+
+## 0. Setup comum e spec
+
+Determine ROOT, branch de destino, comando de teste/CI, kind e escopo. Descubra os
+arquivos canônicos de acompanhamento do app (SDD/checklist, ROADMAP, STATE etc.).
+Não crie um segundo conjunto concorrente de status do projeto.
 
 ```bash
-node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step planner --status in_progress
-node "$SKILL_ROOT/scripts/run-meta.mjs" step --dir "$OUT" --step planner --status done --note "24 tasks"
+node "$SKILL_ROOT/scripts/run-meta.mjs" init --root "$ROOT" \
+  --spec "$SPEC" --kind feature --loop full --worktree 3 \
+  --cobertura 90 --ui-drive fast --test-cmd "$TEST_CMD"
 ```
 
-Passos: `explore planner worktrees implement immutability review score clean project-gates`. Status: `in_progress` | `done` | `failed` | `skipped`.
+Omitir `--spec` se ainda não houver. O JSON retorna `dir` absoluto (`OUT`), run_id,
+base, repo_root e worktree_prefix únicos. **init nunca sobrescreve outra run.**
+Ele deriva arch-map do Atlas existente ou registra greenfield/pending. Se pending,
+o explorer inspeciona o código e escreve o mapa manual **antes do planner**, mesmo
+quando o usuário forneceu o spec. Não assumir que Atlas antigo descreve o código atual.
 
-**Schemas do pack:** `references/pack-schemas.md`, a fonte de todo arquivo em `$OUT/`. O `build-report.mjs` imprime `WARN` para cada desvio. Warning = escritor errado, não leitor.
+Sem spec, use `agents/explorer.md`: draft, decisões materiais, spec canônico e
+`spec_status:confirmed`. Enquanto draft, não implementar. Pergunte sobre UI apenas
+se a escolha fast/guided/off não estiver resolvida pelo pedido; fast é o default.
 
-Stack: `package.json` / `go.mod` / `pom.xml` / `*.csproj` / `Cargo.toml` / `pyproject.toml` — grave o comando de teste do repo em `run-meta.json.test_cmd`.
+Schemas e protocolo de escrita: [references/pack-schemas.md](references/pack-schemas.md).
+Protocolo de evidência e recuperação: [references/lifecycle.md](references/lifecycle.md).
 
-### 0z. Etapa Zero — explorar e escrever o SDD
+## 1. Planejar e distribuir
 
-Quando **não** há spec. Feature nova e refactor entram aqui do mesmo jeito.
+`agents/planner.md` produz TASKS.json, TASKS.md, flow.mmd, payloads.json e spec-summary.md.
+Toda task tem id estável, responsabilidade, critério de aceite, referências, worktree,
+dependências e modo de validação. Toda tela tem contrato `kind:"ui"` com jornada e estados.
 
-**Arch-map antes das perguntas** (o SDD tem de conhecer a arquitetura que existe):
+- Separe slices por responsabilidade; evite arquivos compartilhados.
+- Dependências na mesma slice são sequenciais. Entre slices, use **ondas**: primeiro
+  produtor DONE + integrado, depois `worktrees.mjs sync` do consumidor, só então implemente.
+- Não despache tasks cujo predecessor esteja aberto. `loop=task` não despacha outras
+  tasks em paralelo enquanto aguarda a decisão de continuar.
+- Mostre o plano; a autorização existente permite seguir. Zero tasks ou requisito
+  material indefinido = esclarecer, não implementar por aproximação.
+
+Cada papel usa `agents/<id>.md` + contexto necessário. Use subagentes quando houver
+capacidade, sem exceder slots; senão execute os papéis inline. Apenas o Oracle escreve
+os agregados do pack. Implementers devolvem resultados por task em arquivos distintos.
+
+## 2. Baseline e worktrees
+
+A suíte existente em `into` deve estar verde antes de qualquer RED novo. Uma baseline
+vermelha exige diagnóstico e tratamento separado, dentro da autorização do usuário.
+Não disfarce uma falha anterior como o RED da nova tarefa.
 
 ```bash
-node "$SKILL_ROOT/scripts/hooks.mjs" arch-map --repo-root . --dir "$OUT"
+node "$SKILL_ROOT/scripts/worktrees.mjs" add --root "$ROOT" \
+  --count "$N" --into "$INTO" --test-cmd "$TEST_CMD" --out "$OUT"
 ```
 
-Atlas-docs no repo → derivado de `docs/atlas/app-model.json`; senão o explorer escreve manual; greenfield → `{"source":"greenfield"}`. Detalhes em `agents/explorer.md`.
+O prefixo vem do meta. Estado é persistido antes dos efeitos em Git; repetir `add`
+com o mesmo OUT recupera criação parcial. Mudança local não commitada é preservada
+com erro explícito. Se o script adicionar `.worktrees/` ao `.gitignore`, mostre a
+alteração e inclua-a no commit apropriado. Não reverta alterações alheias.
 
-Subagente `agents/explorer.md` (ou o Oracle no mesmo papel): perguntas em sequência, draft do SDD, confirmação do usuário, arquivo no repo.
+## 3. Implementar e validar cada tarefa
 
-`run-meta.spec_status`: `draft` enquanto não confirmar; `confirmed` + `spec` = path depois. Resume com `draft` volta para cá.
+Use `agents/implementer.md`:
 
-**Proibido:** começar tasks/worktrees/código com `spec_status=draft` ou sem `spec`. **Proibido:** Spec `SKIP` só porque “não tinha SDD no começo” — a Etapa Zero **cria** o SDD.
+| Modo | Evidência |
+|---|---|
+| `red-green` (feature/bugfix) | Falha relevante antes, implementação, teste verde; reversão quando viável |
+| `characterization` (refactor) | Comportamento observado verde **antes** e verde depois; não chamar isso de RED |
+| `check` (docs/config sem comportamento novo) | Justificativa e verificações adequadas: parser/build/link/schema etc. Sem teste artificial |
 
-### 1. Planner
+O correctness reviewer verifica se o modo escolhido é apropriado. Cobertura não é
+quantidade de testes: usar a métrica do repo sobre produto tocado, declarar escopo,
+medir novamente após a integração. Não contar testes duplicados em reexecuções.
 
-Subagente `agents/planner.md`. Produz `TASKS.json` + `TASKS.md` + `flow.mmd` + `payloads.json` (schema canônico; `[]` só se o spec não define contrato) + `spec-summary.md` e, opcionalmente, `diagrams/<T-xxx>.mmd`.
-
-O planner lê `$OUT/hooks/arch-map.json`: tasks respeitam camadas/padrões/libs de lá; peça estrutural nova (fila, serviço, camada, interface, framework, flag) só com `refs` do SDD que a pague — senão vira pergunta. Task estrutural leva `"structural": true` (o hook `overengineering` cobra o que escapar).
-
-Ajuste `N` para `min(N, count(worktree ids distintos))`. Zero tasks → pare.
-
-Mostre o `TASKS.md` ao usuário. Se loop=`task` ou a pergunta 2 foi “não”, **pare aqui**.
-
-### 2. Worktrees
+O Oracle aplica cada resultado com `run-meta.mjs task --dir "$OUT" --result <arquivo>`:
+controle de versão por task, escrita atômica e regeneração do TASKS.md. Antes de retomar,
+`run-meta.mjs sync --dir "$OUT"` repara o espelho se houve interrupção.
 
 ```bash
-# --into: branch do PR. Se HEAD é main/master/trunk e --into omitido, o script cria feature/mmh-YYYYMMDD.
-node "$SKILL_ROOT/scripts/worktrees.mjs" add --root . --count "$N" --prefix mmh --into "$INTO" --test-cmd "$TEST_CMD" --out "$OUT"
+node "$SKILL_ROOT/scripts/worktrees.mjs" sync --root "$ROOT" --index 2 --out "$OUT" --test-cmd "$TEST_CMD"
+node "$SKILL_ROOT/scripts/worktrees.mjs" merge --root "$ROOT" --index 1 --out "$OUT" --test-cmd "$TEST_CMD"
 ```
 
-`$INTO` = `--into` do usuário, ou nome derivado do spec (`feature/<slug>`), **nunca** a default branch. Diga o nome da branch ao usuário antes de `add`.
+Sync só libera dependências DONE e integradas. Merge exige slice limpa antes e depois
+do teste, integra o commit testado e testa o resultado. Falha preserva recursos para
+reparo; repetir merge reconcilia uma interrupção. Conflitos não são resolvidos com
+`--ours`/descarte automático. Slice com task pendente permanece aberta após merge parcial.
+No loop task, ao pausar, registre o estado; pode integrar o que está verde sem apagar
+as tasks restantes. Suite pesada roda serialmente; limpe só recursos criados pela run.
 
-`--test-cmd` na `into` **antes** de criar slices. Vermelho → o script recusa (`Never stack work on a red baseline`) e **não** abre worktree. Sem `test_cmd` conhecido, rode o que o repo usa e só então `add`.
+## 4. Validar o resultado integrado
 
-O script cria `.worktrees/mmh-<i>` + branches `mmh/slice-<i>`, grava `$OUT/worktrees.json` (`into` = alvo do merge). Se o dir da slice **já existe** (crash), não rode `add` de novo — retome no implementer.
-
-Se anexar `.worktrees/` ao `.gitignore` (arquivo versionado), o script imprime `NOTE: appended .worktrees/ … include in the PR` e `gitignore_appended: true` no JSON. **Mostre isso ao usuário.** É alteração legítima do PR — não commitar escondido e não reverter.
-
-Se `git worktree` falhar: `N=1`, implementar na feature branch (ainda assim **não** em main), registrar `worktree: false` no meta. Não inventar worktree.
-
-**Merge não é opcional.** Nenhuma slice fica aberta no closeout. Merge é **sempre** em `worktrees.json.into`, não em `HEAD` se `HEAD` for protegida.
-
-### 3. Implementar
-
-Para cada worktree `i` em paralelo (subagente `agents/implementer.md`, `cwd` = dir da worktree se o host permitir):
-
-- só tasks com `"worktree": i`
-- red→green, com evidência por task no `TASKS.json`: `red{test, output_excerpt}`, `green`, `reversal`, `tests`, `files`, `commits`
-- commits na slice branch
-
-**Loop `task`:** após cada task, pergunte se continua. Não = merge do que já está verde, score, HTML parcial, pare.
-
-**Loop `full`:** só interrompa se RED não existir, merge conflitar, testes da slice falharem, **ou** surgir escolha que o SDD não fecha (pergunte; não decida).
-
-Após cada slice verde (ou no fim, se `full`):
+Depois das alterações finais, capture snapshot e execute testes/contratos/cobertura:
 
 ```bash
-node "$SKILL_ROOT/scripts/worktrees.mjs" merge --root . --index i --test-cmd "$TEST_CMD" --out "$OUT"
+node "$SKILL_ROOT/scripts/run-meta.mjs" snapshot --dir "$OUT"
+# Execute TEST_CMD e cobertura; grave tests.json, coverage.json, immutability.json.
+node "$SKILL_ROOT/scripts/run-meta.mjs" stamp --dir "$OUT" --file tests.json
+node "$SKILL_ROOT/scripts/run-meta.mjs" stamp --dir "$OUT" --file coverage.json
+node "$SKILL_ROOT/scripts/run-meta.mjs" stamp --dir "$OUT" --file immutability.json
 ```
 
-O script faz checkout de `into` e recusa `main`/`master`/`trunk`. Merge **só** se o test-cmd na worktree saiu 0. Conflito → pare e reporte; não `--ours`.
+`stamp` exige o snapshot anterior e recusa alteração do código/inputs durante a
+verificação. Use snapshots separados por rodada concorrente (`--snapshot PATH`).
+Spec/plan/arch-map devem estar completos antes de capturar. Não use stamp para
+“atualizar” prova que não foi reexecutada. `agents/immutability.md` especifica os contratos.
 
-### 4. Imutabilidade
+## 4z. UI em runtime
 
-Subagente `agents/immutability.md` no working tree **já mergeado** (e, em refactor, também *antes* do corte se a slice ainda não mergeou). Grava `$OUT/immutability.json` com `tests[]` estruturado (nome, task, arquivo). Tasks cobertas: `immutability: true`.
-
-Depois do merge final, rode o `test_cmd` inteiro e grave `$OUT/tests.json`: `{cmd, ok, total, passed, failed, skipped, duration_s, suites[], log}`. O `log` leva as últimas 40 linhas.
-
-### 4z. Aceitação de UI (runtime)
-
-**Só quando o pack toca UI.** Gere o escopo (determinístico):
+Gere diff-facts **antes** do escopo:
 
 ```bash
-node "$SKILL_ROOT/scripts/ui-acceptance.mjs" scope --root . --dir "$OUT" [--base "$BASE"]
+node "$SKILL_ROOT/scripts/hooks.mjs" diff-facts --repo-root "$ROOT" --base "$BASE" --dir "$OUT"
+node "$SKILL_ROOT/scripts/ui-acceptance.mjs" scope --root "$ROOT" --dir "$OUT" --base "$BASE"
 ```
 
-`hooks/ui-scope.json` diz `ui_touched` (arquivos de frontend no diff e/ou contratos `kind:"ui"`), as telas declaradas e se o repo tem runner e2e. Três desfechos:
+Scope desconhecido não é backend-only. UI false comprovada ou bypass explícito off
+permite SKIP; UI true requer `agents/ui-acceptance.md`. Boot em localhost pelo comando
+do repo, com porta livre e healthcheck esperado. Credenciais de teste por env, nunca
+no JSON. Falta de runner/browser vira OPEN com motivo, visível no relatório.
 
-- **`ui_touched: false`** → o Motorista grava `hooks/ui-acceptance.json` com `verdict: "SKIP"` (gate pago, pack de backend não dirige nada).
-- **`bypass: true`** (`ui_drive: "off"` — decisão sua no setup) → `ui-acceptance.mjs scope` marca o bypass e o verdict sai **SKIP automático** com o motivo; nada sobe, nada dirige. Bypass é explícito e registrado, nunca silêncio.
-- **`ui_touched: true` + sem bypass** → subagente `agents/ui-acceptance.md` (o **Motorista**), no working tree **já mergeado**, no modo que você escolheu no setup (`fast`/`guided`).
+Preferir runner e2e existente. Caso contrário, driver Playwright; guided pode explorar
+antes com ferramentas disponíveis. Erros inesperados de console/rede rejeitam a
+jornada. Respostas negativas esperadas devem constar em `expected_network_errors`
+com status e pathname exatos. Cada execução tem ID próprio; falha não reutiliza APPROVE
+anterior. Sempre teardown; ele encerra o processo identificado e **preserva** boot.json.
+Grave e carimbe o hook UI após examinar as evidências e as expectativas do SDD.
 
-1. **Boot pelo jeito do repo** (`ui-acceptance.mjs boot --cmd "<cmd do repo>" --port N`): dev server/compose do README/Makefile — nunca inventar comando, nunca produção, só localhost. Login com credencial de **teste** do repo; sem cred de teste → perguntar ao usuário (nunca inventar).
-2. **Modo e2e** quando o repo tem runner (Playwright/Cypress/Maestro/Detox): specs das jornadas rodam headless (`run-e2e`) e ficam no repo como regressão. **Modo drive** senão — **Playwright AI Agents**: o Motorista explora via **Playwright MCP** (`npx -y @playwright/mcp@latest`, snapshot por acessibilidade, console/rede/screenshot) e depois **prova** rodando o driver headless (`ui-acceptance.mjs drive --spec <jornada>.spec.json`) — evidência capturada por código, não por memória do agente. Sem MCP → spec direto do código; sem npx → browser tools do host; sem nada → hook `OPEN`.
-3. Por tela: jornada do SDD (feliz + estados), **cada componente interativo exercitado**, exceptions de console, 4xx/5xx das chamadas, contrato do payload `kind:"ui"`, e **padrão** — design system documentado (violado = high) e telas irmãs de referência (divergência = medium). Screenshot por passo em `ui/screenshots/` (cap 20/jornada).
-4. `hooks/ui-acceptance.json` com verdict/findings (schema dos hooks) + `ui/journeys/<tela>.json`. REJECT = achado ≥ high (app não sobe, crash, console em tela tocada, fora do SDD, padrão documentado violado). Achado real corrige no pack e **re-dirige** (rounds) até secar.
-5. **Sempre** `ui-acceptance.mjs teardown --dir "$OUT"` no fim (mata pelo pid do boot, nunca em massa). Sem browser/runner no host → hook `OPEN` (lacuna visível, não bloqueia, não silencia).
+## 5. Review e hooks
 
-O verdict entra no `hooks.mjs verdict` como o **7º hook** — mesma régua de bloqueio e waiver.
+Diff de BASE ao resultado integrado. Gere deps-freshness (`--mode new`; `all` quando
+follow-up de deps existentes estiver no escopo). Atualização cronológica é advisory;
+compatibilidade, runtime/peers e versão suportada orientam a escolha. Não atualizar
+deps preexistentes fora do escopo só por estarem atrasadas.
 
-### 5. Code review + hooks — 3 eixos e 6 hooks em paralelo
+Reviews independentes: standards, spec e correctness. Hooks: arch-alignment,
+reinvention, security, performance, overengineering, deps-freshness e UI. Use os
+prompts correspondentes; catálogos são sinais contextualizados, não leis de contagem.
+Mostre achados por responsabilidade, com localização e impacto; preserve IDs e rodadas.
 
-Diff: `git log --oneline $BASE..HEAD` e `git diff $BASE...HEAD` (`$BASE` = commit de início gravado no meta).
+O Oracle captura snapshot antes da rodada; cada agente escreve só seu arquivo de
+review/hook, depois o Oracle carimba com aquele snapshot. JSON incompleto/incoerente
+não aprova. Achado ≥high não resolvido bloqueia independentemente do rótulo APPROVE.
+Waiver exige decisão do usuário e motivo, vinculado ao finding concreto; `*` captura
+os achados atuais, nunca futuros. Corrigir código exige refazer os gates afetados.
 
-**Antes de despachar**, gere os fatos determinísticos do diff (insumo dos hooks):
+## 6. Gates do projeto e acompanhamento
+
+Execute os gates exigidos pelo repo e as verificações pertinentes à superfície tocada.
+Use a CI local completa quando existir. Análise diferencial segue o mecanismo do
+analisador/repo; projeto temporário não é obrigatório para toda ferramenta.
+
+Atlas/docs, N+1, abuso e SSRF/CSRF/SQLi são aplicados quando a mudança justificar ou
+as regras do repo exigirem. Tool ausente em gate obrigatório = OPEN, com motivo;
+gate inaplicável = N/A justificado. Não expandir o produto para zerar uma auditoria.
+Após correção real, repita os checks afetados. Repetição sem progresso ou falta de
+infraestrutura deve produzir impedimento concreto, não loop indefinido.
+
+Migrações aplicadas permanecem imutáveis. Contratos entre produtor/consumidor devem
+ser compatíveis e testados; golden é uma opção conforme o repo. Dados/ambientes reais
+seguem a autorização do usuário e as restrições do host.
+
+Atualize os arquivos canônicos descobertos no setup a partir de entregas verificadas.
+Grave `tracking.json` com paths, estado e evidência; se não existirem, registre motivo.
+Grave `project-gates.json`. Ambos recebem stamp após a verificação. Se essas alterações
+mudarem inputs/código, recapture e repita as validações; não recicle resultados antigos.
+
+## 7. Limpeza, fechamento e relatório
 
 ```bash
-node "$SKILL_ROOT/scripts/hooks.mjs" diff-facts --repo-root . --base "$BASE" --dir "$OUT"
-node "$SKILL_ROOT/scripts/hooks.mjs" deps-freshness --repo-root . --dir "$OUT"   # escopo "new": deps adicionadas pelo diff
-```
-
-Fontes de standards: `CODING_STANDARDS.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, `docs/**/standards*`.
-
-Spawn **ao mesmo tempo**:
-
-| Eixo | Prompt | Extra no prompt |
-|------|--------|-----------------|
-| **Standards** | `agents/standards-reviewer.md` | lista de arquivos de standard **+** `catalogs/fowler-smells.md` colado **inteiro** |
-| **Spec** | `agents/spec-reviewer.md` | path/conteúdo do spec (o achado **ou** o escrito na Etapa Zero). `SKIP` só se o usuário recusou explicitamente gravar qualquer spec depois da Zero |
-| **Correctness** | `agents/correctness-reviewer.md` | `TASKS.json` + `immutability.json` + resultado do test-cmd |
-
-E, no mesmo lote, os **hooks semânticos** (cada um grava `hooks/<id>.json`, schema em `references/pack-schemas.md`):
-
-| Hook | Prompt | Extra no prompt |
-|------|--------|-----------------|
-| **arch-alignment** | `agents/hook-arch-alignment.md` | `hooks/arch-map.json` + SDD + diff-facts |
-| **reinvention** | `agents/hook-reinvention.md` | **`catalogs/reinvention-checklist.md` colado inteiro** + diff-facts + libs do manifest |
-| **security** | `agents/hook-security.md` | rotas novas do diff-facts + resultado de runners/skills quando houver |
-| **performance** | `agents/hook-performance.md` | migrações/rotas do diff-facts + resultado do `nplus1-check` quando houver |
-| **overengineering** | `agents/hook-overengineering.md` | **`catalogs/overengineering.md` colado inteiro** + SDD + `payloads.json` + arch-map |
-
-Hooks não votam no consenso 3/3 — têm veredito próprio e regra de bloqueio própria (abaixo). Cada revisor grava `reviews/<eixo>.md` (prosa + `VERDICT:`) **e** `reviews/<eixo>.json`; hooks gravam **só** `hooks/<id>.json` (o `summary` é a prosa). Em re-rodada, lê o JSON anterior, marca `fixed`, anexa rodada. O histórico não se apaga.
-
-**Não** juntar nem rerankear achados. Apresentar ao usuário:
-
-```
-## Standards
-<verbatim>
-## Spec
-<verbatim>
-## Correctness
-<verbatim>
-```
-
-Uma linha no fim: totais por eixo + pior issue de **cada** eixo. Sem vencedor global.
-
-**Consenso:** fechar review só com 3 `APPROVE` (Spec `SKIP` conta). Qualquer `REJECT` → corrigir o eixo → re-rodar **os eixos que rejeitaram** (não os que já APPROVE, salvo o diff ter mudado o que eles viram — na dúvida, os 3 de novo).
-
-**Veredito dos hooks + bloqueio:**
-
-```bash
-node "$SKILL_ROOT/scripts/hooks.mjs" verdict --dir "$OUT"
-```
-
-- Achado `open` com severidade ≥ high **e sem waiver** → `FAIL` → o pack não fecha (mesma régua da cobertura). Re-rodar os hooks que rejeitaram após a correção, como os eixos.
-- Achado ≥ high que o usuário revisou e decidiu aceitar → waiver com motivo dele (nunca do agente):
-
-```bash
-node "$SKILL_ROOT/scripts/hooks.mjs" waive --dir "$OUT" --hook <id> --finding <id|*> --reason "decisão do usuário"
-```
-
-- `OPEN` (registry sem rede, hook não aplicável ao kind) nunca derruba; aparece no HTML como lacuna.
-- Graduação: security/perf/reinvention/overengineering `medium`/`low` são advisory (finding sem bloqueio). Dep **pré-existente** atrasada nunca bloqueia — vira proposta de follow-up (usuário decide bumpar fora do pack).
-
-### 6. Score + HTML
-
-```bash
+node "$SKILL_ROOT/scripts/worktrees.mjs" remove --root "$ROOT" --out "$OUT"
+node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root "$ROOT" --out "$OUT"
 node "$SKILL_ROOT/scripts/score.mjs" --dir "$OUT"
-node "$SKILL_ROOT/scripts/hooks.mjs" verdict --dir "$OUT"
+node "$SKILL_ROOT/scripts/run-meta.mjs" close --dir "$OUT"
 node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
-open "$OUT/report.html" 2>/dev/null || xdg-open "$OUT/report.html" 2>/dev/null || true
 ```
 
-Fechamento do pack = `score.mjs` exit 0 (10/10 **e** cobertura ≥ piso) **e** `hooks.mjs verdict` exit 0 (`PASS`). Um sem o outro não fecha.
+No fallback sem Git, não execute os dois comandos de worktree. Remove nunca força
+exclusão de trabalho sujo/não integrado. Recursos de outras runs permanecem intactos.
+Score retorna blockers: pontuação, cobertura, testes finais, hooks, freshness, gates
+e acompanhamento. **Só close grava status closed**, após validar tudo e selar a run.
+HTML recalcula o resultado e distingue relatório histórico de validação do código atual.
+Pode gerar HTML parcial a qualquer momento, sem declarar conclusão.
 
-HTML (arquivo único, abre offline; o mermaid vem do CDN e, sem rede, mostra a fonte): visão geral com KPIs e linha do tempo, SDD com sumário, tasks filtráveis com evidência red→green, fluxo com zoom, payloads com cópia, testes e cobertura por módulo, review por eixo com rodadas, score com gauges, gates do projeto. Arquivo ausente vira um estado vazio que diz qual agente deveria tê-lo escrito. `--out PATH` grava em outro lugar. Mostrar path absoluto. No closeout, citar: branch `into`, se `.gitignore` ganhou `.worktrees/`, e que score 10 ≠ done do repo.
+Finalize a persistência conforme o repo: inclua o pack/HTML concluído em commit
+próprio na branch de trabalho (stage somente os paths desta run) ou use a política
+de artefatos ignorados já definida pelo projeto. Arquivos canônicos e `.gitignore`
+alterados pela run também precisam de destinação explícita. Não deixe esses arquivos
+pendentes sem informar: o próximo `add` recusa alterações de packs anteriores.
+O commit do pack preserva o selo, pois não muda o conteúdo de produto verificado.
 
-### 7. Limpar — depois do merge, nada fica
-
-Quando **todos** os merges desta run terminaram (closeout). O `merge` de cada slice já apaga a worktree e a branch daquela slice. Mesmo assim, rode a varredura. Ela pega o que o merge não levou: branch `mmh/slice-*` órfã, pasta `.worktrees/mmh-*`, diretório `.worktrees` vazio, registro velho no `git worktree`.
-
-```bash
-node "$SKILL_ROOT/scripts/worktrees.mjs" remove --root . --prefix mmh
-node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root . --prefix mmh
-```
-
-`verify-clean` tem de imprimir `clean`. Sobra = pack não fecha. Não apague worktree de outro prefixo.
-
-Pare no meio do loop `task`, com slice **ainda sem merge**: não rode `remove`. Esse comando apaga também o que ainda não entrou na branch. Conflito de merge: pare; o script não remove a slice cujo merge não aconteceu.
-
-### 8. Gates do projeto (depois do pack)
-
-Leia `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md`. Extraia o que o repo exige **além** dos 3 eixos desta skill (reviewers nomeados, `/security-review`, sweep `docs/` + i18n, “nunca commitar em main”, …).
-
-- Rode o que o host conseguir (skills/plugins citados).
-- O que não rodar → lista **OPEN** no REPORT/HTML, não silêncio.
-
-**Regras base (valem em todo repo, mesmo que o `CLAUDE.md` não cite):**
-
-1. **Gate local completo, não só testes.** Se o repo tem script que espelha a CI (`ci-local.sh`, `make ci`, `just ci`…), rode-o inteiro — inclusive scan de imagem/dependência — antes do push. `mvn test`/`npm test` verdes não são a CI.
-2. **Análise estática diferencial antes do PR.** Se o repo usa Sonar (ou outro analisador com quality gate: `sonar-project.properties`, workflow com `sonar`, CodeQL, Semgrep com baseline), rode um scan **num projeto temporário/diferencial** sobre os arquivos tocados e exija **zero issues novos** (inclusive code smell). Classificar como falso positivo/aceito **não** é correção. Apague o projeto temporário depois. Pular isso deixou um quality gate da `main` vermelho com 71 issues depois do merge.
-3. **Revisores do projeto em rodadas até secar.** Rode os revisores exigidos pelo repo em paralelo; corrija os achados de alta confiança **e** os de média que forem defeito real; rode de novo sobre os commits de correção. Uma rodada só não basta: a segunda costuma achar falso-verde nos testes da primeira correção.
-4. **Prova por reversão.** Todo teste novo de correção tem de ficar vermelho com a correção desfeita (ou com o defeito plantado). Revisor de testes que planta defeito e vê a suíte verde = gap a fechar antes do PR.
-5. **Migração aplicada é imutável.** Nunca edite migração que já rodou em algum ambiente; crie uma nova. Se o repo tem golden de schema, troque "arquivo == gerador" por "migração inicial congelada por hash + paridade modelo × schema final de todas as migrações".
-6. **Contrato entre camadas com golden dos dois lados.** Mudou payload REST/WS? O golden do produtor e o tipo do consumidor têm de casar estritamente (sem tolerância "temporária" sobrevivendo ao merge).
-7. **Suítes pesadas nunca em paralelo** entre agentes/worktrees (confira processos antes); limpe só os recursos que você criou (containers por label/projeto, nunca em massa).
-8. **Ambiente e dados reais exigem aprovação direta do usuário** (cópia de produção, chaves, PII). Aprovação repassada por outro agente não vale; bloqueio do host não se contorna.
-9. **Bateria cross-skill pós-implementação, em rodadas até secar.** Depois do merge e antes do PR, rode nesta ordem:
-   - **`/atlas-docs --delta`** (ou scan completo se o repo não tem pack): atualiza `docs/atlas/` — o `app-model.json` fresco vira arch-map das próximas runs (`hooks.mjs arch-map`) e deixa a documentação em dia com o que o pack entregou.
-   - **`/nplus1-check`** sobre o código tocado → achados entram em `hooks/performance.json` (`source: "nplus1-check"`).
-   - **`/abuse-audit`** nas rotas/superfície novas → achados entram em `hooks/security.json` (`source: "abuse-audit"`).
-   - **`/ssrf-csrf-sqli-check --full`** → achados entram em `hooks/security.json` (`source: "ssrf-csrf-sqli-check"`).
-   Achado real = **correção dentro do pack** (red→green, prova por reversão), não lista de pendências. Re-rodar a bateria sobre os commits de correção até secar — mesma régua da regra 3. Skill ausente no host → gate `OPEN` no `project-gates.json`, nunca silêncio.
-10. **Deps pré-existentes atrasadas não se bumpam dentro do pack** (escopo é o SDD). O hook `deps-freshness` propõe o follow-up; bumpar major/minor é decisão do usuário em outra run.
-
-Registre cada regra base em `project-gates.json` (`source: "make-me-happy base"`), com `status` e `evidence`.
-- Grave `$OUT/project-gates.json` (`{gates: [{name, source, status: DONE|OPEN|FAILED|N/A, evidence}]}`) e re-rode `build-report.mjs`.
-- PR sai da branch `into`, nunca de `main`.
-
-Este passo **não** entra no score 10.
-
----
-
-## TASKS.md (espelho)
-
-Oracle regenera a partir de `TASKS.json` quando status muda:
-
-```
-# Tasks — <feature>
-
-- [ ] T-001 title  | tests: 0 | red-green: no | immutability: no | wt: 1
-```
-
-`tests_added` é a qtd de testes **criados/alterados** naquela task, não cobertura %.
-
-## Non-goals
-
-- Começar implementação sem as duas perguntas (salvo flags `--loop` + pedido explícito, **ou resume**)
-- Pular a Etapa Zero e marcar Spec `SKIP` só porque não havia SDD no repo
-- Abrir um segundo pack enquanto há worktree `mmh/slice-*` ou pack `in_progress` (use `--fresh`)
-- Fechar a run com worktree, branch `mmh/slice-*` ou pasta `.worktrees/mmh-*` desta run ainda no disco
-- Score 10 no feeling
-- Tratar score 10 como “done” do repo / substituto do trio de review do `CLAUDE.md`
-- Mergear slices em `main`/`master`/`trunk`
-- Empilhar feature/slice sobre suite já vermelha (“conserta junto”)
-- Fechar pack com cobertura abaixo do piso (90, ou `--cobertura` se maior) ou sem `coverage.json`
-- Baixar o piso de cobertura com `--cobertura` abaixo de 90
-- Impor stack ou framework
-- Inferir decisão de implementação quando o SDD deixa mais de um caminho
-- Entregar além do que o SDD pediu
-- Review de um eixo só rotulado como consenso 3/3
-- Abrir PR sem as regras base do §8 (gate local completo, análise estática diferencial com zero issues novos, revisores até secar)
-- Fechar pack com hook FAIL (achado ≥ high aberto sem waiver do usuário) — hooks têm a mesma régua da cobertura
-- Waiver de hook dado pelo agente — dispensa é decisão do usuário, com motivo dele gravado
-- Bumpar dependência pré-existente dentro do pack porque "estava atrasada" — vira follow-up, o usuário decide
-- Rodar os hooks em vez dos 3 eixos, ou os 3 eixos em vez dos hooks — são complementares: eixos votam o consenso, hooks bloqueiam por severidade
-- SDD escrito sem arch-map (Etapa Zero produz os dois; greenfield registra `source: "greenfield"`)
-- Fechar pack com UI em escopo (`ui-scope.ui_touched=true`) sem `hooks/ui-acceptance.json` — nem SKIP, nem OPEN, nem verdict
-- Dirigir tela "de memória": evidência de runtime (console, rede, screenshot) vem do driver Playwright headless ou das tools do MCP/browser — o relato do agente não é evidência
-- Credencial de login inventada ou real em spec/arquivo — cred de teste do repo, via flag/env, nunca no JSON
-- Apontar o boot/aceitação para URL de produção — só localhost/compose
-- Re-executar jornada por MCP/browser após correção — re-run é sempre o driver headless (segundos, sem LLM no loop); MCP é só a primeira passada, e só no modo `guided`
+No resultado, informe branch into, entregas, comandos/resultados, pendências reais,
+alterações de acompanhamento e path absoluto do HTML. Abrir PR/push/deploy depende do
+pedido e das regras do projeto; não são efeitos implícitos de obter score 10.

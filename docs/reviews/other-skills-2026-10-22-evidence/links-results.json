@@ -1,0 +1,25 @@
+{
+  "content_loss": {
+    "subset": true,
+    "fix": {
+      "fixed": true
+    },
+    "local_content_remains": false,
+    "backup_remains": false
+  },
+  "wrong_skill_link": {
+    "findings": []
+  },
+  "dangling": {
+    "findings": [
+      {
+        "level": "INFO",
+        "skill": "alpha",
+        "host": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-links-review-22Mm9L/host",
+        "msg": "não exposta neste host"
+      }
+    ],
+    "ensure_error": "EEXIST"
+  },
+  "legacy_md_error": "ENOENT"
+}

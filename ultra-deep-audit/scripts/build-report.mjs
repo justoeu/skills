@@ -8,9 +8,10 @@
  *     [--deps path/to/deps-latest.json] [--stack path/to/stack.json] \
  *     [--meta path/to/run-meta.json] [--app name] [--branch name] [--version ver] [--root .]
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
+import fs from "node:fs";
+import path from "node:path";
+import { auditState, processLock } from "./pack-contract.mjs";
+import { execSync } from "node:child_process";
 
 function arg(name, fallback = undefined) {
   const i = process.argv.indexOf(`--${name}`);
@@ -18,38 +19,47 @@ function arg(name, fallback = undefined) {
   return process.argv[i + 1] ?? fallback;
 }
 
-const findingsPath = arg('findings');
-const outPath = arg('out', 'report.html');
-const title = arg('title', 'Ultra-Deep Quality Audit');
-const mode = arg('mode', 'delta');
-const depsPath = arg('deps', '');
-const stackPath = arg('stack', '');
-const metaPathArg = arg('meta', '');
-const appArg = arg('app', '');
-const branchArg = arg('branch', '');
-const versionArg = arg('version', '');
-const rootArg = arg('root', '');
+const findingsPath = arg("findings");
+const outPath = arg("out", "report.html");
+let title = arg("title", "Ultra-Deep Quality Audit")
+  .replace(/(?:✅\s*)?(?:AUDIT |IMPLEMENTATION )?COMPLETE(?: \(100%\))?/g, "")
+  .trim();
+const mode = arg("mode", "delta");
+const depsPath = arg("deps", "");
+const stackPath = arg("stack", "");
+const metaPathArg = arg("meta", "");
+const appArg = arg("app", "");
+const branchArg = arg("branch", "");
+const versionArg = arg("version", "");
+const rootArg = arg("root", "");
 
 if (!findingsPath) {
-  console.error('Missing --findings');
+  console.error("Missing --findings");
   process.exit(1);
 }
 
-const raw = fs.readFileSync(findingsPath, 'utf8');
+const findingsDir = path.dirname(path.resolve(findingsPath));
+processLock(findingsDir);
+const raw = fs.readFileSync(findingsPath, "utf8");
 let findings = JSON.parse(raw);
 if (!Array.isArray(findings)) {
   findings = findings.findings ?? [];
 }
 for (const finding of findings) {
-  if (finding.line != null && (!Number.isSafeInteger(finding.line) || finding.line < 0)) {
-    throw new TypeError('Finding line must be a non-negative safe integer when provided');
+  if (
+    finding.line != null &&
+    (!Number.isSafeInteger(finding.line) || finding.line < 0)
+  ) {
+    throw new TypeError(
+      "Finding line must be a non-negative safe integer when provided",
+    );
   }
 }
 
 function loadJson(p) {
   if (!p || !fs.existsSync(p)) return null;
   try {
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
+    return JSON.parse(fs.readFileSync(p, "utf8"));
   } catch {
     return null;
   }
@@ -59,36 +69,53 @@ function sh(cmd, cwd) {
   try {
     return execSync(cmd, {
       cwd: cwd || process.cwd(),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch {
-    return '';
+    return "";
   }
 }
 
 function detectAppName(root) {
-  const pkg = loadJson(path.join(root, 'package.json'));
-  if (pkg?.name) return String(pkg.name).replace(/^@[^/]+\//, '');
-  for (const rel of ['Package.swift', 'Bundler.toml', 'pyproject.toml', 'Cargo.toml', 'go.mod', 'pom.xml', 'settings.gradle', 'settings.gradle.kts', 'Makefile']) {
+  const pkg = loadJson(path.join(root, "package.json"));
+  if (pkg?.name) return String(pkg.name).replace(/^@[^/]+\//, "");
+  for (const rel of [
+    "Package.swift",
+    "Bundler.toml",
+    "pyproject.toml",
+    "Cargo.toml",
+    "go.mod",
+    "pom.xml",
+    "settings.gradle",
+    "settings.gradle.kts",
+    "Makefile",
+  ]) {
     const p = path.join(root, rel);
     if (!fs.existsSync(p)) continue;
-    if (rel === 'go.mod') {
-      const m = fs.readFileSync(p, 'utf8').match(/^module\s+(\S+)/m);
-      if (m) return m[1].split('/').pop();
+    if (rel === "go.mod") {
+      const m = fs.readFileSync(p, "utf8").match(/^module\s+(\S+)/m);
+      if (m) return m[1].split("/").pop();
     }
-    if (rel === 'Cargo.toml' || rel === 'pyproject.toml' || rel === 'Bundler.toml') {
-      const m = fs.readFileSync(p, 'utf8').match(/^\s*name\s*=\s*["']([^"']+)["']/m);
+    if (
+      rel === "Cargo.toml" ||
+      rel === "pyproject.toml" ||
+      rel === "Bundler.toml"
+    ) {
+      const m = fs
+        .readFileSync(p, "utf8")
+        .match(/^\s*name\s*=\s*["']([^"']+)["']/m);
       if (m) return m[1];
     }
-    if (rel === 'Package.swift') {
-      const m = fs.readFileSync(p, 'utf8').match(/name:\s*"([^"]+)"/);
+    if (rel === "Package.swift") {
+      const m = fs.readFileSync(p, "utf8").match(/name:\s*"([^"]+)"/);
       if (m) return m[1];
     }
-    if (rel === 'Makefile') {
-      const m = fs.readFileSync(p, 'utf8').match(/^PROJECT\s*[?:]?=\s*(\S+)/m)
-        || fs.readFileSync(p, 'utf8').match(/^APP_NAME\s*[?:]?=\s*(\S+)/m)
-        || fs.readFileSync(p, 'utf8').match(/^NAME\s*[?:]?=\s*(\S+)/m);
+    if (rel === "Makefile") {
+      const m =
+        fs.readFileSync(p, "utf8").match(/^PROJECT\s*[?:]?=\s*(\S+)/m) ||
+        fs.readFileSync(p, "utf8").match(/^APP_NAME\s*[?:]?=\s*(\S+)/m) ||
+        fs.readFileSync(p, "utf8").match(/^NAME\s*[?:]?=\s*(\S+)/m);
       if (m) return m[1];
     }
   }
@@ -96,51 +123,70 @@ function detectAppName(root) {
 }
 
 function detectVersion(root, meta = {}) {
-  if (meta.version || meta.app_version) return String(meta.version || meta.app_version);
-  for (const rel of ['.env', '.env.example', 'Makefile', 'docker-compose.yml', 'docker-compose.app.yml']) {
+  if (meta.version || meta.app_version)
+    return String(meta.version || meta.app_version);
+  for (const rel of [
+    ".env",
+    ".env.example",
+    "Makefile",
+    "docker-compose.yml",
+    "docker-compose.app.yml",
+  ]) {
     const p = path.join(root, rel);
     if (!fs.existsSync(p)) continue;
-    const t = fs.readFileSync(p, 'utf8');
+    const t = fs.readFileSync(p, "utf8");
     const m =
       t.match(/^\s*APP_VERSION\s*=\s*["']?([^\s"']+)/m) ||
       t.match(/APP_VERSION:-\s*([^\s}]+)/) ||
       t.match(/^\s*VERSION\s*[?:]?=\s*(\S+)/m);
-    if (m?.[1] && m[1] !== 'latest') return m[1].replace(/^v/, '');
+    if (m?.[1] && m[1] !== "latest") return m[1].replace(/^v/, "");
   }
-  const tag = sh('git describe --tags --abbrev=0', root);
-  if (tag) return tag.replace(/^v/, '');
-  const pom = path.join(root, 'backend/pom.xml');
+  const tag = sh("git describe --tags --abbrev=0", root);
+  if (tag) return tag.replace(/^v/, "");
+  const pom = path.join(root, "backend/pom.xml");
   if (fs.existsSync(pom)) {
-    const m = fs.readFileSync(pom, 'utf8').match(/<version>([^<]+)<\/version>/);
+    const m = fs.readFileSync(pom, "utf8").match(/<version>([^<]+)<\/version>/);
     if (m) return m[1];
   }
-  const pkg = loadJson(path.join(root, 'frontend/package.json')) || loadJson(path.join(root, 'package.json'));
+  const pkg =
+    loadJson(path.join(root, "frontend/package.json")) ||
+    loadJson(path.join(root, "package.json"));
   if (pkg?.version) return String(pkg.version);
-  return 'unknown';
+  return "unknown";
 }
 
 // Auto-discover deps-latest.json / stack.json / run-meta.json next to FINDINGS
-const findingsDir = path.dirname(path.resolve(findingsPath));
 const depsDoc =
   loadJson(depsPath) ||
-  loadJson(path.join(findingsDir, 'deps-latest.json')) ||
+  loadJson(path.join(findingsDir, "deps-latest.json")) ||
   null;
 const stackDoc =
   loadJson(stackPath) ||
-  loadJson(path.join(findingsDir, 'stack.json')) ||
+  loadJson(path.join(findingsDir, "stack.json")) ||
   depsDoc?.stack ||
   null;
+const gate = auditState(findingsDir, findings);
+title += gate.complete
+  ? ` — ${gate.intent === "fix" ? "IMPLEMENTATION" : "AUDIT"} COMPLETE`
+  : " — INCOMPLETE / UNVERIFIED";
 const metaDoc =
   loadJson(metaPathArg) ||
-  loadJson(path.join(findingsDir, 'run-meta.json')) ||
+  loadJson(path.join(findingsDir, "run-meta.json")) ||
   {};
 
 const repoRoot = path.resolve(
-  rootArg || metaDoc.root || metaDoc.repo_root || path.join(findingsDir, '../../..'),
+  rootArg ||
+    metaDoc.root ||
+    metaDoc.repo_root ||
+    path.join(findingsDir, "../../.."),
 );
 // Prefer explicit cwd if it looks like a git root when default walk-up is wrong
-const gitRoot = sh('git rev-parse --show-toplevel', process.cwd()) || sh('git rev-parse --show-toplevel', repoRoot);
-const resolveRoot = gitRoot || (fs.existsSync(path.join(process.cwd(), '.git')) ? process.cwd() : repoRoot);
+const gitRoot =
+  sh("git rev-parse --show-toplevel", process.cwd()) ||
+  sh("git rev-parse --show-toplevel", repoRoot);
+const resolveRoot =
+  gitRoot ||
+  (fs.existsSync(path.join(process.cwd(), ".git")) ? process.cwd() : repoRoot);
 
 const appName =
   appArg ||
@@ -149,21 +195,21 @@ const appName =
   metaDoc.project ||
   metaDoc.project_name ||
   detectAppName(resolveRoot) ||
-  'unknown-app';
+  "unknown-app";
 
 const branchName =
   branchArg ||
   metaDoc.branch ||
   metaDoc.git_branch ||
-  sh('git rev-parse --abbrev-ref HEAD', resolveRoot) ||
-  'unknown-branch';
+  sh("git rev-parse --abbrev-ref HEAD", resolveRoot) ||
+  "unknown-branch";
 
 const headSha =
   metaDoc.head ||
   metaDoc.sha ||
   metaDoc.commit ||
-  sh('git rev-parse --short HEAD', resolveRoot) ||
-  '';
+  sh("git rev-parse --short HEAD", resolveRoot) ||
+  "";
 
 const appVersion = versionArg || detectVersion(resolveRoot, metaDoc);
 
@@ -178,81 +224,148 @@ const runMeta = {
 };
 
 const agents = {
-  Atlas: { emoji: '🏛️', color: '#6366f1', blurb: 'Architecture / layer boundaries' },
-  Sentinel: { emoji: '🛡️', color: '#ef4444', blurb: 'Security / Authz (fast|deep panel)' },
-  Lyra: { emoji: '🎭', color: '#fb7185', blurb: 'XSS — untrusted data becomes active HTML' },
-  Janus: { emoji: '🚪', color: '#e11d48', blurb: 'Routes mounted where they should not be' },
-  Moira: { emoji: '⏱️', color: '#0ea5e9', blurb: 'Rate limit: real control, client key, state leak' },
-  Sigil: { emoji: '🔑', color: '#facc15', blurb: 'Secrets committed in source' },
-  Basilisk: { emoji: '🐍', color: '#65a30d', blurb: 'SQL / NoSQL operator injection' },
-  Proteus: { emoji: '🫧', color: '#a78bfa', blurb: 'Prompt injection with a side effect' },
-  Mirage: { emoji: '🌫️', color: '#94a3b8', blurb: 'Invented or unused imports and dependencies' },
-  Nexus: { emoji: '⚡', color: '#f59e0b', blurb: 'N+1 / Performance' },
-  Hermes: { emoji: '⚔️', color: '#8b5cf6', blurb: 'Race / PBT' },
-  Hydra: { emoji: '🐉', color: '#06b6d4', blurb: 'Leak / Backpressure' },
-  Forge: { emoji: '🔨', color: '#84cc16', blurb: 'Residual dirty code / quality guild' },
-  Daedalus: { emoji: '🧩', color: '#a3e635', blurb: 'Cyclomatic / cognitive complexity' },
-  Echo: { emoji: '🔁', color: '#22d3ee', blurb: 'Duplicate code (T1–T4)' },
-  Laconic: { emoji: '✂️', color: '#eab308', blurb: 'Verbosity / noise' },
-  Mentor: { emoji: '📚', color: '#c084fc', blurb: 'Clean Code / patterns / BP' },
-  Prism: { emoji: '💎', color: '#ec4899', blurb: 'Deps / CVE / latest stable' },
-  Argus: { emoji: '👁️', color: '#14b8a6', blurb: 'Test quality' },
-  Artemis: { emoji: '🏹', color: '#f97316', blurb: 'Caça-bugs / classic correctness' },
-  Oracle: { emoji: '🔮', color: '#a855f7', blurb: 'Report / Roadmap' },
+  Atlas: {
+    emoji: "🏛️",
+    color: "#6366f1",
+    blurb: "Architecture / layer boundaries",
+  },
+  Sentinel: {
+    emoji: "🛡️",
+    color: "#ef4444",
+    blurb: "Security / Authz (fast|deep panel)",
+  },
+  Lyra: {
+    emoji: "🎭",
+    color: "#fb7185",
+    blurb: "XSS — untrusted data becomes active HTML",
+  },
+  Janus: {
+    emoji: "🚪",
+    color: "#e11d48",
+    blurb: "Routes mounted where they should not be",
+  },
+  Moira: {
+    emoji: "⏱️",
+    color: "#0ea5e9",
+    blurb: "Rate limit: real control, client key, state leak",
+  },
+  Sigil: {
+    emoji: "🔑",
+    color: "#facc15",
+    blurb: "Secrets committed in source",
+  },
+  Basilisk: {
+    emoji: "🐍",
+    color: "#65a30d",
+    blurb: "SQL / NoSQL operator injection",
+  },
+  Proteus: {
+    emoji: "🫧",
+    color: "#a78bfa",
+    blurb: "Prompt injection with a side effect",
+  },
+  Mirage: {
+    emoji: "🌫️",
+    color: "#94a3b8",
+    blurb: "Invented or unused imports and dependencies",
+  },
+  Nexus: { emoji: "⚡", color: "#f59e0b", blurb: "N+1 / Performance" },
+  Hermes: { emoji: "⚔️", color: "#8b5cf6", blurb: "Race / PBT" },
+  Hydra: { emoji: "🐉", color: "#06b6d4", blurb: "Leak / Backpressure" },
+  Forge: {
+    emoji: "🔨",
+    color: "#84cc16",
+    blurb: "Residual dirty code / quality guild",
+  },
+  Daedalus: {
+    emoji: "🧩",
+    color: "#a3e635",
+    blurb: "Cyclomatic / cognitive complexity",
+  },
+  Echo: { emoji: "🔁", color: "#22d3ee", blurb: "Duplicate code (T1–T4)" },
+  Laconic: { emoji: "✂️", color: "#eab308", blurb: "Verbosity / noise" },
+  Mentor: {
+    emoji: "📚",
+    color: "#c084fc",
+    blurb: "Clean Code / patterns / BP",
+  },
+  Prism: { emoji: "💎", color: "#ec4899", blurb: "Deps / CVE / latest stable" },
+  Argus: { emoji: "👁️", color: "#14b8a6", blurb: "Test quality" },
+  Artemis: {
+    emoji: "🏹",
+    color: "#f97316",
+    blurb: "Caça-bugs / classic correctness",
+  },
+  Oracle: { emoji: "🔮", color: "#a855f7", blurb: "Report / Roadmap" },
 };
 
 const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
 const sevColor = {
-  CRITICAL: '#7f1d1d',
-  HIGH: '#dc2626',
-  MEDIUM: '#d97706',
-  LOW: '#64748b',
+  CRITICAL: "#7f1d1d",
+  HIGH: "#dc2626",
+  MEDIUM: "#d97706",
+  LOW: "#64748b",
 };
 
 function roadmapBucket(f) {
-  if (f.severity === 'CRITICAL' || (f.severity === 'HIGH' && f.confidence === 'high')) return 'P0';
-  if (f.severity === 'HIGH') return 'P1';
-  if (f.severity === 'MEDIUM') return 'P2';
-  return 'P3';
+  if (
+    f.severity === "CRITICAL" ||
+    (f.severity === "HIGH" && f.confidence === "high")
+  )
+    return "P0";
+  if (f.severity === "HIGH") return "P1";
+  if (f.severity === "MEDIUM") return "P2";
+  return "P3";
 }
 
 function implementationStatus(f) {
-  const raw = String(f.status || 'open').toLowerCase();
-  if (raw === 'done' || raw === 'resolved') return 'RESOLVED';
-  if (raw === 'refuted') return 'REFUTED';
-  if (raw === 'accepted' || raw === 'accept') return 'ACCEPTED';
-  if (f.in_progress) return 'IN_PROGRESS';
-  return 'OPEN';
+  const raw = String(f.status || "open").toLowerCase();
+  if (raw === "done" || raw === "resolved") return "RESOLVED";
+  if (raw === "refuted") return "REFUTED";
+  if (raw === "accepted" || raw === "accept") return "ACCEPTED";
+  if (f.in_progress) return "IN_PROGRESS";
+  return "OPEN";
 }
 
 function isClosedImplementationStatus(status) {
-  return status === 'RESOLVED' || status === 'REFUTED' || status === 'ACCEPTED';
+  return status === "RESOLVED" || status === "REFUTED" || status === "ACCEPTED";
 }
 
-const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, total: findings.length, blocks: 0, done: 0, open: 0 };
+const counts = {
+  CRITICAL: 0,
+  HIGH: 0,
+  MEDIUM: 0,
+  LOW: 0,
+  total: findings.length,
+  blocks: 0,
+  done: 0,
+  open: 0,
+};
 const byAgent = {};
 for (const f of findings) {
   counts[f.severity] = (counts[f.severity] || 0) + 1;
-  if (f.blocks_pr) counts.blocks++;
+  if (f.blocks_pr && !isClosedImplementationStatus(implementationStatus(f)))
+    counts.blocks++;
   byAgent[f.agent] = (byAgent[f.agent] || 0) + 1;
   f._prio = roadmapBucket(f);
-  f.status = f.status || 'open';
+  f.status = f.status || "open";
   f._implementation_status = implementationStatus(f);
   if (isClosedImplementationStatus(f._implementation_status)) counts.done++;
   else counts.open++;
 }
 
-findings.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9));
+findings.sort(
+  (a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9),
+);
 
-const dataJson = JSON.stringify(findings).replace(/</g, '\\u003c');
-const depsJson = JSON.stringify(depsDoc || null).replace(/</g, '\\u003c');
-const stackJson = JSON.stringify(stackDoc || null).replace(/</g, '\\u003c');
-const metaJson = JSON.stringify(runMeta).replace(/</g, '\\u003c');
+const dataJson = JSON.stringify(findings).replace(/</g, "\\u003c");
+const depsJson = JSON.stringify(depsDoc || null).replace(/</g, "\\u003c");
+const stackJson = JSON.stringify(stackDoc || null).replace(/</g, "\\u003c");
+const metaJson = JSON.stringify(runMeta).replace(/</g, "\\u003c");
 const generatedAt = new Date().toISOString();
-const pageTitle = appName && appName !== 'unknown-app'
-  ? `${appName} · ${title}`
-  : title;
-const headShort = headSha ? ` · <code>${escapeHtml(headSha)}</code>` : '';
+const pageTitle =
+  appName && appName !== "unknown-app" ? `${appName} · ${title}` : title;
+const headShort = headSha ? ` · <code>${escapeHtml(headSha)}</code>` : "";
 
 const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -414,16 +527,19 @@ const html = `<!DOCTYPE html>
 <body>
 <header>
   <h1>${escapeHtml(title)}</h1>
+  <p>Audit verified: ${gate.audit_complete ? "YES" : "NO"} · Implementation verified: ${gate.implementation_complete ? "YES" : "NO"}</p>
+  <p>${escapeHtml(gate.errors.join("; "))}</p>
   <div class="app-line" aria-label="Target application, version and branch">
     <span class="pill">App <strong>${escapeHtml(appName)}</strong></span>
     <span class="pill">Version <code>${escapeHtml(appVersion)}</code></span>
     <span class="pill">Branch <code>${escapeHtml(branchName)}</code>${headShort}</span>
     <span class="pill">Mode <strong>${escapeHtml(runMeta.mode || mode)}</strong></span>
+    <span class="pill">Scope <strong>${escapeHtml(runMeta.scope || "selected roster / default mode scope")}</strong></span>
   </div>
   <div class="meta">
     Generated: ${generatedAt} ·
     SDD-17 · Skill <code>ultra-deep-audit</code> ·
-    Agents: ${Object.keys(agents).join(' · ')}
+    Agents: ${Object.keys(agents).join(" · ")}
   </div>
 </header>
 <div class="layout">
@@ -486,7 +602,7 @@ const html = `<!DOCTYPE html>
       </div>
       <p class="legend">
         <strong>Red→green:</strong> cada fix precisa de teste que falha antes e passa depois. / Each fix requires a test that fails before and passes after.<br/>
-        Atalhos / Shortcuts: <kbd>/</kbd> ${'foca busca / focus search'}.
+        Atalhos / Shortcuts: <kbd>/</kbd> ${"foca busca / focus search"}.
       </p>
     </div>
   </aside>
@@ -503,7 +619,7 @@ const html = `<!DOCTYPE html>
       <button class="btn" id="expandAll">Expandir / Expand</button>
       <button class="btn" id="collapseAll">Colapsar / Collapse</button>
       <button class="btn primary" id="exportJson">Export JSON filtrado / Filtered</button>
-      <button class="btn" id="exportDeps" ${depsDoc ? '' : 'hidden'}>Export deps map</button>
+      <button class="btn" id="exportDeps" ${depsDoc ? "" : "hidden"}>Export deps map</button>
       <span id="shown" class="meta" style="margin-left:auto"></span>
     </div>
     <div id="view-findings"></div>
@@ -534,7 +650,7 @@ function renderCards() {
   const c = { CRITICAL:0, HIGH:0, MEDIUM:0, LOW:0, blocks:0 };
   for (const f of FINDINGS) {
     c[f.severity] = (c[f.severity]||0)+1;
-    if (f.blocks_pr) c.blocks++;
+    if (f.blocks_pr&&!['RESOLVED','REFUTED','ACCEPTED'].includes(f._implementation_status)) c.blocks++;
   }
   const resolved = FINDINGS.filter(f => f._implementation_status === 'RESOLVED').length;
   const inProgress = FINDINGS.filter(f => f._implementation_status === 'IN_PROGRESS').length;
@@ -588,7 +704,7 @@ function filtered() {
     if (state.prio && f._prio !== state.prio) return false;
     if (state.conf && f.confidence !== state.conf) return false;
     if (state.status && f._implementation_status !== state.status) return false;
-    if (state.blocks === '1' && !f.blocks_pr) return false;
+    if (state.blocks === '1' && (!f.blocks_pr || ['RESOLVED','REFUTED','ACCEPTED'].includes(f._implementation_status))) return false;
     if (q) {
       const hay = [f.id, f.title, f.path, f.evidence, f.fix, f.impact, f.domain, f.agent,
         f.category, f.classic_pattern, f.language, f.exploit_scenario, f.failure_scenario]
@@ -795,6 +911,9 @@ function renderDeps() {
       \${(b.packages || []).length ? '<div class="chip-row">' + b.packages.map(p => '<span class="chip">'+esc(p)+'</span>').join('') + '</div>' : ''}
     </div>\`).join('');
 
+  const problems = (DEPS.packages || []).filter(p=>p.error||p.skipped);
+  const coverageIncomplete = problems.length || (sum.errors||0)>0 || (DEPS.runner_errors||[]).length;
+  const problemHtml = [...problems.map(p=>p.name+': '+(p.error||p.reason||'skipped')), ...(DEPS.runner_errors||[]).map(p=>p.ecosystem+': '+p.error)].map(p=>'<li>'+esc(p)+'</li>').join('');
   const allPkgs = (DEPS.packages || []).filter(p => !p.error && !p.skipped);
   const upToDate = allPkgs.filter(p => !p.outdated);
 
@@ -805,6 +924,7 @@ function renderDeps() {
       Policy: \${esc((DEPS.policy && DEPS.policy.exclude) || 'stable-only')} ·
       Generated: \${esc(DEPS.generated_at || '')}
     </p>
+    \${coverageIncomplete ? '<div class="box"><strong>Dependency coverage INCOMPLETE</strong><ul>'+problemHtml+'</ul></div>' : ''}
     <h3 style="margin:.5rem 0 .25rem;font-size:1rem">Stack detectada / Detected stack</h3>
     <div class="chip-row">\${chips.length ? chips.join('') : '<span class="muted">nenhuma</span>'}</div>
     <div class="cards" style="margin-bottom:1rem">
@@ -826,7 +946,7 @@ function renderDeps() {
         </tr>
       </thead>
       <tbody>\${tableRows}</tbody>
-    </table>\` : '<div class="box" style="margin-bottom:1rem">Todas as deps diretas estão no latest stable ✨</div>'}
+    </table>\` : (coverageIncomplete ? '<div class="box">Não foi possível determinar a atualidade de todas as dependências.</div>' : '<div class="box" style="margin-bottom:1rem">Consultas concluídas: nenhuma atualização aplicável pela política registrada.</div>')}
     <h3 style="margin:1rem 0 .5rem;font-size:1rem">Batches sugeridos / Suggested batches</h3>
     \${batchHtml || '<div class="muted">Nenhum batch</div>'}
     <h3 style="margin:1.25rem 0 .5rem;font-size:1rem">Já atualizadas / Already up to date (amostra / sample)</h3>
@@ -904,17 +1024,17 @@ renderFindings();
 
 function escapeHtml(s) {
   return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
-fs.writeFileSync(outPath, html, 'utf8');
+fs.writeFileSync(outPath, html, "utf8");
 
 // Persist resolved identity so TASKS/REPORT/re-runs stay consistent
-const metaOut = path.join(findingsDir, 'run-meta.json');
+const metaOut = path.join(findingsDir, "run-meta.json");
 try {
   const prev = loadJson(metaOut) || {};
   fs.writeFileSync(
@@ -927,15 +1047,16 @@ try {
       },
       null,
       2,
-    ) + '\n',
+    ) + "\n",
   );
 } catch {
   /* best-effort */
 }
 
-const depN = depsDoc?.summary?.outdated ?? depsDoc?.update_map?.suggestions?.length ?? 0;
+const depN =
+  depsDoc?.summary?.outdated ?? depsDoc?.update_map?.suggestions?.length ?? 0;
 console.log(
   `Wrote ${outPath} (app=${appName} branch=${branchName} · ${findings.length} findings` +
-    (depsDoc ? `, deps outdated=${depN}` : ', no deps-latest.json') +
+    (depsDoc ? `, deps outdated=${depN}` : ", no deps-latest.json") +
     `)`,
 );

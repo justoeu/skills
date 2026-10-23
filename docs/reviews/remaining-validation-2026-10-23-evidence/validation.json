@@ -1,0 +1,40 @@
+{
+  "node": {
+    "total": 284,
+    "passed": 284,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0
+  },
+  "total_passed": 311,
+  "formal_skills": {
+    "valid": 6,
+    "invalid": 0
+  },
+  "syntax": {
+    "javascript": 67,
+    "python": 13,
+    "shell_harness": 1,
+    "shell_external_changed": 1
+  },
+  "links": {
+    "drift": 0,
+    "warn": 0,
+    "missing": 0
+  },
+  "diff_check": "passed",
+  "sonar_swiftpm_real": "passed_before_and_after_upgrade",
+  "sonar_xcresult_real": "passed",
+  "global_xcode_selection": "/Library/Developer/CommandLineTools",
+  "evidence_check": {
+    "source_hashes_verified": 172,
+    "external_hashes_verified": 1,
+    "markdown_local_links_verified": 42,
+    "status": "passed"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "source": "~/Developer/Workspace/app-gp/deployments/scripts/runtime-images-supply-chain-gate.sh",
+  "sha256": "2feb68fdc39c9d3f206ec2df2edbed7600b1770c8f028079cb3853a12ee7155d",
+  "fixture": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/runtime-preflight-independent-h3hnrayy",
+  "results": [
+    {
+      "case": "missing_tag",
+      "exit": 1,
+      "old_artifact_preserved": false,
+      "external_tool_calls": 0,
+      "diagnostic": "RUNTIME_IMAGE_PUBLISH_TAG is required in publish mode"
+    },
+    {
+      "case": "missing_compose",
+      "exit": 1,
+      "old_artifact_preserved": false,
+      "external_tool_calls": 0,
+      "diagnostic": "missing compose file: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/runtime-preflight-independent-h3hnrayy/absent.yml"
+    },
+    {
+      "case": "read_only_missing_compose",
+      "exit": 1,
+      "old_artifact_preserved": true,
+      "external_tool_calls": 0,
+      "diagnostic": "missing compose file: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/runtime-preflight-independent-h3hnrayy/absent.yml"
+    }
+  ]
+}

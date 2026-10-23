@@ -28,12 +28,14 @@ def parse_lcov(text):
             current = line[3:]
             files.setdefault(current, {})
         elif line.startswith("DA:") and current is not None:
-            number, _, hits = line[3:].partition(",")
+            fields = line[3:].split(',')
             try:
+                number, hits = int(fields[0]), int(fields[1])
+                if number <= 0 or hits < 0: continue
                 # Uma linha pode aparecer mais de uma vez (genéricos, inlining).
                 # Somar preserva "foi coberta" em vez de deixar o último ganhar.
-                files[current][int(number)] = files[current].get(int(number), 0) + int(hits or 0)
-            except ValueError:
+                files[current][number] = files[current].get(number, 0) + hits
+            except (ValueError, IndexError):
                 continue
         elif line == "end_of_record":
             current = None
@@ -49,23 +51,29 @@ def main():
     files = parse_lcov(lcov_path.read_text(errors="replace"))
 
     root = ET.Element("coverage", version="1")
-    written = 0
+    canonical = {}
     for path, lines in sorted(files.items()):
+        if not lines: continue
         absolute = Path(path)
         if not absolute.is_absolute():
-            absolute = (base / absolute).resolve()
+            absolute = base / absolute
+        absolute = absolute.resolve()
         try:
             relative = absolute.relative_to(base)
         except ValueError:
             # Fora do repositório: dependência baixada, SDK do sistema. Um
             # caminho que não casa faz o SonarQube rejeitar o arquivo inteiro.
             continue
-        element = ET.SubElement(root, "file", path=str(relative))
+        target = canonical.setdefault(str(relative), {})
+        for number, hits in lines.items():
+            target[number] = target.get(number, 0) + hits
+    written = len(canonical)
+    for relative, lines in sorted(canonical.items()):
+        element = ET.SubElement(root, "file", path=relative)
         for number, hits in sorted(lines.items()):
             ET.SubElement(element, "lineToCover",
                           lineNumber=str(number),
                           covered="true" if hits > 0 else "false")
-        written += 1
 
     if written == 0:
         print(f"nenhum arquivo do LCOV caiu dentro de {base}", file=sys.stderr)

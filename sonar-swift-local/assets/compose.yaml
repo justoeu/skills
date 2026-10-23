@@ -46,7 +46,9 @@ services:
       - "127.0.0.1:${SONAR_LOCAL_PORT:-9100}:9000"
     volumes:
       - sonar_data:/opt/sonarqube/data
-      - sonar_extensions:/opt/sonarqube/extensions
+      # Plugins belong to the versioned image. Its inherited VOLUME creates an
+      # anonymous mount: use up --renew-anon-volumes when recreating/upgrading.
+      # Legacy named extensions volumes are left untouched.
       - sonar_logs:/opt/sonarqube/logs
     healthcheck:
       test: [CMD-SHELL, 'curl -fsS http://localhost:9000/api/system/status | grep -q ''"status":"UP"''']
@@ -62,5 +64,4 @@ services:
 volumes:
   postgres_data:
   sonar_data:
-  sonar_extensions:
   sonar_logs:

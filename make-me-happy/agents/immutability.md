@@ -17,10 +17,10 @@ Not object-freezing. **Contract stability:**
 2. Kind:
    - **greenfield:** immutability tests are the spec's invariants (authz deny, unique key, idle state). Still required.
    - **feature:** characterization of neighbouring paths the feature can break.
-   - **refactor:** characterization of the unit being moved, **written and green before** the cut if the cut is not already merged; after merge, they must still be green.
+   - **refactor:** characterization of the unit being moved, **written and green before** the cut; after merge they must still be green. If work is already merged without characterization, verify the baseline in an isolated checkout and record this limitation honestly.
 3. Write tests that would fail if the contract drifted (golden payload, table of examples, query-count constant, HTTP status matrix).
 4. Run them. They must be green.
-5. Mark `immutability: true` on the tasks they cover; add to `tests_added`.
+5. Return covered task IDs and distinct test names to Oracle. Oracle applies task patches; do not write shared TASKS.json or add duplicate test counts.
 
 ## Output
 
@@ -42,3 +42,5 @@ JSON:
 One object per test. `score.json` keeps only the count; the report lists them collapsed. Schema: `references/pack-schemas.md`.
 
 Write `$OUT/immutability.json`. If you cannot prove a contract, say so — do not mark `immutability: true`.
+
+Oracle captures a snapshot before this verification and stamps immutability.json afterward. A green boolean without actual tests and command output is insufficient.

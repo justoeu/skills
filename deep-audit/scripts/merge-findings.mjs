@@ -8,13 +8,14 @@
  * - Normaliza para o schema canônico (lib-findings.mjs).
  * - Dedupe por (path, line, lente, categoria) mantendo a maior severidade e
  *   preferindo o achado verificado por painel.
- * - Atribui ids estáveis `<LENTE>-<AGT>-NNN`.
+ * - Atribui ids estáveis `<LENTE>-<AGT>-HASH`.
  * - **Preserva desfechos de uma rodada anterior** no mesmo pack: um `resolvido`
  *   com teste, um `refutado` com evidência e um `aceito` completo sobrevivem ao
  *   re-merge; qualquer rótulo inválido é rebaixado para `aberto`.
  * - Calcula `blocks_pr`.
  */
 import fs from 'node:fs';
+import { acquireLock, readJson, writeJson, findingsArray, findingHash, identity, stableId, metaFor, hash, fileHash } from './pack-state.mjs';
 import path from 'node:path';
 import {
   AGENTS,
@@ -37,15 +38,11 @@ if (!dir) {
   process.exit(1);
 }
 
+const release = acquireLock(dir);
+metaFor(dir);
 const findingsPath = path.join(dir, 'FINDINGS.json');
 
-function loadJson(p) {
-  try {
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
-  } catch {
-    return null;
-  }
-}
+function loadJson(p) { return fs.existsSync(p) ? readJson(p) : null; }
 
 function loadAgentFiles() {
   const files = fs
@@ -55,13 +52,10 @@ function loadAgentFiles() {
   const all = [];
   const sources = [];
   for (const f of files) {
-    const doc = loadJson(path.join(dir, f));
-    if (doc == null) {
-      console.warn(`merge-findings: ignorando ${f} (JSON inválido)`);
-      continue;
-    }
-    const arr = Array.isArray(doc) ? doc : doc.findings || doc.verified || [];
-    sources.push({ file: f, count: arr.length });
+    const bytes = fs.readFileSync(path.join(dir, f));
+    const doc = JSON.parse(bytes.toString('utf8'));
+    const arr = findingsArray(doc, f);
+    sources.push({ file: f, count: arr.length, hash: hash(bytes) });
     for (const item of arr) {
       if (item && typeof item === 'object' && (item.title || item.path)) {
         all.push({ ...item, _src: f });
@@ -118,33 +112,26 @@ const CARRY = [
   'label_audit',
   'progress',
   'owner',
+  'review',
+  'in_progress',
+  'disposition_evidence',
 ];
 
 for (const f of merged) {
-  const prev = (f.id && prevById.get(f.id)) || prevByKey.get(dedupeKey(f));
-  if (!prev) continue;
-  if (prev.id) f.id = prev.id;
+  const prev = prevByKey.get(dedupeKey(f));
+  f.id = stableId(f);
+  if (!prev || findingHash(prev) !== findingHash(f)) { f.status = 'open'; continue; }
   for (const key of CARRY) {
     if (prev[key] != null) f[key] = prev[key];
   }
   f.status = normalizeStatus(f.status);
 }
 
-// ---- ids --------------------------------------------------------------------
-const used = new Set(merged.map((f) => f.id).filter(Boolean));
-const counters = {};
-for (const f of merged) {
-  if (f.id && /^[A-Z0-9]+-[A-Z]+-\d{3}$/.test(f.id)) continue;
-  const pref = idPrefix(f);
-  counters[pref] = counters[pref] || 0;
-  let id;
-  do {
-    counters[pref] += 1;
-    id = `${pref}-${String(counters[pref]).padStart(3, '0')}`;
-  } while (used.has(id));
-  used.add(id);
-  f.id = id;
-}
+// Missing producer output cannot silently erase a previously known finding.
+const identities = new Set(merged.map(identity));
+for (const prior of previous) if (!identities.has(identity(prior))) merged.push({ ...prior, detector_missing: true });
+for (const f of merged) f.id = stableId(f);
+if (new Set(merged.map(f => f.id)).size !== merged.length) throw new Error('colisão de identidade: consolidação recusada');
 
 // ---- política blocks_pr + auditoria de rótulo -------------------------------
 const labelErrors = [];
@@ -175,15 +162,18 @@ merged.sort(
     String(a.id).localeCompare(String(b.id)),
 );
 
-fs.writeFileSync(findingsPath, JSON.stringify(merged, null, 2) + '\n');
+for (const source of sources) if (fileHash(path.join(dir, source.file)) !== source.hash) throw new Error('produtor mudou durante a consolidação; tente novamente');
+writeJson(findingsPath, merged);
 
 const metaPath = path.join(dir, 'run-meta.json');
-const meta = loadJson(metaPath) || {};
+const meta = metaFor(dir);
+meta.merge_inputs_hash = hash(sources.map(s => [s.file, s.hash]));
 meta.merged_at = nowStamp();
 meta.agent_sources = sources;
 meta.raw_findings = raw.length;
 meta.unique_findings = merged.length;
-if (Object.keys(meta).length) fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n');
+writeJson(metaPath, meta);
+release();
 
 const roster = [...new Set(merged.map((f) => f.agent))]
   .map((a) => `${AGENTS[a]?.emoji || '•'} ${a}`)

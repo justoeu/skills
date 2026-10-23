@@ -1,0 +1,13 @@
+✔ invalid agent preserves prior aggregate and reports failure (87.792833ms)
+✔ single object agent output follows the documented surface schema (89.61575ms)
+✔ assigned IDs are reserved before generating missing IDs (103.798375ms)
+✔ directory scope measures actual source and invalid scope fails strict (168.598375ms)
+✔ legacy progress never advertises verified completion (444.742875ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 992.694

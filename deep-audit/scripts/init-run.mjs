@@ -12,26 +12,31 @@
  *   full  → depth=deep,  effort=max      ← --full JÁ é o teto
  *   depth=deep sem --effort → effort=max
  *
- * Escreve <out>/run-meta.json e imprime as variáveis do pack em shell-eval.
+ * Escreve <out>/run-meta.json e emite JSON estruturado; nunca use eval.
  */
 import fs from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { writeJson, metaFor, expectedStages, git as checkedGit, sourceState, acquireLock } from './pack-state.mjs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { cliArg, cliFlag, nowStamp } from './lib-findings.mjs';
 
-const root = path.resolve(cliArg('root', '.'));
-const mode = cliFlag('full') ? 'full' : (cliArg('mode', 'delta') === 'full' ? 'full' : 'delta');
+const root = fs.realpathSync(path.resolve(cliArg('root', '.')));
+const resumeMeta = cliArg('resume') ? metaFor(path.resolve(root, cliArg('resume'))) : null;
+const mode = cliFlag('full') ? 'full' : cliArg('mode', resumeMeta?.mode || 'delta');
+if (!['delta', 'full'].includes(mode)) throw new Error('mode inválido');
 const only = cliArg('only', '');
 const scope = cliArg('scope', '');
 const base = cliArg('base', '');
 
-let depth = cliArg('depth', '');
+let depth = cliArg('depth', resumeMeta?.depth || '');
 if (!depth) depth = mode === 'full' ? 'deep' : 'fast';
-if (!['fast', 'deep'].includes(depth)) depth = 'fast';
+if (!['fast', 'deep'].includes(depth)) throw new Error('depth inválido');
 
-let effort = cliArg('effort', '');
+let effort = cliArg('effort', resumeMeta?.effort || '');
 if (depth === 'deep') {
-  if (!['medium', 'high', 'max'].includes(effort)) effort = 'max';
+  if (!effort) effort = 'max';
+  if (!['medium', 'high', 'max'].includes(effort)) throw new Error('effort inválido');
 } else {
   effort = 'n/a';
 }
@@ -43,6 +48,7 @@ function git(...args) {
 
 function defaultBase() {
   if (base) return base;
+  if (resumeMeta) return resumeMeta.base || '';
   for (const cand of ['origin/main', 'origin/master', 'main', 'master']) {
     if (git('rev-parse', '--verify', '--quiet', cand)) return cand;
   }
@@ -50,8 +56,13 @@ function defaultBase() {
 }
 
 const resolvedBase = defaultBase();
-const head = git('rev-parse', '--short', 'HEAD');
-const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
+const head = git('rev-parse', 'HEAD');
+const hasGit = Boolean(head);
+if (!hasGit && ((!cliFlag('no-git') && resumeMeta?.git !== false) || mode !== 'full')) throw new Error('sem HEAD Git: use --full --no-git explicitamente');
+if (mode === 'delta' && !resolvedBase) throw new Error('delta sem base: passe --base válido ou use --full');
+const baseCommit = resolvedBase ? checkedGit(root, ['rev-parse', '--verify', `${resolvedBase}^{commit}`]) : null;
+if (baseCommit) checkedGit(root, ['merge-base', baseCommit, 'HEAD']);
+const branch = git('rev-parse', '--abbrev-ref', 'HEAD') || 'NO_GIT';
 const date = new Date().toISOString().slice(0, 10);
 
 const tryRead = (file) => {
@@ -145,64 +156,38 @@ function detectVersion() {
 }
 const { version, version_source: versionSource } = detectVersion();
 
-const outDir = path.resolve(
-  root,
-  cliArg('out', path.join('docs', 'audits', 'deep-audit', `${date}-${mode}`)),
-);
-fs.mkdirSync(outDir, { recursive: true });
-fs.mkdirSync(path.join(outDir, 'sec-deep', 'votes'), { recursive: true });
-
-const changedFiles =
-  mode === 'delta' && resolvedBase
-    ? git('diff', '--name-only', `${resolvedBase}...HEAD`).split('\n').filter(Boolean)
+const runId = randomUUID();
+const resume = cliArg('resume', '');
+if (resume) {
+  const out = path.resolve(root, resume), meta = metaFor(out);
+  if (meta.root !== root || meta.branch !== branch || meta.head !== (head || null) || meta.mode !== mode || meta.depth !== depth || meta.effort !== effort ||
+      (base && meta.base_commit !== baseCommit) || (only && JSON.stringify(meta.only) !== JSON.stringify(only.split(','))) ||
+      (scope && JSON.stringify(meta.scope) !== JSON.stringify(scope.split(',')))) throw new Error('retomada incompatível: root/branch/HEAD/base/escopo mudou; crie nova run');
+  process.stdout.write(JSON.stringify({ out, ...meta, current: sourceState(meta, out) }) + '\n');
+} else {
+  const outDir = path.resolve(root, cliArg('out', path.join('docs', 'audits', 'deep-audit', `${date}-${mode}-${runId}`)));
+  if (fs.existsSync(outDir) && fs.readdirSync(outDir).length) throw new Error('OUT já existe e não está vazio; use --resume explicitamente ou outro OUT');
+  const selected = only ? only.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const required = expectedStages(selected, depth);
+  const changedFiles = mode === 'delta'
+    ? [...new Set([...checkedGit(root, ['diff', '--name-only', `${baseCommit}...HEAD`]).split('\n'), ...checkedGit(root, ['diff', '--name-only', 'HEAD']).split('\n')])].filter(Boolean)
     : [];
-
-const metaPath = path.join(outDir, 'run-meta.json');
-let history = [];
-if (fs.existsSync(metaPath)) {
-  try {
-    history = JSON.parse(fs.readFileSync(metaPath, 'utf8')).history || [];
-  } catch {
-    history = [];
-  }
+  const meta = {
+    schema_version: 2, run_id: runId, generated_at: nowStamp(), root, git: hasGit,
+    app: app || null, version: version || null, version_source: versionSource || null,
+    mode, depth, effort, base: resolvedBase || null, base_commit: baseCommit,
+    head: head || null, branch, only: selected,
+    scope: scope ? scope.split(',').map(s => s.trim()).filter(Boolean) : [],
+    changed_files: changedFiles, changed_file_count: changedFiles.length,
+    expected_stages: required, stages: {},
+    legacy_source: cliArg('legacy', '') ? path.resolve(cliArg('legacy')) : null,
+    history: [{ at: nowStamp(), event: 'init' }],
+  };
+  fs.mkdirSync(outDir, { recursive: true });
+  const release = acquireLock(outDir);
+  if (fs.readdirSync(outDir).some(name => name !== '.writer-lock')) throw new Error('OUT deixou de estar vazio; outra inicialização venceu');
+  fs.mkdirSync(path.join(outDir, 'sec-deep', 'votes'), { recursive: true });
+  writeJson(path.join(outDir, 'run-meta.json'), meta);
+  release();
+  process.stdout.write(JSON.stringify({ out: outDir, ...meta }) + '\n');
 }
-history.unshift({ at: nowStamp(), mode, depth, effort, head, event: 'init' });
-
-const meta = {
-  generated_at: nowStamp(),
-  root,
-  app: app || null,
-  version: version || null,
-  version_source: versionSource || null,
-  mode,
-  depth,
-  effort,
-  base: resolvedBase || null,
-  head: head || null,
-  branch: branch || null,
-  only: only ? only.split(',').map((s) => s.trim()).filter(Boolean) : [],
-  scope: scope ? scope.split(',').map((s) => s.trim()).filter(Boolean) : [],
-  changed_files: changedFiles,
-  changed_file_count: changedFiles.length,
-  history: history.slice(0, 50),
-};
-fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n');
-
-// shell-eval: eval "$(node init-run.mjs --full)"
-const lines = [
-  `OUT=${JSON.stringify(outDir)}`,
-  `APP=${JSON.stringify(app || '')}`,
-  `VERSION=${JSON.stringify(version || '')}`,
-  `BRANCH=${JSON.stringify(branch || '')}`,
-  `MODE=${mode}`,
-  `DEPTH=${depth}`,
-  `EFFORT=${effort}`,
-  `BASE=${JSON.stringify(resolvedBase)}`,
-  `SEC_DIR=${JSON.stringify(path.join(outDir, 'sec-deep'))}`,
-];
-process.stdout.write(lines.join('\n') + '\n');
-console.error(
-  `init-run: app=${app || 'n/a'} v=${version || 'n/a'}${versionSource ? ` (${versionSource})` : ''} ` +
-    `branch=${branch || 'n/a'} mode=${mode} depth=${depth} effort=${effort} base=${resolvedBase || 'n/a'} ` +
-    `${mode === 'delta' ? `changed=${changedFiles.length} ` : ''}→ ${outDir}`,
-);

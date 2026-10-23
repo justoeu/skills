@@ -1,0 +1,11 @@
+✔ partial dependency reports cannot claim coverage; real empty scan can (2774.180834ms)
+✔ delta initialization rejects an unresolved Git base without creating a run (843.069417ms)
+✔ concurrent binds cannot both succeed while losing a binding (1101.071792ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4910.814625

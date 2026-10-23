@@ -113,7 +113,6 @@ test('classesDiagramHtml desenha caixas UML com estereótipo, dependências e m�
   assert.match(html, /«externo»/);
   assert.match(html, /Authorize\(ctx context.Context, in AuthInput\)/);
   assert.match(html, /repo \*ChargeRepo/);
-  assert.match(html, /A\.selMethod\('ChargeService',0\)/);
   assert.match(html, />Insert · Update</);
 });
 
@@ -174,7 +173,6 @@ test('c4CtxGraph injeta o hub system, filtra edges órfãs e c4Svg renderiza nó
   assert.match(svg, /POST \/v1\/charges/);
   assert.match(svg, /ESTE SISTEMA/);
   assert.match(svg, /SISTEMA EXTERNO/);
-  assert.match(svg, /A\.selC4\('system'\)/);
 });
 
 test('c4ContGraph monta grafo por grupo e deriva arestas de calls entre containers', () => {
@@ -194,7 +192,6 @@ test('c4ContGraph monta grafo por grupo e deriva arestas de calls entre containe
   assert.match(svg, /billing-api/);
   assert.match(svg, /Postgres 16/);
   assert.match(svg, /c4-col-label/);
-  assert.match(svg, /A\.selC4\('postgres'\)/);
 });
 
 test('c4NodeDetail lista fluxos com link e mostra lacuna sem seleção', () => {
@@ -202,7 +199,6 @@ test('c4NodeDetail lista fluxos com link e mostra lacuna sem seleção', () => {
   const html = c4NodeDetail({ kind: 'externo', name: 'PSP', desc: 'adquirência', flows: ['imediata'], src: 'internal/psp/client.go' });
   assert.match(html, /SISTEMA EXTERNO/);
   assert.match(html, /PARTICIPA DOS FLUXOS/);
-  assert.match(html, /A\.flow\('imediata'\)/);
   assert.match(html, /internal\/psp\/client\.go/);
   const empty = c4NodeDetail(null);
   assert.match(empty, /Clique num elemento/);

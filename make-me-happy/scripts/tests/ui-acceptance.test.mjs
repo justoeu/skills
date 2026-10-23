@@ -47,7 +47,7 @@ test('scope: detecta UI por diff, por payloads kind ui e acha runner', () => {
     'payloads.json': [],
   });
   const scope2 = buildUiScope(repo, backendOnly, {});
-  assert.equal(scope2.ui_touched, false);
+  assert.equal(scope2.ui_touched, null, "cached diff without a valid Git base cannot prove backend-only");
   assert.equal(scope2.how, null);
 });
 
@@ -107,8 +107,8 @@ test('drive: driver gerado cobre ações/asserts; runDrive com runner fake produ
     // simula o driver headless: lê SPEC e escreve OUT_JSON
     const specRead = JSON.parse(fs.readFileSync(opts.env.SPEC, 'utf8'));
     const journey = {
-      screen: specRead.screen, mode: 'drive', steps: [{ n: 1, action: 'goto', ok: true }],
-      console_errors: [{ text: 'TypeError: x', step: 1 }], network_errors: [],
+      execution_id:opts.env.EXECUTION_ID, screen: specRead.screen, mode: 'drive', steps: [{ n: 1, action: 'goto', ok: true }],
+      console_errors: [], network_errors: [],
       screenshots: [], assertions: { ok: 1, total: 1, failed: [] },
       verdict: 'APPROVE', at: NOW.toISOString(),
     };
@@ -119,7 +119,7 @@ test('drive: driver gerado cobre ações/asserts; runDrive com runner fake produ
   const r = await runDrive(out, { specPath: spec, ensureFn: () => ({ ready: true }), spawnFn: fakeRunner });
   assert.equal(r.ok, true);
   assert.equal(r.journey.screen, 'checkout');
-  assert.equal(r.journey.console_errors.length, 1);
+  assert.equal(r.journey.console_errors.length, 0);
   // credenciais passam por env, nunca pelo spec
   assert.equal(fs.readFileSync(spec, 'utf8').includes('password'), false);
 });

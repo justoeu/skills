@@ -1,0 +1,103 @@
+{
+  "status": "passed",
+  "steps": [
+    {
+      "step": "swift-version",
+      "exit": 0
+    },
+    {
+      "step": "xcode-version",
+      "exit": 0
+    },
+    {
+      "step": "git-0",
+      "exit": 0
+    },
+    {
+      "step": "git-1",
+      "exit": 0
+    },
+    {
+      "step": "git-2",
+      "exit": 0
+    },
+    {
+      "step": "git-3",
+      "exit": 0
+    },
+    {
+      "step": "git-4",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-db",
+      "exit": 0
+    },
+    {
+      "step": "image-1",
+      "exit": 0
+    },
+    {
+      "step": "image-2",
+      "exit": 0
+    },
+    {
+      "step": "start-legacy",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-project",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-idempotent",
+      "exit": 0
+    },
+    {
+      "step": "scan-before-upgrade",
+      "exit": 0
+    },
+    {
+      "step": "upgrade",
+      "exit": 0
+    },
+    {
+      "step": "marker",
+      "exit": 0
+    },
+    {
+      "step": "scan-after-upgrade",
+      "exit": 0
+    },
+    {
+      "step": "plugin-checksum",
+      "exit": 0
+    }
+  ],
+  "image_base": "sonarqube-swift:26.9.0.129388-apple0.5.1",
+  "plugin_checksum": "c27432e52a6ebc698b77ad42bf3d98f5e34fb20d3f398799bda74fbc008f8612  /opt/sonarqube/extensions/plugins/sonar-apple-plugin-0.5.1.jar",
+  "upgrade_marker": "2",
+  "before": "Quality Gate: OK (consultivo); análise 8631d19e-10af-4507-9947-7a2b1d419638; 14 linhas.\nAnalisado: main @ 572bee08dc92\nCobertura: 66.7%\nPainel: http://127.0.0.1:49465/dashboard?id=harness-smoke\nArtefatos: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-swift-5cyl137g\n",
+  "after": "Quality Gate: OK (consultivo); análise e5faf293-85d0-488c-b7ab-1f8af224bc5c; 14 linhas.\nAnalisado: main @ 572bee08dc92\nCobertura: 66.7%\nPainel: http://127.0.0.1:49465/dashboard?id=harness-smoke\nArtefatos: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-swift-syez9o6u\n",
+  "toolchain": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)\nTarget: arm64-apple-macosx26.0",
+  "coverage": [
+    {
+      "analysis_id": "8631d19e-10af-4507-9947-7a2b1d419638",
+      "lines": 12,
+      "covered": 8,
+      "expected_percent": 66.6667,
+      "sonar_percent": 66.7
+    },
+    {
+      "analysis_id": "e5faf293-85d0-488c-b7ab-1f8af224bc5c",
+      "lines": 12,
+      "covered": 8,
+      "expected_percent": 66.6667,
+      "sonar_percent": 66.7
+    }
+  ],
+  "limits": [
+    "Cobertura SwiftPM real via LLVM; não usa .xcresult de um projeto Xcode.",
+    "Imagem derivada usa o mesmo plugin; upgrade prova visibilidade de conteúdo e persistência de dados, não compatibilidade de uma nova versão do plugin."
+  ]
+}

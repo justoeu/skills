@@ -1,0 +1,66 @@
+{
+  "pass": true,
+  "root": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn",
+  "events": [
+    {
+      "name": "init-run",
+      "status": 0,
+      "stderr": "",
+      "stdout": "{\"out\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn/docs/audits/deep-audit/2026-10-23-full-392d30a5-eed2-4fe2-a190-9756ec93b052\",\"schema_version\":2,\"run_id\":\"392d30a5-eed2-4fe2-a190-9756ec93b052\",\"generated_at\":\"2026-10-23 02:19:51 UTC\",\"root\":\"~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn\",\"git\":true,\"app\":\"arithmetic-only\",\"version\":\"1.0.0\",\"version_source\":\"package.json\",\"mode\":\"full\",\"depth\":\"deep\",\"effort\":\"max\",\"base\":\"main\",\"base_commit\":\"0c8a1120b5d1e5b2de8bd8611beeb6901474ec81\",\"head\":\"0c8a1120b5d1e5b2de8bd8611beeb6901474ec81\",\"branch\":\"main\",\"only\":[\"security\"],\"scope\":[],\"changed_files\":[],\"changed_file_count\":0,\"expected_stages\":[\"security\",\"deps\",\"security_inventory\",\"security_hunters\"],\"stages\":{},\"legacy_source\":null,\"history\":[{\"at\":\"2026-10-23 02:19:51 UTC\",\"event\":\"init\"}]}\n"
+    },
+    {
+      "name": "run-state",
+      "status": 0,
+      "stderr": "",
+      "stdout": "{\"schema_version\":2,\"run_id\":\"392d30a5-eed2-4fe2-a190-9756ec93b052\",\"snapshot_id\":\"129575c5-ca69-458f-814b-38692d415fdf\",\"head\":\"0c8a1120b5d1e5b2de8bd8611beeb6901474ec81\",\"branch\":\"main\",\"source_hash\":\"a7fed24af4b5b9820e07ed04c649a72cfc85dfe9687f10bd6ad8521581ea6870\",\"created_at\":\"2026-10-23T02:19:52.245Z\"}\n"
+    },
+    {
+      "name": "run-state",
+      "status": 0,
+      "stderr": "",
+      "stdout": "etapa concluída\n"
+    },
+    {
+      "name": "run-state",
+      "status": 0,
+      "stderr": "",
+      "stdout": "etapa concluída\n"
+    },
+    {
+      "name": "sec-verify",
+      "status": 0,
+      "stderr": "",
+      "stdout": "sec-verify: 0/0; verified\n"
+    },
+    {
+      "name": "run-state",
+      "status": 0,
+      "stderr": "",
+      "stdout": "etapa concluída\n"
+    },
+    {
+      "name": "check-deps-latest",
+      "status": 0,
+      "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn/docs/audits/deep-audit/2026-10-23-full-392d30a5-eed2-4fe2-a190-9756ec93b052/deps-latest.json findings→ ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn/docs/audits/deep-audit/2026-10-23-full-392d30a5-eed2-4fe2-a190-9756ec93b052/agent-prisma-freshness.json\n",
+      "stdout": ""
+    },
+    {
+      "name": "run-state",
+      "status": 0,
+      "stderr": "",
+      "stdout": "etapa concluída\n"
+    },
+    {
+      "name": "merge-findings",
+      "status": 0,
+      "stderr": "",
+      "stdout": "merge-findings: 0 cru → 0 único (2 agentes) → ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-zero-independent-N5nljn/docs/audits/deep-audit/2026-10-23-full-392d30a5-eed2-4fe2-a190-9756ec93b052/FINDINGS.json\n"
+    },
+    {
+      "name": "lint-findings",
+      "status": 0,
+      "stderr": "",
+      "stdout": "{\"status\":\"ok\",\"gate\":\"audit\",\"counts\":{\"total\":0,\"open\":0,\"resolved\":0,\"refuted\":0,\"accepted\":0,\"blocks\":0,\"bySeverity\":{\"CRITICAL\":0,\"HIGH\":0,\"MEDIUM\":0,\"LOW\":0,\"INFO\":0},\"byLens\":{},\"byAgent\":{},\"openHigh\":0}}\n"
+    }
+  ]
+}

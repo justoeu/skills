@@ -1,0 +1,81 @@
+{
+  "syntax": [
+    {
+      "file": "build-report.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "check-deps-latest.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "detect-stack.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "init-run.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "lib-findings.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "lint-findings.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "merge-findings.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "review-verify.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "sec-verify.mjs",
+      "status": 0,
+      "error": ""
+    },
+    {
+      "file": "sync-progress.mjs",
+      "status": 0,
+      "error": ""
+    }
+  ],
+  "detect": {
+    "status": 0,
+    "stdout": "{\n  \"root\": \"/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/empty-stack\",\n  \"languages\": [\n    \"javascript\"\n  ],\n  \"frameworks\": [],\n  \"package_managers\": [\n    \"npm\"\n  ],\n  \"ecosystems\": [\n    \"npm\"\n  ],\n  \"manifests\": [\n    {\n      \"kind\": \"npm\",\n      \"path\": \"package.json\"\n    }\n  ],\n  \"signals\": [\n    \"node:empty-fixture\"\n  ],\n  \"catalog\": \"catalogs/classic-bugs.md\"\n}",
+    "stderr": ""
+  },
+  "deps": {
+    "status": 0,
+    "stdout": "",
+    "stderr": "check-deps-latest: stack=[javascript] checked=0 outdated=0 (major=0 minor=0 patch=0) → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/empty-stack/deps-latest.json findings→ /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-audit-review-QtlRN0/empty-stack/agent-prisma.json"
+  },
+  "dependency_summary": {
+    "checked": 0,
+    "outdated": 0,
+    "up_to_date": 0,
+    "errors": 0,
+    "by_bump": {
+      "major": 0,
+      "minor": 0,
+      "patch": 0
+    },
+    "by_ecosystem": {},
+    "languages": [
+      "javascript"
+    ],
+    "frameworks": []
+  },
+  "html_script_parsed": true
+}

@@ -57,3 +57,7 @@ Write `$OUT/hooks/performance.json`:
 
 `severity`: `critical` | `high` | `medium` | `low` | `info`. `status`: `open` | `fixed` | `wontfix`.
 Re-run: read the previous JSON, mark fixed findings, append a round. Never drop history.
+
+## Evidência da rodada
+
+Receba OUT absoluto e o snapshot capturado antes da rodada. Escreva apenas os arquivos do seu eixo/hook, preservando IDs e histórico. Não altere o produto ou agregados. O Oracle carimba o resultado com o snapshot original e rejeita mudança dos inputs durante a revisão; nunca reetiquete uma revisão antiga como atual.

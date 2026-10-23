@@ -8,7 +8,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { scorePack, verdictOf, immutabilityTests } from '../score.mjs';
+import { scorePack, verdictOf, immutabilityTests, taskValidation } from '../score.mjs';
 import { STEPS } from '../run-meta.mjs';
 
 export const AXES = ['standards', 'spec', 'correctness'];
@@ -19,7 +19,7 @@ export const HOOK_LABELS = {
   security: 'Segurança do diff',
   performance: 'Performance do diff',
   overengineering: 'Sem overengineering',
-  'deps-freshness': 'Deps na última ativa',
+  'deps-freshness': 'Dependências no escopo',
   'ui-acceptance': 'Aceitação de UI (runtime)',
 };
 const TASK_STATUS = new Set(['OPEN', 'IN_PROGRESS', 'DONE', 'BLOCKED']);
@@ -62,7 +62,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
   const tasksDoc = readJson('TASKS.json');
   const repoRoot = findRepoRoot(dir);
 
-  const results = loadResults(dir, readJson);
+  const results = Array.isArray(tasksDoc) ? loadResults(dir, readJson) : new Map();
   const tasks = normalizeTasks(tasksDoc, results, warn);
   const immutRaw = readJson('immutability.json');
   const immutability = normalizeImmutability(immutRaw, warn);
@@ -71,13 +71,10 @@ export function loadPack(dir, { now = new Date() } = {}) {
   const testsRaw = readJson('tests.json');
   const payloadsRaw = readJson('payloads.json');
 
-  let score = readJson('score.json');
-  if (!score && (tasksDoc || exists('reviews'))) {
-    try {
-      score = scorePack(dir);
-    } catch (e) {
-      warn('score.json', `score.mjs falhou: ${e.message}`);
-    }
+  let score=null;
+  if (tasksDoc || exists('reviews')) {
+    try { score=scorePack(dir,{historical:true}); }
+    catch (e) { warn('score.json',`live validation failed: ${e.message}`); }
   }
 
   const coverage = normalizeCoverage(coverageRaw, score, meta);
@@ -86,6 +83,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
   const reviews = loadReviews(dir, readText, readJson, warn);
   const extraReviews = loadExtraReviews(dir, readText);
   const hooksPack = loadHooks(dir, readJson, warn);
+  if (score?.hooks) hooksPack.verdict=score.hooks;
   const projectGates = loadProjectGates(readJson('project-gates.json'), extraReviews, meta, warn);
   const spec = loadSpec(meta, tasksDoc, repoRoot, readText);
   const flow = readText('flow.mmd');
@@ -177,6 +175,7 @@ function evidence(v, fallbackTest) {
       output: v.output_excerpt || v.output || v.message || v.assertion || null,
       at: v.at || null,
       text: v.note || null,
+      ok: typeof v.ok === 'boolean' ? v.ok : null,
     };
   }
   if (typeof v === 'string' && v.trim()) return { test: fallbackTest || null, text: v };
@@ -184,8 +183,8 @@ function evidence(v, fallbackTest) {
   return null;
 }
 
-function normalizeCommits(t, res) {
-  const raw = [...arr(t.commits), ...arr(t.commit), ...arr(res?.commits), ...arr(res?.commit)];
+function normalizeCommits(t) {
+  const raw = [...arr(t.commits), ...arr(t.commit)];
   const seen = new Set();
   const out = [];
   for (const c of raw) {
@@ -200,10 +199,16 @@ function normalizeCommits(t, res) {
 export function normalizeTasks(doc, results = new Map(), warn = () => {}) {
   const list = Array.isArray(doc) ? doc : Array.isArray(doc?.tasks) ? doc.tasks : [];
   return list.filter(isObj).map((t, idx) => {
-    const res = results.get(String(t.id)) || null;
-    const merged = { ...t, ...(res ? Object.fromEntries(Object.entries(res).filter(([k]) => !(k in t) || t[k] == null || k === 'status' || k === 'tests_added' || k === 'red_green')) : {}) };
+    // TASKS.json is the applied state. Pending/stale implementer results must not
+    // change the report independently of the versioned Oracle update and score.
+    // Flat legacy arrays may fill missing fields from old, flat result files.
+    const legacyResult = Array.isArray(doc) ? results.get(String(t.id)) : null;
+    const res = legacyResult && !('patch' in legacyResult) && !('expected_version' in legacyResult) ? legacyResult : null;
+    const merged = { ...(res || {}), ...t };
     const id = String(merged.id || `T-${String(idx + 1).padStart(3, '0')}`);
     const status = String(merged.status || 'OPEN').toUpperCase();
+    const validation = ['check', 'characterization'].includes(merged.validation) ? merged.validation : 'red-green';
+    const validationOk = Boolean(taskValidation(merged));
     if (!TASK_STATUS.has(status)) warn('TASKS.json', `${id}: status "${merged.status}" fora do enum OPEN|IN_PROGRESS|DONE|BLOCKED`);
     const redTest = merged.red_test || (typeof merged.test === 'string' ? merged.test : null) || (isObj(merged.red) ? merged.red.test : null);
     const red = evidence(merged.red, redTest) || (merged.characterization ? { test: redTest, text: merged.characterization } : null);
@@ -212,13 +217,22 @@ export function normalizeTasks(doc, results = new Map(), warn = () => {}) {
       ? { done: merged.reversal.done !== false, output: merged.reversal.output_excerpt || merged.reversal.output || null, text: merged.reversal.note || null }
       : typeof merged.reversal === 'string' ? { done: true, text: merged.reversal } : typeof merged.reversal === 'boolean' ? { done: merged.reversal } : null;
     const tests = arr(merged.tests).map((x) => (typeof x === 'string' ? x : x?.name)).filter(Boolean);
-    if (status === 'DONE' && !(red && (red.test || red.output || red.text))) {
-      warn('TASKS.json', `${id}: DONE sem evidência RED (red.test / red_test)`);
+    if (status === 'DONE' && !validationOk) {
+      const missing = validation === 'check'
+        ? 'checks válidos para docs/config (kind, validation_reason, checks[])'
+        : validation === 'characterization'
+          ? 'caracterização válida antes/depois (before/after com ok, command e output_excerpt)'
+          : 'evidência RED/GREEN válida (red/green, tests_added e red_green)';
+      warn('TASKS.json', `${id}: DONE sem ${missing}`);
     }
     return {
       id,
       title: String(merged.title || merged.name || id),
       status,
+      kind: merged.kind || null,
+      validation,
+      validation_ok: validationOk,
+      validation_reason: typeof merged.validation_reason === 'string' ? merged.validation_reason : null,
       worktree: merged.worktree ?? null,
       tests_added: num(merged.tests_added) ?? 0,
       red_green: merged.red_green === true,
@@ -226,10 +240,13 @@ export function normalizeTasks(doc, results = new Map(), warn = () => {}) {
       depends_on: arr(merged.depends_on).map(String),
       refs: [...arr(merged.refs), ...arr(merged.findings), ...arr(merged.rf), ...arr(merged.spec_refs), ...arr(merged.task_refs)].map(String),
       files: arr(merged.files).map(String),
-      commits: normalizeCommits(merged, res),
+      commits: normalizeCommits(merged),
       tests,
       red,
       green,
+      before: evidence(merged.before, null),
+      after: evidence(merged.after, null),
+      checks: arr(merged.checks).map((check) => evidence(check, null)).filter(Boolean),
       reversal,
       evidenceText: typeof merged.evidence === 'string' ? merged.evidence : null,
       description: [merged.slice, merged.description, merged.why].filter((x) => typeof x === 'string' && x.trim()).join('\n\n'),
@@ -789,7 +806,8 @@ function buildSteps({ meta, tasks, worktrees, immutability, reviews, score, cove
   const next = String(meta.next_step || '').replace(/^worktrees-add$/, 'worktrees');
   return STEPS.map((id) => {
     const r = isObj(recorded[id]) ? recorded[id] : null;
-    const status = r?.status || infer[id]();
+    const invalid=score?.blockers?.some(b=>b.step===id);
+    const status = invalid ? (id==='project-gates' ? 'in_progress' : 'failed') : r?.status || infer[id]();
     return {
       id,
       label: STEP_LABEL[id],

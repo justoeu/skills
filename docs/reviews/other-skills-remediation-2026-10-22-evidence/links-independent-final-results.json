@@ -1,0 +1,15 @@
+{
+  "base": "/tmp/links-independent-final-H8u5CV",
+  "fixed": {
+    "fixed": true,
+    "backup": "/tmp/links-independent-final-H8u5CV/.skill-link-backups/host/alpha-71ca67d3-0412-4381-ac64-e8fb1db8d6b9"
+  },
+  "hostEntries": [
+    "alpha"
+  ],
+  "physicalSkills": [],
+  "postAudit": [],
+  "linkCorrect": true,
+  "backupOutsideRoot": true,
+  "backupPreserved": true
+}

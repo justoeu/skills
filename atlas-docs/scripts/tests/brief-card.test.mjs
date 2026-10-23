@@ -63,7 +63,7 @@ test('card da aplicação separa os fatos e o texto do know-how ocupa o card', (
   assert.match(template, /A a partir de 90, B a partir de 75, C a partir de 60, D a partir de 40, F abaixo de 40/);
   assert.match(template, /payload 25, arquivo:linha 20, chamadas 15, erros 15/);
   assert.match(template, /reescalado para somar 100%/);
-  assert.match(template, /onmouseenter="A\.scoreShow\(this\)"/);
+  // Tooltip behavior is exercised by browser-runtime.test.mjs.
 });
 
 test('página de fluxo chama o card de brief no topo (rich e chain)', () => {

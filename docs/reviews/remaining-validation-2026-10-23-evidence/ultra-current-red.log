@@ -1,0 +1,85 @@
+✔ every BOM-property pin in backend/pom.xml is mapped and justified (2.56025ms)
+✔ o glob dos instrumentos inclui o teste do build-report (0.41325ms)
+✔ migrações manifestadas exigem todos os XMLs nominais e testes realmente executados (783.55125ms)
+✔ agenda-mutation preserva o núcleo já medido e acrescenta as correções desta onda (0.507167ms)
+✔ assinatura-otp-mutation mede o caminho PKCS#12 real e o diff o dispara (0.291792ms)
+✔ todo perfil extra executa o verificador de mutations.xml antes de aceitar Maven verde (1547.90925ms)
+✔ verificador real rejeita mutations.xml ausente (181.997584ms)
+✔ verificador real rejeita relatório vazio (85.6825ms)
+✔ verificador real rejeita todos os RUN_ERROR, inclusive com aspas simples e na mesma linha (95.218708ms)
+✔ verificador real rejeita MEMORY_ERROR com aspas duplas (74.792166ms)
+✔ verificador real rejeita divergência no total gerado (66.6315ms)
+✔ verificador real rejeita mortos divergentes de KILLED mais TIMED_OUT (58.285625ms)
+✔ verificador real aceita somente relatório coerente com aspas mistas e múltiplos mutantes por linha (53.725375ms)
+✔ runtime image gate rejects a required image without immutable digest (50.932834ms)
+✔ runtime image gate rejects an incomplete required image set (41.139334ms)
+✔ runtime image gate resolves release env references to the checked-in runtime images (784.209792ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE:-attacker.example/runtime:latest} (25.530292ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE:+attacker.example/runtime:latest} (28.9305ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE} (29.692375ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest} (37.87275ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest} (30.9145ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE} (31.43925ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE:-attacker.example/runtime:latest} (40.61025ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE:+attacker.example/runtime:latest} (36.466541ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE} (39.468333ms)
+✔ runtime image gate accepts the checked-in development and deployment compose files (715.827209ms)
+✔ runtime image gate scans five images on two platforms and emits ten CycloneDX SBOMs (460.635459ms)
+✔ runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure (378.8705ms)
+✔ runtime image gate executes all three checked-in Dockerfiles for both local platforms (598.663833ms)
+✔ release mode publishes each local runtime once and scans the published multiarch digest (938.06525ms)
+✔ publish mode exposes runtime-images.env only after every vulnerability scan passes (822.818041ms)
+✖ publish preflight missing-compose invalidates stale runtime-images.env before tools run (21.485417ms)
+✖ publish preflight invalid-digest invalidates stale runtime-images.env before tools run (46.66525ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 31
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8362.699917
+
+✖ failing tests:
+
+test at runtime-images-supply-chain-gate.test.mjs:7:3
+✖ publish preflight missing-compose invalidates stale runtime-images.env before tools run (21.485417ms)
+  AssertionError [ERR_ASSERTION]: failed preflight must not leave a deploy artifact from an earlier attempt
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:627:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at runtime-images-supply-chain-gate.test.mjs:7:3
+✖ publish preflight invalid-digest invalidates stale runtime-images.env before tools run (46.66525ms)
+  AssertionError [ERR_ASSERTION]: failed preflight must not leave a deploy artifact from an earlier attempt
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:627:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -11,8 +11,7 @@ Fowler chama o sintoma local (Speculative Generality). Este catálogo olha a
 2. **O arch-map manda.** Padrão já adotado pelo app (ex.: repo já é hexagonal)
    não é overengineering — seguir o padrão local é consistência. O achado é
    **quebrar** o padrão local ou **adicionar camada além** dele.
-3. **Contagem é prova.** Interface com 1 implementação, flag sem leitor, camada
-   que só repassa: cite a contagem no achado.
+3. **Contagem é indício.** Investigue responsabilidade, fronteira, testabilidade e padrões locais antes de propor remover uma interface/camada/configuração.
 
 Cada item: **sinal → o que exigir**.
 
@@ -23,8 +22,7 @@ handler → service → manager → repo onde o app tem handler → repo.
 
 ### Interface com uma implementação
 `type X interface` + exatamente 1 impl + nenhum mock de teste além do trivial,
-sem segunda implementação no SDD. → delete a interface, use o tipo concreto;
-interfaces nascem no segundo consumidor.
+sem segunda implementação no SDD. → investigar se há fronteira, contrato ou testabilidade que justifique a interface. Uma implementação não prova defeito; só propor simplificação com benefício concreto e compatibilidade com o padrão local.
 
 ### Abstração "para o futuro"
 Generic/param de tipo, hook, plugin point, strategy, factory ou builder cujo único
@@ -38,7 +36,7 @@ feature flag para comportamento que o spec define como fixo.
 
 ### Configurabilidade sem leitor
 Env var / option / setting novo que nenhum código lê além do default, ou lido em
-um só lugar sempre com o mesmo valor. → hardcode; config nasce com 2+ ambientes reais.
+um só lugar sempre com o mesmo valor. → verificar finalidade operacional e ambiente; segredos e configuração de deploy não viram hardcode. Propor remoção somente quando comprovadamente sem função.
 
 ### Contrato além do pedido
 Endpoint/CLI/evento além dos `payloads.json`; campo de resposta "que custa nada

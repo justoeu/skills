@@ -14,15 +14,28 @@
  *   # Reabrir
  *   node sync-progress.mjs --dir ... --open CQ-FOR-002
  *
- *   # Quando 100% DONE → HTML título "COMPLETE" + TASKS.md footer
+ *   # Completion is derived from current audit/implementation evidence
  *   node sync-progress.mjs --dir ... --refresh
  *
  * Sempre: atualiza FINDINGS.json status, TASKS.md, report.html
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { spawnSync, execSync } from 'node:child_process';
+import fs from "node:fs";
+import path from "node:path";
+import {
+  processLock,
+  meta,
+  current,
+  requireCurrent,
+  atomic,
+  bind,
+  bound,
+  uniqueIds,
+  policyBlocks,
+  validationErrors,
+  auditState,
+} from "./pack-contract.mjs";
+import { fileURLToPath } from "node:url";
+import { spawnSync, execSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -39,17 +52,17 @@ function sh(cmd, cwd) {
   try {
     return execSync(cmd, {
       cwd: cwd || process.cwd(),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch {
-    return '';
+    return "";
   }
 }
 
 function loadJson(p) {
   try {
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
+    return JSON.parse(fs.readFileSync(p, "utf8"));
   } catch {
     return null;
   }
@@ -57,26 +70,34 @@ function loadJson(p) {
 
 function detectAppName(root) {
   try {
-    const pkg = loadJson(path.join(root, 'package.json'));
-    if (pkg?.name) return String(pkg.name).replace(/^@[^/]+\//, '');
-  } catch { /* */ }
-  for (const rel of ['Package.swift', 'Bundler.toml', 'Cargo.toml', 'go.mod', 'Makefile']) {
+    const pkg = loadJson(path.join(root, "package.json"));
+    if (pkg?.name) return String(pkg.name).replace(/^@[^/]+\//, "");
+  } catch {
+    /* */
+  }
+  for (const rel of [
+    "Package.swift",
+    "Bundler.toml",
+    "Cargo.toml",
+    "go.mod",
+    "Makefile",
+  ]) {
     const p = path.join(root, rel);
     if (!fs.existsSync(p)) continue;
-    const t = fs.readFileSync(p, 'utf8');
-    if (rel === 'go.mod') {
+    const t = fs.readFileSync(p, "utf8");
+    if (rel === "go.mod") {
       const m = t.match(/^module\s+(\S+)/m);
-      if (m) return m[1].split('/').pop();
+      if (m) return m[1].split("/").pop();
     }
-    if (rel === 'Package.swift') {
+    if (rel === "Package.swift") {
       const m = t.match(/name:\s*"([^"]+)"/);
       if (m) return m[1];
     }
-    if (rel === 'Cargo.toml' || rel === 'Bundler.toml') {
+    if (rel === "Cargo.toml" || rel === "Bundler.toml") {
       const m = t.match(/^\s*name\s*=\s*["']([^"']+)["']/m);
       if (m) return m[1];
     }
-    if (rel === 'Makefile') {
+    if (rel === "Makefile") {
       const m = t.match(/^(?:PROJECT|APP_NAME|NAME)\s*[?:]?=\s*(\S+)/m);
       if (m) return m[1];
     }
@@ -86,52 +107,70 @@ function detectAppName(root) {
 
 /** Prefer deploy/release version (APP_VERSION / git tag) over module versions. */
 function detectVersion(root, meta = {}) {
-  if (meta.version || meta.app_version) return String(meta.version || meta.app_version);
-  for (const rel of ['.env', '.env.example', 'Makefile', 'docker-compose.yml', 'docker-compose.app.yml']) {
+  if (meta.version || meta.app_version)
+    return String(meta.version || meta.app_version);
+  for (const rel of [
+    ".env",
+    ".env.example",
+    "Makefile",
+    "docker-compose.yml",
+    "docker-compose.app.yml",
+  ]) {
     const p = path.join(root, rel);
     if (!fs.existsSync(p)) continue;
-    const t = fs.readFileSync(p, 'utf8');
+    const t = fs.readFileSync(p, "utf8");
     const m =
       t.match(/^\s*APP_VERSION\s*=\s*["']?([^\s"']+)/m) ||
       t.match(/APP_VERSION:-\s*([^\s}]+)/) ||
       t.match(/^\s*VERSION\s*[?:]?=\s*(\S+)/m);
-    if (m?.[1] && m[1] !== 'latest') return m[1].replace(/^v/, '');
+    if (m?.[1] && m[1] !== "latest") return m[1].replace(/^v/, "");
   }
-  const tag = sh('git describe --tags --abbrev=0', root);
-  if (tag) return tag.replace(/^v/, '');
-  const pom = path.join(root, 'backend/pom.xml');
+  const tag = sh("git describe --tags --abbrev=0", root);
+  if (tag) return tag.replace(/^v/, "");
+  const pom = path.join(root, "backend/pom.xml");
   if (fs.existsSync(pom)) {
-    const m = fs.readFileSync(pom, 'utf8').match(/<version>([^<]+)<\/version>/);
+    const m = fs.readFileSync(pom, "utf8").match(/<version>([^<]+)<\/version>/);
     if (m) return m[1];
   }
-  const pkg = loadJson(path.join(root, 'frontend/package.json')) || loadJson(path.join(root, 'package.json'));
+  const pkg =
+    loadJson(path.join(root, "frontend/package.json")) ||
+    loadJson(path.join(root, "package.json"));
   if (pkg?.version) return String(pkg.version);
-  return 'unknown';
+  return "unknown";
 }
 
-const dir = arg('dir');
+const dir = arg("dir");
 if (!dir) {
-  console.error('Usage: node sync-progress.mjs --dir <audit-out-dir> [--done id1,id2] [--open id] [--note "..."] [--test "..."] [--refresh] [--title "..."] [--app name] [--branch name]');
+  console.error(
+    'Usage: node sync-progress.mjs --dir <audit-out-dir> [--done id1,id2] [--open id] [--note "..."] [--test "..."] [--refresh] [--title "..."] [--app name] [--branch name]',
+  );
   process.exit(1);
 }
 
-const findingsPath = path.join(dir, 'FINDINGS.json');
-const tasksPath = path.join(dir, 'TASKS.md');
-const htmlPath = path.join(dir, 'report.html');
-const reportPath = path.join(dir, 'REPORT.md');
-const metaPath = path.join(dir, 'run-meta.json');
+processLock(dir);
+const findingsPath = path.join(dir, "FINDINGS.json");
+const tasksPath = path.join(dir, "TASKS.md");
+const htmlPath = path.join(dir, "report.html");
+const reportPath = path.join(dir, "REPORT.md");
+const metaPath = path.join(dir, "run-meta.json");
 
 if (!fs.existsSync(findingsPath)) {
   console.error(`Missing ${findingsPath}`);
   process.exit(1);
 }
 
-let findings = JSON.parse(fs.readFileSync(findingsPath, 'utf8'));
+let findings = JSON.parse(fs.readFileSync(findingsPath, "utf8"));
 if (!Array.isArray(findings)) findings = findings.findings ?? [];
+try {
+  uniqueIds(findings);
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
 
-const note = arg('note', '');
-const testNote = arg('test', '');
-const now = new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+const note = arg("note", "");
+const testNote = arg("test", "");
+const now = new Date().toISOString().slice(0, 19).replace("T", " ") + " UTC";
 
 function mark(ids, status) {
   const set = new Set(ids.map((s) => s.trim()).filter(Boolean));
@@ -139,12 +178,14 @@ function mark(ids, status) {
   for (const f of findings) {
     if (!set.has(f.id)) continue;
     f.status = status;
-    if (status === 'resolved') {
-      f.blocks_pr = false;
+    if (status === "resolved") {
+      f.block_policy = policyBlocks(f);
+      f.blocks_pr = f.block_policy;
       f.resolved_in = note || f.resolved_in || now;
       if (testNote) f.resolved_test = testNote;
       f.resolved_at = now;
     } else {
+      f.blocks_pr = policyBlocks(f);
       f.resolved_in = null;
       f.resolved_test = null;
       f.resolved_at = null;
@@ -154,68 +195,126 @@ function mark(ids, status) {
   return n;
 }
 
-const CLOSED_STATUSES = new Set(['done', 'resolved', 'refuted', 'accepted', 'accept']);
-const isClosed = (f) => CLOSED_STATUSES.has(String(f.status || 'open').toLowerCase());
+const CLOSED_STATUSES = new Set([
+  "done",
+  "resolved",
+  "refuted",
+  "accepted",
+  "accept",
+]);
+const isClosed = (f) =>
+  CLOSED_STATUSES.has(String(f.status || "open").toLowerCase());
 
-const doneArg = arg('done', '');
-const openArg = arg('open', '');
+const doneArg = arg("done", "");
+const openArg = arg("open", "");
+if (doneArg || openArg || arg("accept", "")) {
+  try {
+    const m = requireCurrent(dir);
+    if (!bound(dir, "FINDINGS.json", m))
+      throw Error("aggregate missing/stale; rerun merge");
+    const ids = [
+      ...doneArg.split(","),
+      ...openArg.split(","),
+      ...arg("accept", "").split(","),
+    ].filter(Boolean);
+    for (const id of ids)
+      if (!findings.some((f) => f.id === id))
+        throw Error(`unknown finding id: ${id}`);
+    if (doneArg) {
+      const state = auditState(dir, findings);
+      if (!state.audit_complete)
+        throw Error(`audit gates pending: ${state.errors.join("; ")}`);
+      for (const id of doneArg.split(",")) {
+        const errors = validationErrors(dir, id, m);
+        if (errors.length) throw Error(`${id}: ${errors.join("; ")}`);
+      }
+    }
+    if (arg("accept", "")) {
+      if (!note) throw Error("--accept requires explicit disposition --note");
+      for (const f of findings)
+        if (arg("accept", "").split(",").includes(f.id)) {
+          f.status = "accepted";
+          f.disposition_reason = note;
+        }
+    }
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+}
 if (doneArg) {
-  const n = mark(doneArg.split(','), 'resolved');
+  const n = mark(doneArg.split(","), "resolved");
   console.log(`Marked DONE: ${n} id(s)`);
 }
 if (openArg) {
-  const n = mark(openArg.split(','), 'open');
+  const n = mark(openArg.split(","), "open");
   console.log(`Marked OPEN: ${n} id(s)`);
 }
 
 // ensure status field
 for (const f of findings) {
-  if (!f.status) f.status = 'open';
+  if (!f.status) f.status = "open";
 }
 
 const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
 const prioOf = (f) => {
-  if (f.severity === 'CRITICAL' || (f.severity === 'HIGH' && f.confidence === 'high')) return 'P0';
-  if (f.severity === 'HIGH') return 'P1';
-  if (f.severity === 'MEDIUM') return 'P2';
-  return 'P3';
+  if (
+    f.severity === "CRITICAL" ||
+    (f.severity === "HIGH" && f.confidence === "high")
+  )
+    return "P0";
+  if (f.severity === "HIGH") return "P1";
+  if (f.severity === "MEDIUM") return "P2";
+  return "P3";
 };
 
-findings.sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9) || a.id.localeCompare(b.id));
+findings.sort(
+  (a, b) =>
+    (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9) ||
+    a.id.localeCompare(b.id),
+);
 
 const done = findings.filter(isClosed);
 const open = findings.filter((f) => !isClosed(f));
-const pct = findings.length ? Math.round((done.length / findings.length) * 100) : 0;
-const complete = open.length === 0 && findings.length > 0;
+const pct = findings.length
+  ? Math.round((done.length / findings.length) * 100)
+  : 0;
+let complete;
+let gate;
 
 // Write FINDINGS
-fs.writeFileSync(findingsPath, JSON.stringify(findings, null, 2) + '\n');
+if (!meta(dir, false) || doneArg || openArg || arg("accept", "")) {
+  atomic(findingsPath, findings);
+  if (meta(dir, false)) bind(dir, "FINDINGS.json");
+}
+gate = auditState(dir, findings);
+complete = gate.complete;
 
 // Build TASKS.md
 const byPrio = { P0: [], P1: [], P2: [], P3: [] };
 for (const f of findings) byPrio[prioOf(f)].push(f);
 
 // Resolve app + branch (CLI > run-meta > git/manifests)
-const gitRoot = sh('git rev-parse --show-toplevel') || process.cwd();
+const gitRoot = sh("git rev-parse --show-toplevel") || process.cwd();
 const prevMeta = loadJson(metaPath) || {};
 const appName =
-  arg('app') ||
+  arg("app") ||
   prevMeta.app ||
   prevMeta.app_name ||
   prevMeta.project ||
   detectAppName(gitRoot);
 const branchName =
-  arg('branch') ||
+  arg("branch") ||
   prevMeta.branch ||
   prevMeta.git_branch ||
-  sh('git rev-parse --abbrev-ref HEAD', gitRoot) ||
-  'unknown-branch';
-let headSha = prevMeta.head || prevMeta.sha || prevMeta.commit || '';
-if (!headSha || headSha === 'HEAD' || headSha === 'head') {
-  headSha = sh('git rev-parse --short HEAD', gitRoot) || '';
+  sh("git rev-parse --abbrev-ref HEAD", gitRoot) ||
+  "unknown-branch";
+let headSha = prevMeta.head || prevMeta.sha || prevMeta.commit || "";
+if (!headSha || headSha === "HEAD" || headSha === "head") {
+  headSha = sh("git rev-parse --short HEAD", gitRoot) || "";
 }
-const appVersion = arg('version') || detectVersion(gitRoot, prevMeta);
-const runMode = prevMeta.mode || arg('mode', 'full');
+const appVersion = arg("version") || detectVersion(gitRoot, prevMeta);
+const runMode = prevMeta.mode || arg("mode", "full");
 const runMeta = {
   ...prevMeta,
   app: appName,
@@ -226,35 +325,54 @@ const runMeta = {
   root: prevMeta.root || gitRoot,
   updated_at: now,
 };
-fs.writeFileSync(metaPath, JSON.stringify(runMeta, null, 2) + '\n');
+fs.writeFileSync(metaPath, JSON.stringify(runMeta, null, 2) + "\n");
 
 const lines = [];
 lines.push(`# TASKS — Ultra-Deep Audit`);
-lines.push('');
-lines.push(`> Auto-gerado por \`sync-progress.mjs\` · **não editar IDs à mão** — use \`--done\` / \`--open\`.`);
-lines.push('');
+lines.push("");
+lines.push(
+  `> Auto-gerado por \`sync-progress.mjs\` · **não editar IDs à mão** — use \`--done\` / \`--open\`.`,
+);
+lines.push("");
 lines.push(`| Field | Value |`);
 lines.push(`|-------|------:|`);
 lines.push(`| **App** | \`${appName}\` |`);
 lines.push(`| **Version** | \`${appVersion}\` |`);
-lines.push(`| **Branch** | \`${branchName}\`${headSha ? ` @ \`${headSha}\`` : ''} |`);
+lines.push(
+  `| **Branch** | \`${branchName}\`${headSha ? ` @ \`${headSha}\`` : ""} |`,
+);
 lines.push(`| Mode | ${runMode} |`);
+lines.push(
+  `| Scope | ${prevMeta.scope || "selected roster / default mode scope"} |`,
+);
 lines.push(`| Total | ${findings.length} |`);
 lines.push(`| DONE | ${done.length} |`);
 lines.push(`| OPEN | ${open.length} |`);
 lines.push(`| Progress | **${pct}%** |`);
-lines.push(`| Complete | ${complete ? '✅ YES' : '❌ NO'} |`);
+lines.push(`| Audit verified | ${gate.audit_complete ? "YES" : "NO"} |`);
+lines.push(
+  `| Implementation verified | ${gate.implementation_complete ? "YES" : "NO"} |`,
+);
+lines.push(
+  `| Complete (${gate.intent || "legacy"}) | ${complete ? "✅ YES" : "❌ NO"} |`,
+);
+lines.push(`| Pending gates | ${gate.errors.join("; ") || "none"} |`);
 lines.push(`| Updated | ${now} |`);
-lines.push('');
+lines.push("");
 lines.push(`## Iteration log`);
-lines.push('');
+lines.push("");
 // preserve previous log if exists
 let prevLog = [];
 if (fs.existsSync(tasksPath)) {
-  const prev = fs.readFileSync(tasksPath, 'utf8');
-  const m = prev.match(/## Iteration log\n\n([\s\S]*?)(?=\n## Tasks by priority|\n## |\z)/);
+  const prev = fs.readFileSync(tasksPath, "utf8");
+  const m = prev.match(
+    /## Iteration log\n\n([\s\S]*?)(?=\n## Tasks by priority|\n## |\z)/,
+  );
   if (m) {
-    prevLog = m[1].trim().split('\n').filter((l) => l.startsWith('- '));
+    prevLog = m[1]
+      .trim()
+      .split("\n")
+      .filter((l) => l.startsWith("- "));
   }
 }
 if (doneArg || openArg || note) {
@@ -263,144 +381,161 @@ if (doneArg || openArg || note) {
   if (openArg) parts.push(`OPEN \`${openArg}\``);
   if (note) parts.push(`— ${note}`);
   if (testNote) parts.push(`(test: \`${testNote}\`)`);
-  prevLog.unshift(parts.join(' '));
+  prevLog.unshift(parts.join(" "));
 }
 if (!prevLog.length) {
   prevLog.push(`- **${now}** — TASKS.md created from FINDINGS.json`);
 }
 lines.push(...prevLog.slice(0, 50));
-lines.push('');
+lines.push("");
 lines.push(`## Tasks by priority`);
-lines.push('');
-lines.push(`Checkbox = status. Oracle marca DONE só após **teste red→green**.`);
-lines.push('');
+lines.push("");
+lines.push(
+  `Checkbox = disposition. DONE requires recorded validation, review and documentation evidence for the current snapshot.`,
+);
+lines.push("");
 
-for (const p of ['P0', 'P1', 'P2', 'P3']) {
+for (const p of ["P0", "P1", "P2", "P3"]) {
   const items = byPrio[p];
   const d = items.filter(isClosed).length;
   lines.push(`### ${p} (${d}/${items.length} done)`);
-  lines.push('');
+  lines.push("");
   if (!items.length) {
-    lines.push('_none_');
-    lines.push('');
+    lines.push("_none_");
+    lines.push("");
     continue;
   }
   for (const f of items) {
-    const box = isClosed(f) ? '[x]' : '[ ]';
-    const test = f.test_red_green?.name ? ` · test: \`${f.test_red_green.name}\`` : '';
-    const res = f.resolved_in ? ` · _${f.resolved_in}_` : '';
+    const box = isClosed(f) ? "[x]" : "[ ]";
+    const test = f.test_red_green?.name
+      ? ` · test: \`${f.test_red_green.name}\``
+      : "";
+    const res = f.resolved_in ? ` · _${f.resolved_in}_` : "";
     lines.push(`- ${box} **${f.id}** (${f.agent}/${f.severity}) — ${f.title}`);
-    lines.push(`  - \`${f.path || '?'}${f.line != null ? ':' + f.line : ''}\`${test}${res}`);
+    lines.push(
+      `  - \`${f.path || "?"}${f.line != null ? ":" + f.line : ""}\`${test}${res}`,
+    );
   }
-  lines.push('');
+  lines.push("");
 }
 
 lines.push(`## Still OPEN`);
-lines.push('');
+lines.push("");
 if (!open.length) {
-  lines.push('_All tasks complete._ 🎉');
+  lines.push("_No open findings. Completion depends on the gates above._");
 } else {
   for (const f of open) {
     lines.push(`- **${f.id}** — ${f.title}`);
   }
 }
-lines.push('');
+lines.push("");
 lines.push(`## Workflow (cada iteração)`);
-lines.push('');
-lines.push('```bash');
-lines.push('# 1) Implement fix + red→green test');
-lines.push('# 2) Mark done:');
-lines.push(`node .claude/skills/ultra-deep-audit/scripts/sync-progress.mjs \\`);
+lines.push("");
+lines.push("```bash");
+lines.push("# 1) Record validation appropriate to bug/refactor/docs/deps");
+lines.push("# 2) Mark done:");
+lines.push(`node "$SKILL_ROOT/scripts/sync-progress.mjs" \\`);
 lines.push(`  --dir ${dir} \\`);
 lines.push(`  --done ID1,ID2 \\`);
 lines.push(`  --note "PR #N / commit sha" \\`);
 lines.push(`  --test "ClassName#method"`);
-lines.push('# 3) HTML + TASKS atualizados automaticamente');
-lines.push('# 4) Quando OPEN=0, report.html título vira COMPLETE');
-lines.push('```');
-lines.push('');
+lines.push("# 3) HTML + TASKS atualizados automaticamente");
+lines.push(
+  "# 4) Completion requires current audit gates and applicable implementation evidence",
+);
+lines.push("```");
+lines.push("");
 
 if (complete) {
-  lines.push(`## ✅ AUDIT COMPLETE`);
-  lines.push('');
-  lines.push(`All ${findings.length} findings marked DONE. HTML regenerated as complete.`);
-  lines.push('');
+  lines.push(
+    `## ✅ ${gate.intent === "fix" ? "IMPLEMENTATION" : "AUDIT"} COMPLETE`,
+  );
+  lines.push("");
+  lines.push(
+    `Current ${gate.intent} gates passed. Finding dispositions remain listed below.`,
+  );
+  lines.push("");
 }
 
-fs.writeFileSync(tasksPath, lines.join('\n'));
-console.log(`Wrote ${tasksPath} (${pct}% · ${done.length}/${findings.length} DONE)`);
+fs.writeFileSync(tasksPath, lines.join("\n"));
+console.log(
+  `Wrote ${tasksPath} (${pct}% · ${done.length}/${findings.length} DONE)`,
+);
 
 // Regenerate HTML via build-report.mjs
-const buildScript = path.join(__dirname, 'build-report.mjs');
+const buildScript = path.join(__dirname, "build-report.mjs");
 const titleBase =
-  arg('title') ||
+  arg("title") ||
   `Ultra-Deep Quality Audit — ${appName} v${appVersion} (${branchName})`;
 const title = complete
-  ? `${titleBase} ✅ COMPLETE (100%)`
+  ? `${titleBase} ✅ ${gate.intent === "fix" ? "IMPLEMENTATION" : "AUDIT"} COMPLETE`
   : `${titleBase} (${done.length} DONE / ${open.length} OPEN · ${pct}%)`;
 
-const depsLatest = path.join(dir, 'deps-latest.json');
-const stackJson = path.join(dir, 'stack.json');
+const depsLatest = path.join(dir, "deps-latest.json");
+const stackJson = path.join(dir, "stack.json");
 const buildArgs = [
   buildScript,
-  '--findings',
+  "--findings",
   findingsPath,
-  '--out',
+  "--out",
   htmlPath,
-  '--title',
+  "--title",
   title,
-  '--mode',
+  "--mode",
   runMode,
-  '--meta',
+  "--meta",
   metaPath,
-  '--app',
+  "--app",
   appName,
-  '--branch',
+  "--branch",
   branchName,
-  '--version',
+  "--version",
   appVersion,
-  '--root',
+  "--root",
   gitRoot,
 ];
-if (fs.existsSync(depsLatest)) buildArgs.push('--deps', depsLatest);
-if (fs.existsSync(stackJson)) buildArgs.push('--stack', stackJson);
+if (fs.existsSync(depsLatest)) buildArgs.push("--deps", depsLatest);
+if (fs.existsSync(stackJson)) buildArgs.push("--stack", stackJson);
 
-const r = spawnSync(process.execPath, buildArgs, { encoding: 'utf8' });
+const r = spawnSync(process.execPath, buildArgs, { encoding: "utf8" });
 if (r.stdout) process.stdout.write(r.stdout);
 if (r.stderr) process.stderr.write(r.stderr);
 if (r.status !== 0) {
-  console.error('build-report failed');
+  console.error("build-report failed");
   process.exit(r.status || 1);
 }
 
 // Full REPORT.md + ROADMAP.md (identity + stack + deps research + waves)
-const mdScript = path.join(__dirname, 'write-pack-markdown.mjs');
+const mdScript = path.join(__dirname, "write-pack-markdown.mjs");
 if (fs.existsSync(mdScript)) {
   const mdArgs = [
     mdScript,
-    '--dir',
+    "--dir",
     dir,
-    '--app',
+    "--app",
     appName,
-    '--branch',
+    "--branch",
     branchName,
-    '--version',
+    "--version",
     appVersion,
   ];
-  const md = spawnSync(process.execPath, mdArgs, { encoding: 'utf8' });
+  const md = spawnSync(process.execPath, mdArgs, { encoding: "utf8" });
   if (md.stdout) process.stdout.write(md.stdout);
   if (md.stderr) process.stderr.write(md.stderr);
   if (md.status !== 0) {
-    console.error('write-pack-markdown failed');
+    console.error("write-pack-markdown failed");
     process.exit(md.status || 1);
   }
 } else if (fs.existsSync(reportPath)) {
   // fallback light banner
-  let rep = fs.readFileSync(reportPath, 'utf8');
-  const identity = `> **App:** \`${appName}\` · **Version:** \`${appVersion}\` · **Branch:** \`${branchName}\`${headSha ? ` @ \`${headSha}\`` : ''} · **Mode:** ${runMode}\n>\n`;
-  const banner = `${identity}> **Progress:** ${done.length}/${findings.length} DONE (${pct}%) · OPEN ${open.length} · updated ${now}${complete ? ' · ✅ COMPLETE' : ''}\n\n`;
-  if (/^> \*\*App:\*\*/m.test(rep) || rep.startsWith('> **Progress:**')) {
-    rep = rep.replace(/^(?:> \*\*(?:App|Progress|Version):\*\*[^\n]*\n)+(?:>\n)?> \*\*Progress:\*\*[^\n]*\n\n/m, banner);
+  let rep = fs.readFileSync(reportPath, "utf8");
+  const identity = `> **App:** \`${appName}\` · **Version:** \`${appVersion}\` · **Branch:** \`${branchName}\`${headSha ? ` @ \`${headSha}\`` : ""} · **Mode:** ${runMode}\n>\n`;
+  const banner = `${identity}> **Progress:** ${done.length}/${findings.length} DONE (${pct}%) · OPEN ${open.length} · updated ${now}${complete ? " · ✅ COMPLETE" : ""}\n\n`;
+  if (/^> \*\*App:\*\*/m.test(rep) || rep.startsWith("> **Progress:**")) {
+    rep = rep.replace(
+      /^(?:> \*\*(?:App|Progress|Version):\*\*[^\n]*\n)+(?:>\n)?> \*\*Progress:\*\*[^\n]*\n\n/m,
+      banner,
+    );
     if (!rep.includes(`**App:** \`${appName}\``)) {
       rep = rep.replace(/^> \*\*Progress:\*\*[^\n]*\n\n/, banner);
     }
@@ -410,4 +545,8 @@ if (fs.existsSync(mdScript)) {
   fs.writeFileSync(reportPath, rep);
 }
 
-console.log(complete ? '✅ ALL TASKS COMPLETE — HTML updated' : `OPEN remaining: ${open.map((f) => f.id).join(', ')}`);
+console.log(
+  complete
+    ? `✅ ${gate.intent === "fix" ? "IMPLEMENTATION" : "AUDIT"} COMPLETE — HTML updated`
+    : `OPEN remaining: ${open.map((f) => f.id).join(", ")}`,
+);

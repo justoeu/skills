@@ -11,6 +11,7 @@
  * Writes deps-latest.json (update_map + suggestions) + optional Prism findings.
  */
 import fs from 'node:fs';
+import { atomicWrite } from './pack-state.mjs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import https from 'node:https';
@@ -2069,14 +2070,14 @@ async function main() {
   const json = JSON.stringify(report, null, 2) + '\n';
   if (outPath) {
     fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
-    fs.writeFileSync(outPath, json);
+    atomicWrite(outPath, json);
   } else {
     process.stdout.write(json);
   }
 
   if (findingsPath) {
     fs.mkdirSync(path.dirname(path.resolve(findingsPath)), { recursive: true });
-    fs.writeFileSync(findingsPath, JSON.stringify(findings, null, 2) + '\n');
+    atomicWrite(findingsPath, JSON.stringify(findings, null, 2) + '\n');
   }
 
   console.error(

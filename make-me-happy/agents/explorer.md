@@ -47,7 +47,7 @@ Depois, só o que o kind precisa. Uma pergunta de cada vez. Não invente a respo
 - Dor atual (por que agora)
 - Pronto = testes da baseline verdes + a estrutura pedida
 
-Não pergunte stack se o repo já tem. Não pergunte biblioteca / schema / nome interno se o usuário ainda não tocou nisso — isso é decisão; se surgir mais de um caminho, **pergunte** (regra Só o SDD).
+Não pergunte stack se o repo já tem. Escolhas locais reversíveis seguem os padrões do repo. Pergunte somente por decisões materiais ainda não autorizadas.
 
 ## Write the SDD
 
@@ -73,11 +73,11 @@ Invariants:  # obrigatório em refactor
 Done when:
 ```
 
-Mostre o draft. **Espere confirmação.** Ajustes até o usuário dizer que vale. Aí:
+Mostre o spec. Se ele apenas registra decisões já autorizadas, siga; se restam escolhas materiais, mantenha draft e aguarde a resposta. Quando resolvidas:
 
 - `run-meta.json`: `spec` = path no repo, `spec_status` = `confirmed`, `kind`
 - `$OUT/spec-summary.md` = o mesmo conteúdo (ou 1 página)
-- **SDD com telas?** Pergunte agora: *"aceitação de UI em runtime: `sim fast`, `sim guided` ou `não`?"* → grave `ui_drive` (`fast|guided|off`) no `run-meta.json` (decisão do setup, §4z obedece; `off` = bypass registrado)
+- **SDD com telas?** Reuse a escolha do usuário ou o default fast. guided explora antes; off só com bypass explícito. Não repetir pergunta já resolvida.
 - Só então o Oracle segue ao Planner
 
-Sem confirmação: `spec_status` = `draft`, **não** implemente.
+Sem resolução das decisões materiais: spec_status=draft, não implementar. Se o usuário recusar qualquer spec, encerrar este fluxo; não preparar Spec SKIP.

@@ -1,0 +1,81 @@
+{
+  "same_user_shared_budget": [
+    202,
+    202,
+    429
+  ],
+  "rotated_user_shared_global": [
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    429,
+    429
+  ],
+  "bounded_budget_users": 8,
+  "upload_oversize": 413,
+  "upload_repetition": [
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202
+  ],
+  "upload_jobs": 20,
+  "dispatch_replay": [
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202,
+    202
+  ],
+  "dispatch_jobs": 20,
+  "register_ids": [
+    98,
+    99,
+    100
+  ],
+  "register_sizes": {
+    "accounts": 100,
+    "cache": 100
+  },
+  "large_jobs": [
+    202,
+    202
+  ],
+  "large_retained_bytes": 2097152
+}

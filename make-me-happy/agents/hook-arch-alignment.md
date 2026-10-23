@@ -17,7 +17,7 @@ Valide a tríade **implementação ↔ SDD ↔ arch-map**:
    padrão diferente do app) sem o SDD justificar → não é achado de estilo: é a
    pergunta que o Oracle leva ao usuário (regra Só o SDD).
 
-Greenfield (arch-map ausente ou `source: "greenfield"`): inverta a lente — valide
+Greenfield (`source: "greenfield"`): inverta a lente — valide
 a coerência **interna** do SDD (decisões combinam entre si? a pilha escolhida
 sustenta o que ele promete?) e deixe estrutura sem requisito para o hook
 `overengineering`.
@@ -32,7 +32,8 @@ sustenta o que ele promete?) e deixe estrutura sem requisito para o hook
 
 `VERDICT: APPROVE` | `VERDICT: REJECT` — REJECT em conflito com ADR documentado,
 camada/ padrão ignorado sem justificativa no SDD, ou decisão estrutural nova
-injustificada. Ignorância honesta (arch-map OPEN) não é REJECT; é finding `warn`.
+injustificada. Mapa ausente/pending impede a revisão: retorne OPEN com a lacuna
+e peça ao Oracle completar o setup, sem inferir greenfield.
 
 Write `$OUT/hooks/arch-alignment.json` (schema below). No separate md — `summary` carries the prose. Under 300 words in `summary`.
 
@@ -53,3 +54,7 @@ Write `$OUT/hooks/arch-alignment.json` (schema below). No separate md — `summa
 
 `severity`: `critical` | `high` | `medium` | `low` | `info`. `status`: `open` | `fixed` | `wontfix`.
 Re-run: read the previous JSON, mark fixed findings, append a round. Never drop history.
+
+## Evidência da rodada
+
+Receba OUT absoluto e o snapshot capturado antes da rodada. Escreva apenas os arquivos do seu eixo/hook, preservando IDs e histórico. Não altere o produto ou agregados. O Oracle carimba o resultado com o snapshot original e rejeita mudança dos inputs durante a revisão; nunca reetiquete uma revisão antiga como atual.

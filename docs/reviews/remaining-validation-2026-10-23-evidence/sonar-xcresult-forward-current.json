@@ -1,0 +1,110 @@
+{
+  "root": "/private/tmp/sonar-xcresult-forward-a1tphxcv",
+  "package": "/private/tmp/sonar-xcresult-forward-a1tphxcv/ParcelPricing",
+  "bundle": "/private/tmp/sonar-xcresult-forward-a1tphxcv/Results.xcresult",
+  "command": [
+    "xcodebuild",
+    "-scheme",
+    "ParcelPricing",
+    "-destination",
+    "platform=macOS",
+    "-derivedDataPath",
+    "/private/tmp/sonar-xcresult-forward-a1tphxcv/DerivedData",
+    "-enableCodeCoverage",
+    "YES",
+    "-resultBundlePath",
+    "/private/tmp/sonar-xcresult-forward-a1tphxcv/Results.xcresult",
+    "-disableAutomaticPackageResolution",
+    "-skipPackageUpdates",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "test"
+  ],
+  "returncode": 0,
+  "source_executable_lines": 18,
+  "source_covered_lines": 15,
+  "xml_matches_xccov": true,
+  "xml_files": [
+    "Sources/ParcelPricing/DeliveryQuote.swift",
+    "Tests/ParcelPricingTests/DeliveryQuoteTests.swift"
+  ],
+  "markers": {
+    "EMPTY": {
+      "line": 4,
+      "hits": 0,
+      "covered": false
+    },
+    "MEMBER": {
+      "line": 7,
+      "hits": 1,
+      "covered": true
+    },
+    "BULK": {
+      "line": 10,
+      "hits": 1,
+      "covered": true
+    },
+    "STANDARD": {
+      "line": 12,
+      "hits": 0,
+      "covered": false
+    },
+    "SEASON": {
+      "line": 17,
+      "hits": 0,
+      "covered": false
+    },
+    "SEASON_DEFAULT": {
+      "line": 19,
+      "hits": 1,
+      "covered": true
+    }
+  },
+  "bundle_unchanged": true,
+  "coverage_subprocesses": [
+    [
+      "xcrun",
+      "xccov",
+      "view",
+      "--archive",
+      "--json",
+      "/private/tmp/sonar-xcresult-forward-a1tphxcv/Results.xcresult"
+    ],
+    [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "~/Developer/harness/skills/sonar-swift-local/scripts/xccov-to-sonar.py",
+      "/private/tmp/sonar-xcresult-forward-a1tphxcv/conversion/xccov.json",
+      "/private/tmp/sonar-xcresult-forward-a1tphxcv/ParcelPricing"
+    ]
+  ],
+  "invalid_cases": [
+    {
+      "case": "missing",
+      "rejected": true,
+      "message": "Bundle .xcresult informado n\u00e3o existe ou n\u00e3o \u00e9 diret\u00f3rio .xcresult."
+    },
+    {
+      "case": "file",
+      "rejected": true,
+      "message": "Bundle .xcresult informado n\u00e3o existe ou n\u00e3o \u00e9 diret\u00f3rio .xcresult."
+    },
+    {
+      "case": "wrong_extension",
+      "rejected": true,
+      "message": "Bundle .xcresult informado n\u00e3o existe ou n\u00e3o \u00e9 diret\u00f3rio .xcresult."
+    },
+    {
+      "case": "empty_bundle",
+      "rejected": true,
+      "message": "N\u00e3o foi poss\u00edvel ler a cobertura do .xcresult informado."
+    },
+    {
+      "case": "other_checkout",
+      "rejected": true,
+      "message": "O .xcresult informado n\u00e3o cont\u00e9m cobertura v\u00e1lida para este reposit\u00f3rio."
+    }
+  ],
+  "malformed_json_rejected_without_partial_xml": true,
+  "helper_stdout": "Cobertura: usando .xcresult fornecido; os testes n\u00e3o s\u00e3o reexecutados por este scan.\n"
+}

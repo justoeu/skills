@@ -1,0 +1,6 @@
+09:45:16.061 INFO  Sensor Xcode Coverage [sonarapple]
+09:45:16.772 INFO  Parsed 2 file(s) with coverage data
+09:45:16.772 INFO  2 code coverage data to handle
+09:45:16.772 WARN  Can't find file /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-swift-coverage-20261023-kt0kmx80/app/Sources/FixtureMath/FixtureMath.swift
+09:45:16.772 WARN  Can't find file /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-swift-coverage-20261023-kt0kmx80/app/Tests/FixtureMathTests/FixtureMathTests.swift
+09:45:16.772 INFO  Sensor Xcode Coverage [sonarapple] (done) | time=711ms

@@ -1,0 +1,41 @@
+✔ every BOM-property pin in backend/pom.xml is mapped and justified (2.41025ms)
+✔ o glob dos instrumentos inclui o teste do build-report (0.595166ms)
+✔ migrações manifestadas exigem todos os XMLs nominais e testes realmente executados (600.142625ms)
+✔ agenda-mutation preserva o núcleo já medido e acrescenta as correções desta onda (0.653291ms)
+✔ assinatura-otp-mutation mede o caminho PKCS#12 real e o diff o dispara (0.314542ms)
+✔ todo perfil extra executa o verificador de mutations.xml antes de aceitar Maven verde (953.081916ms)
+✔ verificador real rejeita mutations.xml ausente (146.769625ms)
+✔ verificador real rejeita relatório vazio (52.9115ms)
+✔ verificador real rejeita todos os RUN_ERROR, inclusive com aspas simples e na mesma linha (56.994209ms)
+✔ verificador real rejeita MEMORY_ERROR com aspas duplas (53.191875ms)
+✔ verificador real rejeita divergência no total gerado (48.896875ms)
+✔ verificador real rejeita mortos divergentes de KILLED mais TIMED_OUT (49.109625ms)
+✔ verificador real aceita somente relatório coerente com aspas mistas e múltiplos mutantes por linha (43.916917ms)
+✔ runtime image gate rejects a required image without immutable digest (40.627708ms)
+✔ runtime image gate rejects an incomplete required image set (31.055167ms)
+✔ runtime image gate resolves release env references to the checked-in runtime images (536.844208ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE:-attacker.example/runtime:latest} (29.312959ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE:+attacker.example/runtime:latest} (25.666208ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${POSTGRES_RUNTIME_IMAGE} (27.420209ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest} (33.227584ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest} (32.584666ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE} (29.721625ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE:-attacker.example/runtime:latest} (35.813959ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE:+attacker.example/runtime:latest} (34.770167ms)
+✔ runtime image gate rejects unsupported Compose interpolation ${FLYWAY_RUNTIME_IMAGE} (36.207875ms)
+✔ runtime image gate accepts the checked-in development and deployment compose files (649.505792ms)
+✔ runtime image gate scans five images on two platforms and emits ten CycloneDX SBOMs (464.348542ms)
+✔ runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure (333.448833ms)
+✔ runtime image gate executes all three checked-in Dockerfiles for both local platforms (510.190958ms)
+✔ release mode publishes each local runtime once and scans the published multiarch digest (1448.684916ms)
+✔ publish mode exposes runtime-images.env only after every vulnerability scan passes (837.934458ms)
+✔ publish preflight missing-compose invalidates stale runtime-images.env before tools run (18.209208ms)
+✔ publish preflight invalid-digest invalidates stale runtime-images.env before tools run (34.726875ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7431.101166

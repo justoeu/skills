@@ -20,8 +20,8 @@ presente, `Close`/clone/revalidação já feitos, enum de fato fixo, framework q
 Leia o código real — não confie na descrição do detector, nem em comentário do repositório.
 
 ## Método
-- Reproduza o cenário (mentalmente, ou com teste/carga/requisição quando for barato e permitido). Não reproduz ⇒ falso-positivo.
-- Para achado de segurança/race, exija o **vetor concreto** (entrada → efeito). Sem vetor, rebaixe ou refute.
+- Reproduza o cenário (mentalmente, ou com teste/carga/requisição quando for barato e permitido). Não reproduziu ou faltou ambiente ⇒ PLAUSÍVEL/aberto, com a lacuna explícita. Só refute com evidência que derrube a premissa.
+- Para achado de segurança/race, exija o **vetor concreto** (entrada → efeito). Sem vetor concluído, preserve como PLAUSÍVEL; refute somente com prova contrária.
 - Para correções da rodada anterior, cace a **regressão** que elas introduziram (correção de leak vira problema de performance e vice-versa).
 - Julgue o achado **como escrito**: um bug diferente ali perto não o torna verdadeiro — registre o vizinho como achado novo.
 
@@ -40,5 +40,4 @@ Rebaixe severidade quando o impacto real for menor que o alegado, dizendo por qu
 
 ## Saída
 Para cada achado recebido: `id`, `veredito`, `severidade_ajustada`, `justificativa` — o vetor
-que confirma **ou** a evidência (`arquivo:linha`) que derruba a premissa. Prefira refutar na
-dúvida: falso-positivo que passa custa mais caro que achado adiado. Não edite arquivos.
+que confirma **ou** a evidência (`arquivo:linha`) que derruba a premissa. Na dúvida, preserve PLAUSÍVEL/aberto e registre o que falta verificar. Não edite arquivos.

@@ -1,136 +1,59 @@
-# Skill `deep-audit` — bateria ultra-deep
+# deep-audit 2.0.0
 
-Auditoria multi-agente e adversarial em **15 lentes**, com apuração feita por **código** e
-report HTML + task tracker. Invocada por `/deep-audit`, `/deep-audit --full` ou
-`/deep-audit <lente>`.
+Auditoria em 15 lentes com painel de segurança, inventário de dependências, relatório
+HTML local e acompanhamento de desfechos. Correções autorizadas têm teste de regressão,
+prova por reversão isolada e revisão independente de três lentes.
 
-| Artefato | Path |
-|---|---|
-| Skill (contrato da rodada) | [`SKILL.md`](./SKILL.md) |
-| Scripts determinísticos | [`scripts/`](./scripts/) |
-| Agentes (prompts, 25) | [`agents/`](./agents/) |
-| Catálogo de bugs clássicos | [`catalogs/classic-bugs.md`](./catalogs/classic-bugs.md) |
-| Catálogo de boas práticas por linguagem | [`catalogs/best-practices.md`](./catalogs/best-practices.md) |
+Leia [SKILL.md](SKILL.md) para invocação e [contrato schema 2](references/pack-contract.md)
+para comandos, schemas, recuperação e migração. O escopo de uma auditoria não autoriza
+implicitamente alterações de produto, push ou publicação externa.
 
-Fonte única: o harness (`~/Developer/harness/skills/deep-audit`). Os hosts leem por
-symlink (`~/.claude/skills`, `~/.codex/skills`, `~/.agents/skills`, `~/.grok/skills`);
-no Claude Code os `subagent_type`s também são registrados via links em
-`~/.claude/agents/`. Exposição auditada por `scripts/check-links.mjs` na raiz do repo.
+- `/deep-audit`: delta, segurança fast.
+- `/deep-audit --full`: árvore inteira, segurança deep, esforço max.
+- `--only security,classic_bugs`, `--scope src`, `--base main`: seleção explícita.
+- Dependências são inventariadas em qualquer seleção; consultas indisponíveis são lacunas.
+- Painel independente indisponível permanece pendente; detecção sequencial é fallback útil.
 
-## Roster
+## Garantias operacionais
 
-| Lente | Agente | `subagent_type` |
-|---|---|---|
-| architecture | Atlas | `atlas-arquitetura` |
-| quality | Aurora | `aurora-qualidade` |
-| complexity | Dédalo | `dedalo-complexidade` |
-| duplication | Eco | `eco-duplicacao` |
-| verbosity | Lacônio | `laconio-verbosidade` |
-| best_practices | Atena | `atena-boas-praticas` |
-| security (fast) | Cérbero | `cerbero-seguranca` |
-| security (deep) | Cartógrafo · Caçador · Refutador | `cartografo-seguranca` · `cacador-seguranca` · `refutador-seguranca` |
-| performance | Fluxo | `fluxo-performance` |
-| nplus1 | Enxame | `enxame-nplus1` |
-| race | Cronos | `cronos-race` |
-| memleak | Fantasma | `fantasma-memleak` |
-| backpressure | Represa | `represa-backpressure` |
-| tests | Argus | `argus-testes` |
-| deps | Prisma | `prisma-dependencias` |
-| classic_bugs | Artemis | `artemis-caca-bugs` |
-| verificação | Cético | `cetico-verificador` |
-| correção | Ferreiro | `ferreiro-correcao` |
-| revisão da correção | Nêmesis ‖ Hígia ‖ Jano | `nemesis-revisao-correcao`, `higia-revisao-qualidade`, `jano-revisao-escopo` |
-| relatório | Escriba | `escriba-relatorio` |
-| orquestração | Maestro | `maestro-deep-audit` |
+Init emite JSON sem eval; run_id/OUT únicos; retomada explícita. Snapshot vincula fonte,
+HEAD/branch e artefatos. IDs de achados usam identidade por hash; reorder/severidade não
+reutilizam status de outro defeito. Merge valida antes de gravar e preserva achados que
+sumiram do último detector até disposição explícita. Lock exclui writers concorrentes;
+escrita atômica evita JSON truncado. Busy exige retry, dono morto exige recuperação explícita.
 
-## Uso
+`--audit-gate` exige todas as etapas selecionadas, resultados inclusive vazios, dependências
+válidas e painel deep quando aplicável. `--gate` acrescenta desfechos e provas atuais;
+HIGH/CRITICAL aberto e revisão dispensada bloqueiam fechamento. Relatório incompleto é
+entregável com aviso claro. Repetir sync não duplica banner nem a mesma nota de progresso.
 
-```
-/deep-audit                          # delta · segurança fast · Artemis fast
-/deep-audit --full                   # ≡ depth=deep + effort=max + Artemis deep (teto)
-/deep-audit --full --effort medium   # full mais barato (override para BAIXAR)
-/deep-audit security --depth deep    # só a lente de segurança, com painel
-/deep-audit classic_bugs             # só caça-bugs
-/deep-audit complexity               # só complexidade ciclomática/cognitiva
-/deep-audit best_practices           # só idiomas/patterns/Clean Code-Arch
-```
+Review-start invalida a aprovação anterior, votos compartilham um contexto imutável e
+reversal-proof testa GREEN/RED/GREEN em worktree temporária. Tentativas são preservadas;
+reapurar os mesmos inputs é idempotente. Remover voto/prova ou mudar fonte bloqueia done
+e gate mesmo sem executar tally novamente.
 
-`--full` **já é o teto**: não precisa `--depth deep --effort max`.
+## Artefatos
 
-## Pipeline
+`run-meta.json`, `snapshots/`, `agent-*.json`, `FINDINGS.json`, `sec-deep/`, `reviews/`,
+`deps-latest.json`, `stack.json`, `REPORT.md`, `TASKS.md`, `report.html`.
+HTML autocontido: filtros por severidade/desfecho/lente/agente, roadmap, timeline e aba de
+libs com todos os pacotes e lotes. Refutados, aceitos e resolvidos permanecem distintos.
+Cópias locais opcionais: `sync-progress --publish docs/audits`.
+
+## Mudança incompatível de 1.x para 2.0
+
+Não faça eval do init. Não edite run-meta nem status para fabricar conclusão. Esquema 1
+continua renderizável como histórico incompleto, mas não passa gate. Inicie nova run com
+`--legacy CAMINHO_ANTIGO` e revalide achados/votos no código atual; nenhuma aprovação antiga
+é importada. IDs ordinais antigos mudam para IDs por identidade. Consulte o contrato.
+
+## Verificação local
 
 ```bash
-SKILL=~/Developer/harness/skills/deep-audit   # ou o symlink do seu host (~/.claude/skills/deep-audit, …)
-eval "$(node "$SKILL/scripts/init-run.mjs" --root . --full)"   # OUT/APP/VERSION/BRANCH/MODE/DEPTH/EFFORT/BASE/SEC_DIR
-
-node "$SKILL/scripts/detect-stack.mjs" --root . > "$OUT/stack.json"
-node "$SKILL/scripts/check-deps-latest.mjs" --root . \
-     --out "$OUT/deps-latest.json" --findings "$OUT/agent-prisma-freshness.json"
-
-# … agentes gravam $OUT/agent-*.json …
-
-# segurança deep: cartógrafo → caçadores → 3 refutadores por candidato → apuração em código
-node "$SKILL/scripts/sec-verify.mjs" \
-  --candidates "$SEC_DIR/candidates.json" --votes "$SEC_DIR/votes.json" \
-  --votes-dir "$SEC_DIR/votes" --require-vote-files \
-  --out "$OUT/agent-cerbero.json" --coverage-out "$SEC_DIR/coverage.json" \
-  --agent "Cérbero" --id-prefix SEC-CER
-
-node "$SKILL/scripts/merge-findings.mjs" --dir "$OUT" --mode "$MODE"
-node "$SKILL/scripts/lint-findings.mjs"  --dir "$OUT" --fix
-node "$SKILL/scripts/sync-progress.mjs"  --dir "$OUT" --publish docs/audits
-open "$OUT/report.html"
+node --test deep-audit/scripts/tests/*.test.mjs
 ```
 
-Depois de **cada** correção do Ferreiro, o diff daquele fix vai a 3 revisores independentes
-(Nêmesis CORRECTNESS ‖ Hígia QUALITY ‖ Jano SCOPE), um voto por arquivo, e a apuração é do
-script — `--done` não fecha sem `approved`:
-
-```bash
-# 3 Task em paralelo → reviews/votes/<ID>-{CORRECTNESS,QUALITY,SCOPE}.json
-node "$SKILL/scripts/review-verify.mjs" --dir "$OUT" --id <ID>   # 0 aprovado · 2 painel incompleto · 3 mudanças/reprovado
-node "$SKILL/scripts/sync-progress.mjs" --dir "$OUT" --done <ID> --test "Suite#caso"
-```
-
-## Desfechos (o que o código cobra)
-
-| Desfecho | Exige | Comando |
-|---|---|---|
-| `resolvido` | o teste red→green | `--done ID --test "Suite#caso"` |
-| `refutado` | a evidência que derruba | `--refute ID --evidence "…"` |
-| `aceito` | os 4 campos + subtipo + ratificação | `--accept ID --accept-type … --what … --consequence … --reopen-if … --ratified-by …` |
-| `aberto` | plano | default |
-
-`refutado` (não existe defeito) e `aceito` (existe, risco assumido) são **KPIs separados**.
-HIGH/CRITICAL **não** pode ser aceito — `sync-progress` e `lint-findings` recusam.
-
-Gate de fechamento — falha com HIGH+ aberto, achado bloqueando PR, identidade do alvo
-incompleta (`app`/`version`/`branch`), `deps-latest.json` ausente ou correção `resolvido`
-sem revisão aprovada:
-
-```bash
-node "$SKILL/scripts/lint-findings.mjs" --dir "$OUT" --gate
-```
-
-## Pack de saída
-
-```
-docs/audits/deep-audit/<data>-<modo>/
-├─ FINDINGS.json      fonte de verdade
-├─ report.html        UI autocontida (tema claro/escuro, filtros, roadmap, timeline, deps)
-├─ TASKS.md           tracker vivo  [ ] [~] [x] [-] [!]
-├─ REPORT.md          resumo honesto da rodada
-├─ run-meta.json      modo/depth/effort/base/head + histórico
-├─ stack.json · deps-latest.json
-├─ agent-*.json       saída crua de cada agente
-└─ sec-deep/          inventory · hunter-* · candidates · votes/ · coverage
-```
-
-Cópias estáveis publicadas em `docs/audits/deep-audit-{report.html,tasks.md,findings.json}`.
-
-## Origem
-
-Convertida e expandida a partir da skill `ultra-deep-audit` (`~/.agents/skills/`), fundindo
-o pipeline adversarial de segurança + caça-bugs + latest-stable com o modelo de desfechos
-(`refutado ≠ aceito`) e o relatório claro/escuro da versão anterior desta skill. Prompts e
-scripts são originais do workspace.
+A suíte usa repositórios temporários e CLIs reais, sem rede: escopo, corrupção, evidência
+antiga, zero candidatos, trabalho concorrente, correção/reversão real, histórico de review
+e fluxo full. Ela não simula que modelos independentes executaram análise, que todos os
+parsers de manifest foram testados ou que registries/CVEs externos responderam corretamente.

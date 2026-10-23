@@ -1,0 +1,14 @@
+{
+  "base": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7",
+  "canonical_without_mkdir": true,
+  "nested_build_without_mkdir": true,
+  "rebuild_history_identical": true,
+  "first_flows": [
+    "create-order"
+  ],
+  "second_flows": [
+    "create-order",
+    "cancel-order"
+  ],
+  "nested_build_stdout": "score 48 (D) \u00b7 2 fluxos \u00b7 entrypoints: 2 mapeados \u00b7 0 triviais \u00b7 cov: create-order=70%, cancel-order=70%\nclasses: 2/2 fluxos \u00b7 c4: C1 ok \u00b7 C2 0 containers\nok \u2192 /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/fresh/nested/html/index.html (148 KB)\n"
+}

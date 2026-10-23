@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "steps": [
+    {
+      "step": "git-0",
+      "exit": 0
+    },
+    {
+      "step": "git-1",
+      "exit": 0
+    },
+    {
+      "step": "git-2",
+      "exit": 0
+    },
+    {
+      "step": "git-3",
+      "exit": 0
+    },
+    {
+      "step": "git-4",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-db",
+      "exit": 0
+    },
+    {
+      "step": "image-1",
+      "exit": 0
+    },
+    {
+      "step": "image-2",
+      "exit": 0
+    },
+    {
+      "step": "start-legacy",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-project",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-idempotent",
+      "exit": 0
+    },
+    {
+      "step": "scan-before-upgrade",
+      "exit": 0
+    },
+    {
+      "step": "upgrade",
+      "exit": 0
+    },
+    {
+      "step": "marker",
+      "exit": 0
+    },
+    {
+      "step": "scan-after-upgrade",
+      "exit": 0
+    },
+    {
+      "step": "plugin-checksum",
+      "exit": 0
+    }
+  ],
+  "image_base": "sonarqube-swift:26.9.0.129388-apple0.5.1",
+  "plugin_checksum": "c27432e52a6ebc698b77ad42bf3d98f5e34fb20d3f398799bda74fbc008f8612  /opt/sonarqube/extensions/plugins/sonar-apple-plugin-0.5.1.jar",
+  "upgrade_marker": "2",
+  "before": "Cobertura SwiftPM: não aplicável; projetos Xcode precisam de .xcresult.\nQuality Gate: OK (consultivo); análise 971c3bb1-be7d-43ce-93f2-6eccb361263d; 6 linhas.\nAnalisado: main @ c365f0c7266b\nCobertura: não medida por este fluxo.\nPainel: http://127.0.0.1:57574/dashboard?id=harness-smoke\nArtefatos: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-swift-ta1enofe\n",
+  "after": "Cobertura SwiftPM: não aplicável; projetos Xcode precisam de .xcresult.\nQuality Gate: ERROR (consultivo); análise 8cf789d2-0fa7-4c48-a3d1-091e324f1e20; 6 linhas.\nAnalisado: main @ c365f0c7266b\nCobertura: não medida por este fluxo.\nPainel: http://127.0.0.1:57574/dashboard?id=harness-smoke\nArtefatos: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-swift-gxcc5wn3\n",
+  "limits": [
+    "Sem Package.swift/Xcode: cobertura real não exercitada.",
+    "Imagem derivada usa o mesmo plugin; upgrade prova visibilidade de conteúdo e persistência de dados, não compatibilidade de uma nova versão do plugin."
+  ]
+}

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { scorePack, effectiveCoverageFloor, parseCoverageFloor } from '../score.mjs';
+import {completePack} from './helpers/complete-pack.mjs';
 
 function pack(overrides = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mmh-score-'));
@@ -16,9 +17,11 @@ function pack(overrides = {}) {
       { id: 'T-002', title: 'b', status: 'DONE', tests_added: 1, red_green: true, immutability: true, worktree: 2 },
     ],
   };
+  for (const t of tasks.tasks) { t.red={command:'test',output_excerpt:'failed before'}; t.green={command:'test',output_excerpt:'passed after'}; }
   fs.writeFileSync(path.join(dir, 'TASKS.json'), JSON.stringify(tasks));
   fs.writeFileSync(path.join(dir, 'immutability.json'), JSON.stringify({ green: true, suite: ['A#b'] }));
   fs.writeFileSync(path.join(dir, 'worktrees.json'), JSON.stringify({
+    skipped: true, reason: 'unit fixture without Git',
     slices: [
       { index: 1, merged: true, removed: true },
       { index: 2, merged: true, removed: true },
@@ -28,13 +31,15 @@ function pack(overrides = {}) {
   fs.writeFileSync(path.join(reviews, 'spec.md'), 'ok\nVERDICT: APPROVE\n');
   fs.writeFileSync(path.join(reviews, 'correctness.md'), 'ok\nVERDICT: APPROVE\n');
   fs.writeFileSync(path.join(dir, 'coverage.json'), JSON.stringify({ pct: 96.2, tool: 'c8' }));
+  for (const axis of ['standards','spec','correctness']) fs.writeFileSync(path.join(reviews,`${axis}.json`),JSON.stringify({axis,verdict:'APPROVE',findings:[]}));
   for (const [file, body] of Object.entries(overrides)) {
     const dest = path.join(dir, file);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     if (body === null) fs.rmSync(dest, { force: true });
     else fs.writeFileSync(dest, typeof body === 'string' ? body : JSON.stringify(body));
+    if (/^reviews\/.*\.md$/.test(file) && typeof body==='string') fs.writeFileSync(dest.replace(/\.md$/,'.json'),JSON.stringify({axis:file.split('/')[1].split('.')[0],verdict:body.match(/VERDICT: (\w+)/)?.[1],findings:[]}));
   }
-  return dir;
+  return completePack(dir);
 }
 
 test('ten when every gate is paid', () => {
@@ -43,9 +48,10 @@ test('ten when every gate is paid', () => {
   assert.equal(r.closable, true);
 });
 
-test('spec SKIP still pays the review gate', () => {
+test('spec SKIP does not pay the required review gate', () => {
   const r = scorePack(pack({ 'reviews/spec.md': 'no spec available\nVERDICT: SKIP\n' }));
-  assert.equal(r.score, 10);
+  assert.equal(r.score, 8);
+  assert.equal(r.closable,false);
 });
 
 test('REJECT on correctness blocks close', () => {

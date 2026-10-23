@@ -15,9 +15,9 @@
  *
  * Output feeds agents; agents still verify path:line by reading source.
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -25,15 +25,15 @@ function arg(name, fallback) {
   return process.argv[i + 1] ?? fallback;
 }
 
-const root = path.resolve(arg('root', '.'));
-const outPath = arg('out', '');
-const scopeArg = arg('scope', '');
-const topN = Number(arg('top', '40')) || 40;
+const root = path.resolve(arg("root", "."));
+const outPath = arg("out", "");
+const scopeArg = arg("scope", "");
+const topN = Number(arg("top", "40")) || 40;
 // TOOL-ORC-002: the cap used to be a hardcoded 8, which silently swallowed
 // backend/src/main/java/com/appgp/backend/<layer>/<pkg>/ (depth 9) — i.e. the whole
 // Java side of a Spring repo — and reported nothing about it.
-const maxDepth = Math.max(1, Number(arg('max-depth', '32')) || 32);
-const strict = process.argv.includes('--strict');
+const maxDepth = Math.max(1, Number(arg("max-depth", "32")) || 32);
+const strict = process.argv.includes("--strict");
 
 /** Ledger of everything the walk refused to enter. Never let a skip be silent. */
 const traversal = {
@@ -42,18 +42,53 @@ const traversal = {
   truncated_dirs: [],
   skipped_dirs: [],
   unreadable_dirs: [],
+  unreadable_files: [],
+  invalid_scopes: [],
 };
 
 const SKIP_DIR = new Set([
-  'node_modules', '.git', 'vendor', '.build', 'build', 'dist', 'target',
-  'coverage', '__pycache__', '.gradle', '.idea', 'Pods', 'DerivedData',
-  'graphify-out', 'Docs', 'docs', '.venv', 'venv', 'bin', 'obj',
+  "node_modules",
+  ".git",
+  "vendor",
+  ".build",
+  "build",
+  "dist",
+  "target",
+  "coverage",
+  "__pycache__",
+  ".gradle",
+  ".idea",
+  "Pods",
+  "DerivedData",
+  "graphify-out",
+  "Docs",
+  "docs",
+  ".venv",
+  "venv",
+  "bin",
+  "obj",
 ]);
 
 const EXT = new Set([
-  '.swift', '.go', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx',
-  '.java', '.kt', '.kts', '.py', '.rs', '.cs', '.rb', '.php',
-  '.scala', '.m', '.mm',
+  ".swift",
+  ".go",
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".jsx",
+  ".java",
+  ".kt",
+  ".kts",
+  ".py",
+  ".rs",
+  ".cs",
+  ".rb",
+  ".php",
+  ".scala",
+  ".m",
+  ".mm",
 ]);
 
 const DECISION_RE =
@@ -72,18 +107,21 @@ function walk(dir, files, depth = 0) {
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch (e) {
-    traversal.unreadable_dirs.push({ path: rel(dir), error: String(e.code || e.message || e) });
+    traversal.unreadable_dirs.push({
+      path: rel(dir),
+      error: String(e.code || e.message || e),
+    });
     return;
   }
   for (const ent of entries) {
     const p = path.join(dir, ent.name);
-    if (SKIP_DIR.has(ent.name) || ent.name.startsWith('.')) {
+    if (SKIP_DIR.has(ent.name) || ent.name.startsWith(".")) {
       // Symlinked directories report isDirectory() === false, so they are never
       // traversed and the walk cannot cycle — the cap is a guardrail, not a filter.
       if (ent.isDirectory()) {
         traversal.skipped_dirs.push({
           path: rel(p),
-          reason: SKIP_DIR.has(ent.name) ? 'skip-list' : 'dot-directory',
+          reason: SKIP_DIR.has(ent.name) ? "skip-list" : "dot-directory",
         });
       }
       continue;
@@ -94,12 +132,12 @@ function walk(dir, files, depth = 0) {
 }
 
 function rel(p) {
-  return path.relative(root, p).split(path.sep).join('/');
+  return path.relative(root, p).split(path.sep).join("/");
 }
 
-const TEST_PATH_RE =
-  /(^|\/)(test|tests|__tests__|spec|__mocks__)\//i;
-const TEST_FILE_RE = /(Test|Tests|IT|ITCase|TestCase)\.[a-z]+$|\.(test|spec)\.[a-z]+$/;
+const TEST_PATH_RE = /(^|\/)(test|tests|__tests__|spec|__mocks__)\//i;
+const TEST_FILE_RE =
+  /(Test|Tests|IT|ITCase|TestCase)\.[a-z]+$|\.(test|spec)\.[a-z]+$/;
 
 /** Test sources are measured too, but flagged so Daedalus/Laconic can rank production first. */
 function isTestPath(fileRel) {
@@ -108,17 +146,17 @@ function isTestPath(fileRel) {
 
 function normalizeLine(s) {
   return s
-    .replace(/\/\/.*$/, '')
-    .replace(/#.*$/, '')
-    .replace(/\/\*.*?\*\//g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\/\/.*$/, "")
+    .replace(/#.*$/, "")
+    .replace(/\/\*.*?\*\//g, "")
+    .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
 
 function countDecisions(text) {
   let n = 0;
-  const re = new RegExp(DECISION_RE.source, 'g');
+  const re = new RegExp(DECISION_RE.source, "g");
   let m;
   while ((m = re.exec(text)) !== null) n++;
   return n;
@@ -151,23 +189,23 @@ function extractFunctions(content, fileRel) {
       continue;
     }
     const name =
-      m[1] || m[2] || m[3] || m[4] || m[5] || m[6] || m[7] || 'anonymous';
+      m[1] || m[2] || m[3] || m[4] || m[5] || m[6] || m[7] || "anonymous";
     const start = i;
     let depth = 0;
     let started = false;
     let end = i;
     // Python: indent block
-    if (fileRel.endsWith('.py')) {
-      const baseIndent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+    if (fileRel.endsWith(".py")) {
+      const baseIndent = (line.match(/^(\s*)/) || ["", ""])[1].length;
       end = i + 1;
       while (end < lines.length) {
         const L = lines[end];
-        if (L.trim() === '') {
+        if (L.trim() === "") {
           end++;
           continue;
         }
-        const ind = (L.match(/^(\s*)/) || ['', ''])[1].length;
-        if (ind <= baseIndent && L.trim() !== '') break;
+        const ind = (L.match(/^(\s*)/) || ["", ""])[1].length;
+        if (ind <= baseIndent && L.trim() !== "") break;
         end++;
       }
       end = Math.max(start + 1, end);
@@ -175,27 +213,29 @@ function extractFunctions(content, fileRel) {
       for (let j = i; j < lines.length; j++) {
         const L = lines[j];
         for (const ch of L) {
-          if (ch === '{') {
+          if (ch === "{") {
             depth++;
             started = true;
-          } else if (ch === '}') {
+          } else if (ch === "}") {
             depth--;
           }
         }
         end = j + 1;
         if (started && depth <= 0) break;
         // no-brace one-liner
-        if (!started && j > i && /;\s*$/.test(L) && !L.includes('{')) {
+        if (!started && j > i && /;\s*$/.test(L) && !L.includes("{")) {
           end = j + 1;
           break;
         }
       }
     }
     const bodyLines = lines.slice(start, end);
-    const body = bodyLines.join('\n');
+    const body = bodyLines.join("\n");
     const decisions = countDecisions(body);
     const cc = 1 + decisions;
-    const loc = bodyLines.filter((l) => l.trim() && !/^\s*(\/\/|#|\/\*|\*)/.test(l)).length;
+    const loc = bodyLines.filter(
+      (l) => l.trim() && !/^\s*(\/\/|#|\/\*|\*)/.test(l),
+    ).length;
     const nesting = maxNesting(bodyLines);
     fns.push({
       path: fileRel,
@@ -221,13 +261,26 @@ function shingles(content, fileRel) {
     if (slice.some((l) => l.length < 8)) continue;
     if (slice.filter((l) => l.length > 0).length < WIN - 1) continue;
     // skip brace-only / import heavy
-    if (slice.every((l) => /^import |^using |^package |^from |^\{$|^\}$/.test(l) || !l))
+    if (
+      slice.every(
+        (l) => /^import |^using |^package |^from |^\{$|^\}$/.test(l) || !l,
+      )
+    )
       continue;
-    const key = slice.join('\n');
+    const key = slice.join("\n");
     // Semgrep 965108856: Non-security fingerprint for local duplicate-code grouping; not an authenticity check.
     // nosemgrep: javascript.node-stdlib.cryptography.crypto-weak-algorithm.crypto-weak-algorithm
-    const hash = crypto.createHash('sha1').update(key).digest('hex').slice(0, 16);
-    out.push({ hash, path: fileRel, line: i + 1, preview: slice[0].slice(0, 80) });
+    const hash = crypto
+      .createHash("sha1")
+      .update(key)
+      .digest("hex")
+      .slice(0, 16);
+    out.push({
+      hash,
+      path: fileRel,
+      line: i + 1,
+      preview: slice[0].slice(0, 80),
+    });
   }
   return out;
 }
@@ -235,14 +288,24 @@ function shingles(content, fileRel) {
 // collect files
 let files = [];
 if (scopeArg) {
-  for (const s of scopeArg.split(',').map((x) => x.trim()).filter(Boolean)) {
+  for (const s of scopeArg
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean)) {
     const p = path.isAbsolute(s) ? s : path.join(root, s);
-    if (fs.existsSync(p) && fs.statSync(p).isFile()) files.push(p);
+    try {
+      if (fs.statSync(p).isDirectory()) walk(p, files);
+      else if (fs.statSync(p).isFile()) files.push(p);
+      else traversal.invalid_scopes.push(s);
+    } catch (e) {
+      traversal.invalid_scopes.push(s);
+    }
   }
 } else {
   walk(root, files);
 }
 
+files = [...new Set(files)];
 const functions = [];
 const shingleMap = new Map(); // hash -> [{path,line,preview}]
 const longFunctions = [];
@@ -250,11 +313,18 @@ const longFunctions = [];
 for (const fp of files) {
   let content;
   try {
-    content = fs.readFileSync(fp, 'utf8');
-  } catch {
+    content = fs.readFileSync(fp, "utf8");
+  } catch (e) {
+    traversal.unreadable_files.push({ path: rel(fp), reason: e.message });
     continue;
   }
-  if (content.length > 1_500_000) continue;
+  if (content.length > 1_500_000) {
+    traversal.unreadable_files.push({
+      path: rel(fp),
+      reason: "file exceeds 1.5 MB limit",
+    });
+    continue;
+  }
   const fileRel = rel(fp);
   const fns = extractFunctions(content, fileRel);
   for (const f of fns) {
@@ -268,7 +338,9 @@ for (const fp of files) {
 }
 
 functions.sort((a, b) => b.cyclomatic - a.cyclomatic || b.loc - a.loc);
-const hotspots = functions.filter((f) => f.cyclomatic >= 12 || f.nesting >= 4).slice(0, topN);
+const hotspots = functions
+  .filter((f) => f.cyclomatic >= 12 || f.nesting >= 4)
+  .slice(0, topN);
 
 const clones = [];
 for (const [, locs] of shingleMap) {
@@ -283,7 +355,7 @@ for (const [, locs] of shingleMap) {
   if (uniq.length < 2) continue;
   if (uniq.every((u) => u.path === uniq[0].path) && uniq.length < 2) continue;
   clones.push({
-    clone_type: 'T1_heuristic',
+    clone_type: "T1_heuristic",
     occurrences: uniq.slice(0, 8).map((u) => ({
       path: u.path,
       line: u.line,
@@ -304,7 +376,14 @@ const result = {
   generated_at: new Date().toISOString(),
   root,
   files_scanned: files.length,
-  traversal: { ...traversal, complete: traversal.truncated_dirs.length === 0 && traversal.unreadable_dirs.length === 0 },
+  traversal: {
+    ...traversal,
+    complete:
+      traversal.truncated_dirs.length === 0 &&
+      traversal.unreadable_dirs.length === 0 &&
+      traversal.unreadable_files.length === 0 &&
+      traversal.invalid_scopes.length === 0,
+  },
   thresholds: {
     cc_medium: 15,
     cc_high: 20,
@@ -331,20 +410,22 @@ if (!scopeArg) {
       `${traversal.skipped_dirs.length} dirs skipped by skip-list/dot-rule`,
   );
   for (const d of traversal.unreadable_dirs) {
-    console.error(`measure-quality: WARN: unreadable directory ${d.path} (${d.error})`);
+    console.error(
+      `measure-quality: WARN: unreadable directory ${d.path} (${d.error})`,
+    );
   }
   if (traversal.truncated_dirs.length) {
     console.error(
       `measure-quality: ERROR: metrics are INCOMPLETE — ${traversal.truncated_dirs.length} ` +
         `directories were not entered at --max-depth=${maxDepth}: ` +
-        traversal.truncated_dirs.slice(0, 5).join(', ') +
-        (traversal.truncated_dirs.length > 5 ? ', …' : '') +
-        ' — raise --max-depth',
+        traversal.truncated_dirs.slice(0, 5).join(", ") +
+        (traversal.truncated_dirs.length > 5 ? ", …" : "") +
+        " — raise --max-depth",
     );
   }
 }
 
-const text = JSON.stringify(result, null, 2) + '\n';
+const text = JSON.stringify(result, null, 2) + "\n";
 if (outPath) {
   fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
   fs.writeFileSync(outPath, text);
@@ -356,6 +437,8 @@ if (outPath) {
 }
 
 if (strict && !result.traversal.complete) {
-  console.error('measure-quality: --strict: refusing to report metrics over an incomplete traversal');
+  console.error(
+    "measure-quality: --strict: refusing to report metrics over an incomplete traversal",
+  );
   process.exit(2);
 }

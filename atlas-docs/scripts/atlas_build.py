@@ -10,8 +10,10 @@ Uso:
   atlas_build.py MODEL.json --check-only
 """
 import argparse
+import datetime
 import json
 import math
+from pathlib import Path
 import re
 import sys
 
@@ -27,9 +29,14 @@ SECRET_KEY_RE = re.compile(
     r"(?i)^(password|passwd|pwd|secret|secrets|token|api_key|apikey|private_key"
     r"|authorization|auth|credential|credentials|client_secret|access_key)$"
 )
+SECRET_FIELDS = r"password|passwd|pwd|secret|token|api[_-]?key|client_secret|access_key|private_key|authorization"
 SECRET_VAL_RE = re.compile(
-    r"(?i)(password|passwd|secret|token|api[_-]?key|authorization)\s*[:=]\s*([^\s\"'{][^\s\"'}]*)"
+    r'''(?i)(["']?(?:''' + SECRET_FIELDS + r''')["']?\s*[:=]\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;}]+)'''
 )
+URL_AUTH_RE = re.compile(r'''(?i)(\b[a-z][a-z0-9+.-]*://)[^\s/@<>"']+@''')
+URL_QUERY_RE = re.compile(r'''(?i)([?&](?:''' + SECRET_FIELDS + r''')=)[^&#\s"']+''')
+HEADER_RE = re.compile(r'''(?im)(\b(?:authorization|proxy-authorization|x-api-key)\s*:\s*)[^\r\n]+''')
+PRIVATE_KEY_RE = re.compile(r"-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----.*?-----END (?:[A-Z0-9]+ )*PRIVATE KEY-----", re.S)
 MASK = "****"
 
 
@@ -44,9 +51,21 @@ def warn(msg):
 
 # ---------------------------------------------------------------- masking
 def mask_string(key, value):
-    if SECRET_KEY_RE.match(key or "") and value and MASK not in value:
+    if SECRET_KEY_RE.match(key or "") and value:
         return MASK
-    return SECRET_VAL_RE.sub(lambda m: m.group(1) + ": " + MASK, value)
+    # Parse structured payloads before their quoted keys become opaque text.
+    if value.lstrip().startswith(("{", "[")):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, (dict, list)):
+                return json.dumps(walk_mask(parsed), ensure_ascii=False)
+        except (ValueError, RecursionError):
+            pass
+    value = PRIVATE_KEY_RE.sub(MASK, value)
+    value = URL_AUTH_RE.sub(lambda m: m.group(1) + MASK + "@", value)
+    value = URL_QUERY_RE.sub(lambda m: m.group(1) + MASK, value)
+    value = HEADER_RE.sub(lambda m: m.group(1) + MASK, value)
+    return SECRET_VAL_RE.sub(lambda m: m.group(1) + ('"' + MASK + '"' if m.group(2).startswith('"') else MASK), value)
 
 
 def walk_mask(obj, key=None):
@@ -95,19 +114,55 @@ def step_completeness(step):
 def flow_coverage(flow):
     steps = flow.get("steps") or []
     if not steps:
-        return None
-    if isinstance(flow.get("cov"), int) and flow.get("cov") >= 0:
-        return flow["cov"]
+        return 0
     return pct(sum(step_completeness(s) for s in steps) / len(steps))
 
 
 def fill_flow_coverage(model):
     for f in model.get("flows") or []:
-        cov = flow_coverage(f)
-        if cov is not None:
-            f["cov"] = cov
+        f["cov"] = flow_coverage(f)
+
+
+def has_observation_source(item):
+    source = item.get("source")
+    if not isinstance(source, dict) or not isinstance(source.get("ref"), str) or not source["ref"].strip():
+        return False
+    try:
+        stamp = datetime.datetime.fromisoformat(source.get("observedAt", "").replace("Z", "+00:00"))
+        return stamp.tzinfo is not None
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
+def normalize_runtime(model):
+    """Known runtime slots never become observed facts just because a number exists."""
+    def normalize(item, fields):
+        if has_observation_source(item):
+            item["prov"] = "observed"
         else:
-            f["cov"] = f.get("cov", 0)
+            for field in fields:
+                if field in item:
+                    item[field] = "—"
+            item["prov"] = "external"
+
+    for table in (model.get("data") or {}).get("tables") or []:
+        normalize(table, ("rows", "size", "wps"))
+    for topic in (model.get("events") or {}).get("topics") or []:
+        normalize(topic, ("lag", "dlq"))
+
+    def visit(value):
+        if isinstance(value, dict):
+            if value.get("prov") in ("external", "observed") and "v" in value:
+                normalize(value, ("v",))
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+    # History/score are derived records, not telemetry inputs.
+    for key, value in model.items():
+        if key not in ("history", "score"):
+            visit(value)
 
 
 def env_score(model):
@@ -166,8 +221,12 @@ def compute_score(model):
 def validate_entrypoints(model):
     """Régua de exaustividade: cada entrypoint termina mapeado ou trivial."""
     eps = model.get("entrypoints") or []
-    flow_ids = {f.get("id") for f in model.get("flows") or []}
+    flow_ids = {f.get("id") for f in model.get("flows") or [] if isinstance(f.get("id"), str)}
     errors, warnings = [], []
+    if not isinstance(model.get("entrypoints"), list):
+        return ["entrypoints obrigatório: inventário deve ser uma lista"], warnings
+    if not eps and (model.get("flows") or not isinstance(model.get("entrypointsNote"), str) or not model["entrypointsNote"].strip()):
+        errors.append("entrypoints vazio exige ausência de fluxos e entrypointsNote justificando a superfície vazia")
     for i, e in enumerate(eps):
         ref = e.get("ref", f"#{i}")
         st = e.get("status")
@@ -177,16 +236,35 @@ def validate_entrypoints(model):
                 "documente o fluxo (status mapeado + flow) ou justifique como trivial"
             )
         elif st == "mapeado":
-            if e.get("flow") not in flow_ids:
+            if not isinstance(e.get("flow"), str) or e["flow"] not in flow_ids:
                 errors.append(f"entrypoints[{i}] '{ref}' aponta para fluxo inexistente '{e.get('flow')}'")
         elif st == "trivial":
-            if not e.get("note"):
-                warnings.append(f"entrypoints[{i}] '{ref}' trivial sem note explicando por quê")
+            if not isinstance(e.get("note"), str) or not e["note"].strip():
+                errors.append(f"entrypoints[{i}] '{ref}' trivial sem note explicando por quê")
         else:
             errors.append(
                 f"entrypoints[{i}] '{ref}' status inválido '{st}' (use mapeado | trivial | nao-mapeado)"
             )
     return errors, warnings
+
+
+def validate_flow_refs(model):
+    ids = {f.get("id") for f in model.get("flows", []) if isinstance(f.get("id"), str)}
+    errors = []
+    def visit(value, path=""):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                location = f"{path}.{key}" if path else key
+                if key == "flows" and path:
+                    if not isinstance(child, list) or any(not isinstance(ref, str) or ref not in ids for ref in child):
+                        errors.append(f"{location} referencia fluxo inexistente: {child!r}")
+                else:
+                    visit(child, location)
+        elif isinstance(value, list):
+            for i, child in enumerate(value):
+                visit(child, f"{path}[{i}]")
+    visit(model)
+    return errors
 
 
 def validate_classes(model):
@@ -282,8 +360,10 @@ def validate(model):
     errors, warnings = [], []
     if not isinstance(model, dict):
         die("raiz do modelo precisa ser objeto")
-    if model.get("schema") != "atlas-docs/1":
-        warnings.append('campo schema deveria ser "atlas-docs/1"')
+    if model.get("schema") == "atlas-docs/1":
+        warnings.append("migração atlas-docs/1 → atlas-docs/2: inventário, referências e proveniência validados; cobertura recalculada")
+    elif model.get("schema") != "atlas-docs/2":
+        errors.append('schema suportado: atlas-docs/2 (atlas-docs/1 aceito para migração)')
     for section, fields in REQUIRED.items():
         v = model.get(section)
         if section in ("app",) and not isinstance(v, dict):
@@ -295,14 +375,14 @@ def validate(model):
                     errors.append(f"app.{f} ausente")
     if not model.get("flows"):
         warnings.append("nenhum fluxo extraído — dashboard fica vazio na página Fluxos")
-    elif not model.get("entrypoints"):
-        warnings.append(
-            "sem inventário de entrypoints — a régua de exaustividade (TODOS os fluxos) "
-            "fica sem prova; liste cada rota/consumer/cron/webhook e marque mapeado|trivial"
-        )
+    known_ids = set()
     for i, f in enumerate(model.get("flows") or []):
-        if not f.get("id"):
-            errors.append(f"flows[{i}] sem id")
+        if not isinstance(f.get("id"), str) or not f["id"].strip():
+            errors.append(f"flows[{i}] sem id textual")
+        elif f["id"] in known_ids:
+            errors.append(f"flows[{i}] id duplicado")
+        if isinstance(f.get("id"), str):
+            known_ids.add(f["id"])
         fid = f.get("id", i)
         if not (f.get("steps") or []):
             warnings.append(f"fluxo '{fid}' sem steps")
@@ -364,6 +444,30 @@ def main():
     except json.JSONDecodeError as e:
         die(f"JSON inválido em {args.model}: {e}")
 
+    if not isinstance(model, dict):
+        die("raiz do modelo precisa ser objeto")
+    for section in ("app", "identity", "architecture", "data", "events", "env", "quality", "c4", "history", "contracts"):
+        if section in model and not isinstance(model[section], dict):
+            die(f"{section} precisa ser objeto")
+    if "context" in model.get("c4", {}) and not isinstance(model["c4"]["context"], dict):
+        die("c4.context precisa ser objeto")
+    for name in ("scans", "coverage", "changelog"):
+        values = model.get("history", {}).get(name, [])
+        if not isinstance(values, list) or any(not isinstance(value, dict) for value in values):
+            die(f"history.{name} precisa ser lista de objetos")
+    # Validate the collection shapes used below before computing derived fields.
+    def shape(value, key="root"):
+        object_lists = {"flows", "steps", "entrypoints", "tables", "topics", "vars", "actors", "systems", "containers", "edges", "classes", "methods"}
+        if isinstance(value, dict):
+            for name, child in value.items():
+                if name in object_lists and not (name == "flows" and key != "root"):
+                    if not isinstance(child, list) or any(not isinstance(item, dict) for item in child):
+                        die(f"{key}.{name} precisa ser lista de objetos")
+                shape(child, key + "." + name)
+        elif isinstance(value, list):
+            for child in value:
+                shape(child, key + "[]")
+    shape(model)
     model = walk_mask(model)
     mask_env(model)
     fill_flow_coverage(model)
@@ -371,6 +475,7 @@ def main():
     ep_errors, ep_warnings = validate_entrypoints(model)
     errors += ep_errors
     warnings += ep_warnings
+    errors += validate_flow_refs(model)
     warnings += validate_classes(model)
     c4_errors, c4_warnings = validate_c4(model)
     errors += c4_errors
@@ -382,6 +487,8 @@ def main():
             print(f"ERRO: {e}", file=sys.stderr)
         die("modelo inválido — corrija antes do build")
 
+    normalize_runtime(model)
+    model["schema"] = "atlas-docs/2"
     model["score"] = compute_score(model)
 
     eps = model.get("entrypoints") or []
@@ -391,17 +498,21 @@ def main():
         n_tri = sum(1 for e in eps if e.get("status") == "trivial")
         ep_summary = f" · entrypoints: {n_map} mapeados · {n_tri} triviais"
 
-    cov = (model.get("history") or {}).get("coverage")
-    today = (model.get("app") or {}).get("generatedAt", "")[:10]
-    if isinstance(cov, list):
-        if not cov or str(cov[-1].get("day")) != today:
-            cov.append({"day": today or "hoje", "v": model["score"]["overall"]})
-            model.setdefault("history", {})["coverage"] = cov
-
     scans = (model.get("history") or {}).get("scans") or []
+    hist = model.setdefault("history", {})
+    cov = hist.setdefault("coverage", [])
+    today = model["app"].setdefault("generatedAt", datetime.datetime.now(datetime.timezone.utc).isoformat())[:10]
+    point = {"day": today, "v": model["score"]["overall"], "commit": model["app"]["commit"],
+             "scan": scans[0].get("id") if scans else None}
+    # One observation per scan/change; identical rebuilds are idempotent.
+    if not cov or any(cov[-1].get(k) != v for k, v in point.items()):
+        cov.append(point)
     if scans and isinstance(scans[0], dict):
-        prev = scans[0].pop("__prevOverall", None)
-        if prev is not None and scans[0].get("delta") in ("…", "±?", "—"):
+        legacy_prev = scans[0].pop("__prevOverall", None)
+        prev = scans[0].get("previousScore", legacy_prev)
+        scans[0]["score"] = model["score"]["overall"]
+        if isinstance(prev, (int, float)) and not isinstance(prev, bool) and math.isfinite(prev):
+            scans[0]["previousScore"] = prev
             d = model["score"]["overall"] - int(prev)
             scans[0]["delta"] = f"{d:+d}%"
             scans[0]["deltaKind"] = "ok" if d >= 0 else "bad"
@@ -444,6 +555,7 @@ def main():
         base = args.model.rsplit("/", 1)
         out = (base[0].rstrip("/") + "/index.html") if len(base) == 2 else "index.html"
     html = inject(template, model)
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(html)
     print(f"ok → {out} ({len(html)//1024} KB)")

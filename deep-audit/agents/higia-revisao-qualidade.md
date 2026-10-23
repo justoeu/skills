@@ -48,6 +48,7 @@ própria correção introduziu ou piorou.
 Somente JSON:
 ```json
 {
+  "context": "copie aqui o objeto CONTEXT inteiro recebido, sem alterar campos",
   "verdict": "APROVA",
   "lens": "QUALITY",
   "reasoning": "arquivo:linha e a regra/medida que sustenta o voto",
@@ -62,3 +63,5 @@ e não-vazio quando o voto não é `APROVA`; `new_findings` carrega o que é for
 
 O orquestrador grava seu voto em `reviews/votes/<ID>-QUALITY.json` e o **código**
 (`review-verify.mjs`) apura.
+
+Receba CONTEXT de review-start junto do diff. O voto contém esse objeto completo; mudança no produto exige nova revisão, nunca reutilize voto antigo. Consulte `../references/pack-contract.md`. Não execute reversão no checkout compartilhado.

@@ -1,0 +1,27 @@
+✖ empty candidate envelope cannot erase findings produced by completed hunters (1098.545875ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1278.49375
+
+✖ failing tests:
+
+test at ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:467:1
+✖ empty candidate envelope cannot erase findings produced by completed hunters (1098.545875ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: 0
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:471:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 0,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }

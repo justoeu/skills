@@ -1,0 +1,31 @@
+Building for debugging...
+[0/7] Write sources
+[2/7] ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/skills-swift-coverage-20261023-kt0kmx80/artifacts/swift-build/arm64-apple-macosx/debug/CoverageFixturePackageTests.derived/runner.swift
+[3/7] Write sources
+[4/7] Write swift-version--58304C5D6DBC2206.txt
+[6/9] Emitting module FixtureMath
+[7/9] Compiling FixtureMath FixtureMath.swift
+[8/11] Compiling FixtureMathTests FixtureMathTests.swift
+[9/11] Emitting module FixtureMathTests
+[10/13] Emitting module CoverageFixturePackageTests
+[11/13] Compiling CoverageFixturePackageTests runner.swift
+[11/13] Write Objects.LinkFileList
+[12/13] Linking CoverageFixturePackageTests
+Build complete! (8.85s)
+Test Suite 'All tests' started at 2026-10-23 09:36:45.563.
+Test Suite 'CoverageFixturePackageTests.xctest' started at 2026-10-23 09:36:45.564.
+Test Suite 'FixtureMathTests' started at 2026-10-23 09:36:45.564.
+Test Case '-[FixtureMathTests.FixtureMathTests testPositive]' started.
+Test Case '-[FixtureMathTests.FixtureMathTests testPositive]' passed (0.001 seconds).
+Test Case '-[FixtureMathTests.FixtureMathTests testTwice]' started.
+Test Case '-[FixtureMathTests.FixtureMathTests testTwice]' passed (0.000 seconds).
+Test Suite 'FixtureMathTests' passed at 2026-10-23 09:36:45.565.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'CoverageFixturePackageTests.xctest' passed at 2026-10-23 09:36:45.565.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'All tests' passed at 2026-10-23 09:36:45.566.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.003) seconds
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

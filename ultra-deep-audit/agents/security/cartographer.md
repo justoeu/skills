@@ -54,8 +54,12 @@ Return **only** JSON (no markdown fence, no preamble):
 
 ```json
 {
+  "complete": true,
+  "required_hunters": [{"component":"api","lens":"authorization"}],
   "components": [],
   "securityScanSkippedComponents": [],
   "notes": "one line on sizing choices"
 }
 ```
+
+For schema 2, list every required component×lens assignment in required_hunters. complete=true only after accounting for the corpus. If no attack surface exists, use no_attack_surface=true, a concrete reason and no assignments; do not invent an empty hunter.

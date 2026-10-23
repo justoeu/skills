@@ -19,15 +19,13 @@ Find check-then-act, lost updates, TOCTOU between threads/instances.
 5. Login/refresh/token family without lock  
 6. Slot double-booking without lock  
 
-## Catalogs
+## Project contracts
 
-- `Docs/audit/race-conditions-ultra-deep-2026-07-22.md`  
-- `Docs/audit/race-wave3-ultra-deep-2026-07-23.md`  
-- `Docs/audit/race-smoke-concurrency-checklist.md`
+Read concurrency invariants and persistence constraints in the current repository. No external project catalog is required.
 
 ## Property-based testing
 
-Recommend **jqwik** (BE) or **fast-check** (FE) when:
+Use the repository’s existing property-testing tool (for example jqwik or fast-check when applicable) when:
 
 - invariant must hold under permutation of ops  
 - many equivalent interleavings  

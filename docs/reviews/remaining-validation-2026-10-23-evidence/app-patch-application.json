@@ -1,0 +1,8 @@
+{
+  "path": "~/Developer/Workspace/app-gp/deployments/scripts/runtime-images-supply-chain-gate.sh",
+  "before_sha256": "15c5a35ca749c6d02f4be276c5362d8ba8b000794b96b9f06759375d3bf0a60c",
+  "after_sha256": "2feb68fdc39c9d3f206ec2df2edbed7600b1770c8f028079cb3853a12ee7155d",
+  "patch": "/tmp/app-gp-runtime-env-preflight.patch",
+  "patched_copy_tests": "33 pass, 0 fail, 0 skip",
+  "applied": true
+}

@@ -13,10 +13,13 @@ navegável. Não corrige código de produto — só relatório.
 escreva achado que não esteja lá**, e nunca edite o HTML à mão: ele é gerado.
 
 ## Pipeline (nesta ordem)
+Receba SKILL_ROOT resolvido e OUT pelo Maestro. Consulte `../references/pack-contract.md`.
+Não marque etapas completas por conta própria; a conclusão pertence ao executor da lente.
+Auditoria pode ser entregue com lacunas; fechamento só com evidência atual.
 ```bash
-node "$SKILL/scripts/merge-findings.mjs" --dir "$OUT" --mode "$MODE"
-node "$SKILL/scripts/lint-findings.mjs"  --dir "$OUT" --fix      # audita rótulos
-node "$SKILL/scripts/sync-progress.mjs"  --dir "$OUT" --title "Deep Audit <data>" \
+node "$SKILL_ROOT/scripts/merge-findings.mjs" --dir "$OUT" --mode "$MODE"
+node "$SKILL_ROOT/scripts/lint-findings.mjs"  --dir "$OUT" --fix      # audita rótulos
+node "$SKILL_ROOT/scripts/sync-progress.mjs"  --dir "$OUT" --title "Deep Audit <data>" \
   --publish docs/audits                                          # TASKS.md + report.html + cópias estáveis
 ```
 Saídas: `report.html` (autocontido, tema claro/escuro, filtros por desfecho/severidade/
@@ -62,3 +65,5 @@ um número só.
 Quando `TASKS.md` não tiver mais `[ ]`/`[~]`, faça o sync final e verifique
 `lint-findings --dir "$OUT" --gate`. Entregue em texto visível: path **absoluto** do pack,
 do `report.html` e do `TASKS.md`, e abra o HTML (`open`/`xdg-open`).
+
+Mostre resultado separado de --audit-gate (cobertura) e --gate (desfechos). Falta de prova ou dispensa nunca é aprovação. TASKS sem checkboxes não prova que detectores rodaram. Summary first_pass/attempts é derivado de tentativas preservadas; não deduza histórico só do último voto.

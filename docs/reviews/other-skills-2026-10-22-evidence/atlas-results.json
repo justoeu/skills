@@ -1,0 +1,428 @@
+{
+  "root": "/tmp/atlas-forward-dm6rkbe4",
+  "product": "/tmp/atlas-forward-dm6rkbe4/product",
+  "forward": [
+    {
+      "label": "initial",
+      "build": 0,
+      "score": {
+        "overall": 100,
+        "grade": "A",
+        "breakdown": [
+          {
+            "k": "Cobertura dos fluxos",
+            "v": 100,
+            "weight": "45%",
+            "prov": "code"
+          },
+          {
+            "k": "Modelo & contratos",
+            "v": 100,
+            "weight": "20%",
+            "prov": "code"
+          },
+          {
+            "k": "Variáveis de ambiente",
+            "v": 100,
+            "weight": "10%",
+            "prov": "code"
+          },
+          {
+            "k": "Quality gates",
+            "v": 100,
+            "weight": "25%",
+            "prov": "code"
+          }
+        ]
+      },
+      "flow_ids": [
+        "orders"
+      ],
+      "commit": "21dbb726fd3aaf73bc072ca9263f7f41c33dc111",
+      "commitPrev": null,
+      "history": {
+        "scans": [
+          {
+            "commit": "21dbb726fd3aaf73bc072ca9263f7f41c33dc111",
+            "when": "23/10 10:00",
+            "title": "initial",
+            "detail": "",
+            "delta": "—",
+            "deltaKind": "ok"
+          }
+        ],
+        "coverage": [
+          {
+            "day": "2026-10-23",
+            "v": 100
+          }
+        ],
+        "changelog": []
+      },
+      "libs": [
+        {
+          "group": "Runtime",
+          "items": [
+            {
+              "name": "express",
+              "ver": "5.0.0"
+            },
+            {
+              "name": "sqlite3",
+              "ver": "5.1.0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "update1",
+      "build": 0,
+      "score": {
+        "overall": 82,
+        "grade": "B",
+        "breakdown": [
+          {
+            "k": "Cobertura dos fluxos",
+            "v": 60,
+            "weight": "45%",
+            "prov": "code"
+          },
+          {
+            "k": "Modelo & contratos",
+            "v": 100,
+            "weight": "20%",
+            "prov": "code"
+          },
+          {
+            "k": "Variáveis de ambiente",
+            "v": 100,
+            "weight": "10%",
+            "prov": "code"
+          },
+          {
+            "k": "Quality gates",
+            "v": 100,
+            "weight": "25%",
+            "prov": "code"
+          }
+        ]
+      },
+      "flow_ids": [
+        "orders",
+        "refunds"
+      ],
+      "commit": "7f193994d39fcf0900a380754b1a7b59d8b44621",
+      "commitPrev": "21dbb726fd3aaf73bc072ca9263f7f41c33dc111",
+      "history": {
+        "scans": [
+          {
+            "commit": "7f193994d39fcf0900a380754b1a7b59d8b44621",
+            "when": "23/10 10:00",
+            "title": "update1",
+            "detail": "",
+            "delta": "-18%",
+            "deltaKind": "bad"
+          },
+          {
+            "commit": "21dbb726fd3aaf73bc072ca9263f7f41c33dc111",
+            "when": "23/10 10:00",
+            "title": "initial",
+            "detail": "",
+            "delta": "—",
+            "deltaKind": "ok"
+          }
+        ],
+        "coverage": [
+          {
+            "day": "2026-10-23",
+            "v": 100
+          },
+          {
+            "day": "2026-10-22",
+            "v": 82
+          }
+        ],
+        "changelog": [
+          {
+            "tag": "NOVO",
+            "body": "Refund journey documented."
+          }
+        ]
+      },
+      "libs": [
+        {
+          "group": "Runtime",
+          "items": [
+            {
+              "name": "express",
+              "ver": "5.0.0"
+            },
+            {
+              "name": "sqlite3",
+              "ver": "5.1.0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "update2",
+      "build": 0,
+      "score": {
+        "overall": 100,
+        "grade": "A",
+        "breakdown": [
+          {
+            "k": "Cobertura dos fluxos",
+            "v": 100,
+            "weight": "45%",
+            "prov": "code"
+          },
+          {
+            "k": "Modelo & contratos",
+            "v": 100,
+            "weight": "20%",
+            "prov": "code"
+          },
+          {
+            "k": "Variáveis de ambiente",
+            "v": 100,
+            "weight": "10%",
+            "prov": "code"
+          },
+          {
+            "k": "Quality gates",
+            "v": 100,
+            "weight": "25%",
+            "prov": "code"
+          }
+        ]
+      },
+      "flow_ids": [
+        "orders"
+      ],
+      "commit": "20ea4533c90a64bd73787f7921ad98c56b99b508",
+      "commitPrev": "7f193994d39fcf0900a380754b1a7b59d8b44621",
+      "history": {
+        "scans": [
+          {
+            "commit": "20ea4533c90a64bd73787f7921ad98c56b99b508",
+            "when": "23/10 10:00",
+            "title": "update2",
+            "detail": "",
+            "delta": "+18%",
+            "deltaKind": "ok"
+          }
+        ],
+        "coverage": [
+          {
+            "day": "2026-10-22",
+            "v": 100
+          }
+        ],
+        "changelog": [
+          {
+            "tag": "REMOVE",
+            "body": "Refund removed."
+          }
+        ]
+      },
+      "libs": [
+        {
+          "group": "Runtime",
+          "items": [
+            {
+              "name": "express",
+              "ver": "5.0.0"
+            },
+            {
+              "name": "sqlite3",
+              "ver": "5.2.0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stale_coverage": {
+    "build": 0,
+    "cov": 100,
+    "score": 100
+  },
+  "inflated_coverage": {
+    "build": 0,
+    "score": {
+      "overall": 505,
+      "grade": "A",
+      "breakdown": [
+        {
+          "k": "Cobertura dos fluxos",
+          "v": 1000,
+          "weight": "45%",
+          "prov": "code"
+        },
+        {
+          "k": "Modelo & contratos",
+          "v": 100,
+          "weight": "20%",
+          "prov": "code"
+        },
+        {
+          "k": "Variáveis de ambiente",
+          "v": 100,
+          "weight": "10%",
+          "prov": "code"
+        },
+        {
+          "k": "Quality gates",
+          "v": 100,
+          "weight": "25%",
+          "prov": "code"
+        }
+      ]
+    }
+  },
+  "missing-inventory": {
+    "result": {
+      "exit": 0,
+      "stdout": "score 100 (A) · 1 fluxos · cov: orders=100%\nclasses: 1/1 fluxos · c4: C1 ok · C2 2 containers\nok → /tmp/atlas-forward-dm6rkbe4/missing-inventory.html (141 KB)\n",
+      "stderr": "aviso: sem inventário de entrypoints — a régua de exaustividade (TODOS os fluxos) fica sem prova; liste cada rota/consumer/cron/webhook e marque mapeado|trivial\n"
+    },
+    "score": {
+      "overall": 100,
+      "grade": "A",
+      "breakdown": [
+        {
+          "k": "Cobertura dos fluxos",
+          "v": 100,
+          "weight": "45%",
+          "prov": "code"
+        },
+        {
+          "k": "Modelo & contratos",
+          "v": 100,
+          "weight": "20%",
+          "prov": "code"
+        },
+        {
+          "k": "Variáveis de ambiente",
+          "v": 100,
+          "weight": "10%",
+          "prov": "code"
+        },
+        {
+          "k": "Quality gates",
+          "v": 100,
+          "weight": "25%",
+          "prov": "code"
+        }
+      ]
+    }
+  },
+  "trivial-unjustified": {
+    "result": {
+      "exit": 0,
+      "stdout": "score 100 (A) · 1 fluxos · entrypoints: 0 mapeados · 1 triviais · cov: orders=100%\nclasses: 1/1 fluxos · c4: C1 ok · C2 2 containers\nok → /tmp/atlas-forward-dm6rkbe4/trivial-unjustified.html (141 KB)\n",
+      "stderr": "aviso: entrypoints[0] 'POST /orders' trivial sem note explicando por quê\n"
+    },
+    "score": {
+      "overall": 100,
+      "grade": "A",
+      "breakdown": [
+        {
+          "k": "Cobertura dos fluxos",
+          "v": 100,
+          "weight": "45%",
+          "prov": "code"
+        },
+        {
+          "k": "Modelo & contratos",
+          "v": 100,
+          "weight": "20%",
+          "prov": "code"
+        },
+        {
+          "k": "Variáveis de ambiente",
+          "v": 100,
+          "weight": "10%",
+          "prov": "code"
+        },
+        {
+          "k": "Quality gates",
+          "v": 100,
+          "weight": "25%",
+          "prov": "code"
+        }
+      ]
+    }
+  },
+  "secret_canaries": {
+    "result": {
+      "exit": 0,
+      "stdout": "score 100 (A) · 1 fluxos · entrypoints: 1 mapeados · 1 triviais · cov: orders=100%\nclasses: 1/1 fluxos · c4: C1 ok · C2 2 containers\nok → /tmp/atlas-forward-dm6rkbe4/secret-canaries.html (142 KB)\n",
+      "stderr": ""
+    },
+    "remaining": [
+      "CANARY_URL_PASSWORD",
+      "CANARY_JSON_PASSWORD",
+      "CANARY_JSON_TOKEN",
+      "CANARY_BEARER_VALUE",
+      "CANARY_HTTP_PASSWORD"
+    ],
+    "html": "/tmp/atlas-forward-dm6rkbe4/secret-canaries.html"
+  },
+  "dangling_flow_refs": {
+    "flows": [
+      "orders"
+    ],
+    "env_refs": [
+      "orders",
+      "refunds"
+    ],
+    "build": 0,
+    "html": "/tmp/atlas-forward-dm6rkbe4/update2.html"
+  },
+  "event_handler_probe": {
+    "result": {
+      "exit": 0,
+      "stdout": "score 100 (A) · 1 fluxos · entrypoints: 1 mapeados · 1 triviais · cov: orders');window.__ATLAS_PROBE=1;//=100%\nclasses: 1/1 fluxos · c4: C1 ok · C2 2 containers\nok → /tmp/atlas-forward-dm6rkbe4/event-handler-probe.html (141 KB)\n",
+      "stderr": ""
+    },
+    "html": "/tmp/atlas-forward-dm6rkbe4/event-handler-probe.html",
+    "id": "orders');window.__ATLAS_PROBE=1;//"
+  },
+  "full_empty_libs": {
+    "result": {
+      "exit": 0,
+      "stdout": "merge ok → /tmp/atlas-forward-dm6rkbe4/full-libs-out.json · full · 1 fluxos\nrode atlas_build.py para apurar score e gerar o index.html (o delta do scan mais recente é atualizado lá)\n",
+      "stderr": ""
+    },
+    "libs": [
+      {
+        "group": "Runtime",
+        "items": [
+          {
+            "name": "express",
+            "ver": "5.0.0"
+          },
+          {
+            "name": "sqlite3",
+            "ver": "5.1.0"
+          }
+        ]
+      }
+    ]
+  },
+  "delta_base": {
+    "first_scan_commitPrev": null,
+    "first_scan_commit": "21dbb726fd3aaf73bc072ca9263f7f41c33dc111",
+    "at_update1_prev_diff": [
+      "package.json"
+    ],
+    "correct_diff": [
+      "package.json",
+      "src/refunds.mjs"
+    ]
+  }
+}

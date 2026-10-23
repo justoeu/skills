@@ -12,6 +12,8 @@
  * chega aqui como aceito (lint-findings rebaixa para aberto).
  */
 import fs from 'node:fs';
+import { atomicWrite, readJson, findingsArray } from './pack-state.mjs';
+import { closureErrors } from './closure.mjs';
 import path from 'node:path';
 import {
   AGENTS,
@@ -47,8 +49,7 @@ function loadJson(p) {
   }
 }
 
-let findings = loadJson(findingsPath);
-if (!Array.isArray(findings)) findings = findings?.findings ?? [];
+let findings = findingsArray(readJson(findingsPath));
 
 const baseDir = path.dirname(path.resolve(findingsPath));
 const meta = loadJson(cliArg('meta')) || loadJson(path.join(baseDir, 'run-meta.json'));
@@ -68,6 +69,7 @@ findings.sort(
   (a, b) => (SEV_RANK[a.severity] ?? 9) - (SEV_RANK[b.severity] ?? 9) || String(a.id).localeCompare(String(b.id)),
 );
 
+const gateErrors = closureErrors(baseDir, findings);
 const c = counts(findings);
 const closed = c.resolved + c.refuted + c.accepted;
 const pct = c.total ? Math.round((closed / c.total) * 100) : 0;
@@ -200,6 +202,7 @@ footer { padding:1rem 1.5rem; color:var(--muted); font-size:.75rem; border-top:1
 </style>
 </head>
 <body>
+<div role="status" style="padding:16px;background:#162032;color:#fff">${gateErrors.length ? 'Auditoria/fechamento PENDENTE: ' + escapeHtml(gateErrors.join('; ')) : 'Evidências atuais verificadas pelo gate'}</div>
 <header>
   <div>
     <h1>${escapeHtml(title)}</h1>
@@ -810,7 +813,7 @@ kpis(); renderFilters(); renderTabs(); render();
 `;
 
 fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
-fs.writeFileSync(outPath, html);
+atomicWrite(outPath, html);
 console.log(
   `build-report: ${c.total} achados (${c.open} aberto · ${c.resolved} resolvido · ${c.refuted} refutado · ` +
     `${c.accepted} aceito · ${pct}% fechado) → ${path.resolve(outPath)}`,

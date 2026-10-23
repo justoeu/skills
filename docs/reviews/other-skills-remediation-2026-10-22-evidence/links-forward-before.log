@@ -1,0 +1,33 @@
+✖ TL-01: divergent bytes survive --fix in a retained backup (29.311875ms)
+✔ TL-01: failed symlink creation restores original copy (6.005542ms)
+✔ TL-01: symlink content in a copied skill is preserved without following it (44.748167ms)
+✔ TL-02: another skill inside the same harness is rejected (71.796875ms)
+✔ TL-02: aliases must point to the exact canonical skill (57.692291ms)
+✔ TL-03: dangling symlink diagnosed and ensure refuses safely (14.113ms)
+✔ TL-03: legacy markdown does not crash or get overwritten by ensure (5.459792ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 359.360416
+
+✖ failing tests:
+
+test at scripts/tests/check-links-regression.test.mjs:20:1
+✖ TL-01: divergent bytes survive --fix in a retained backup (29.311875ms)
+  AssertionError [ERR_ASSERTION]: backup must be outside the skill discovery root
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/scripts/tests/check-links-regression.test.mjs:28:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

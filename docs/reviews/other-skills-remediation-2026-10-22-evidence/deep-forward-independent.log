@@ -1,0 +1,15 @@
+{
+  "base": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8",
+  "events": 71,
+  "first": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-a65c5021-877c-4265-a2d3-e3bc3a8d54f3",
+  "id": "BUG-ART-3F632C13ECC608E8",
+  "red": 1,
+  "fix_closed": true,
+  "reopen_and_reclose": true,
+  "same_day_new": true,
+  "security": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/deep-independent-forward-lnv3L8/repo/docs/audits/deep-audit/2026-10-23-full-b4072a01-039b-41df-a2b2-1028ac1ec993",
+  "security_adversarial": true,
+  "legitimate_zero_instrument": true,
+  "head_invalidation": true,
+  "pass": true
+}

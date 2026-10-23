@@ -1,0 +1,397 @@
+{
+  "base": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7",
+  "root": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product",
+  "model": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+  "html": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html",
+  "first": {
+    "flows": [
+      "create-order"
+    ],
+    "entrypoints": [
+      {
+        "kind": "library",
+        "ref": "orders.mjs:createOrder(input)",
+        "status": "mapeado",
+        "flow": "create-order"
+      }
+    ],
+    "libs": [
+      {
+        "group": "Dependências declaradas · package.json",
+        "items": [
+          {
+            "name": "sqlite3",
+            "ver": "5.2.0",
+            "use": "Declarada no manifesto; nenhum uso/importação nos arquivos lidos",
+            "note": "Não inferir banco operacional ou instalação",
+            "state": "warn"
+          }
+        ]
+      }
+    ],
+    "history": {
+      "scans": [
+        {
+          "id": "e29fafd21e4a4f8389830fbc5a4c1cdd",
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "when": "2026-10-23T02:15:42.991988+00:00",
+          "title": "Leitura inicial dos dois arquivos",
+          "detail": "",
+          "delta": "—",
+          "deltaKind": "ok",
+          "previousScore": null,
+          "score": 48
+        }
+      ],
+      "coverage": [
+        {
+          "day": "2026-10-23",
+          "v": 48,
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "scan": "e29fafd21e4a4f8389830fbc5a4c1cdd"
+        }
+      ],
+      "changelog": [
+        {
+          "tag": "NOVO",
+          "body": "Mapeada exportação createOrder e dependência sqlite3 declarada sem uso visível."
+        }
+      ]
+    },
+    "score": {
+      "overall": 48,
+      "grade": "D",
+      "breakdown": [
+        {
+          "k": "Cobertura dos fluxos",
+          "v": 70,
+          "weight": "45%",
+          "prov": "code"
+        },
+        {
+          "k": "Modelo & contratos",
+          "v": 0,
+          "weight": "20%",
+          "prov": "code"
+        },
+        {
+          "k": "Variáveis de ambiente",
+          "v": null,
+          "weight": "10%",
+          "prov": "external"
+        },
+        {
+          "k": "Quality gates",
+          "v": null,
+          "weight": "25%",
+          "prov": "external"
+        }
+      ]
+    }
+  },
+  "second": {
+    "flows": [
+      "create-order",
+      "cancel-order"
+    ],
+    "entrypoints": [
+      {
+        "kind": "library",
+        "ref": "orders.mjs:createOrder(input)",
+        "status": "mapeado",
+        "flow": "create-order"
+      },
+      {
+        "kind": "library",
+        "ref": "orders.mjs:cancelOrder(order)",
+        "status": "mapeado",
+        "flow": "cancel-order"
+      }
+    ],
+    "libs": [
+      {
+        "group": "Dependências declaradas · package.json",
+        "items": [
+          {
+            "name": "sqlite3",
+            "ver": "^5.2.0",
+            "use": "Declarada, sem uso/importação no código lido",
+            "note": "Range do manifesto local; não é consulta a registry",
+            "state": "warn"
+          }
+        ]
+      }
+    ],
+    "history": {
+      "scans": [
+        {
+          "id": "be5e68d9bb7f40659a93a596e0548f26",
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "when": "2026-10-23T02:15:43.730777+00:00",
+          "title": "Nova função da biblioteca e range local",
+          "detail": "",
+          "delta": "+0%",
+          "deltaKind": "ok",
+          "previousScore": 48,
+          "score": 48
+        },
+        {
+          "id": "e29fafd21e4a4f8389830fbc5a4c1cdd",
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "when": "2026-10-23T02:15:42.991988+00:00",
+          "title": "Leitura inicial dos dois arquivos",
+          "detail": "",
+          "delta": "—",
+          "deltaKind": "ok",
+          "previousScore": null,
+          "score": 48
+        }
+      ],
+      "coverage": [
+        {
+          "day": "2026-10-23",
+          "v": 48,
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "scan": "e29fafd21e4a4f8389830fbc5a4c1cdd"
+        },
+        {
+          "day": "2026-10-23",
+          "v": 48,
+          "commit": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+          "scan": "be5e68d9bb7f40659a93a596e0548f26"
+        }
+      ],
+      "changelog": [
+        {
+          "tag": "NOVO",
+          "body": "Adicionada exportação cancelOrder e fluxo de cópia com status cancelled."
+        },
+        {
+          "tag": "DOC",
+          "body": "Faixa declarada de sqlite3 passa de 5.2.0 para ^5.2.0; sem consulta a registry."
+        },
+        {
+          "tag": "NOVO",
+          "body": "Mapeada exportação createOrder e dependência sqlite3 declarada sem uso visível."
+        }
+      ]
+    },
+    "score": {
+      "overall": 48,
+      "grade": "D",
+      "breakdown": [
+        {
+          "k": "Cobertura dos fluxos",
+          "v": 70,
+          "weight": "45%",
+          "prov": "code"
+        },
+        {
+          "k": "Modelo & contratos",
+          "v": 0,
+          "weight": "20%",
+          "prov": "code"
+        },
+        {
+          "k": "Variáveis de ambiente",
+          "v": null,
+          "weight": "10%",
+          "prov": "external"
+        },
+        {
+          "k": "Quality gates",
+          "v": null,
+          "weight": "25%",
+          "prov": "external"
+        }
+      ]
+    }
+  },
+  "delta": {
+    "mode": "delta",
+    "base": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+    "head": "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+    "files": [
+      {
+        "status": "M",
+        "path": "orders.mjs"
+      },
+      {
+        "status": "M",
+        "path": "package.json"
+      },
+      {
+        "status": "?",
+        "path": "docs/atlas/app-model.json"
+      },
+      {
+        "status": "?",
+        "path": "docs/atlas/index.html"
+      }
+    ]
+  },
+  "rebuild_history_identical": true,
+  "html_bytes": 152661,
+  "logs": [
+    {
+      "argv": [
+        "git",
+        "init",
+        "-b",
+        "main"
+      ],
+      "exit": 0,
+      "stdout": "Initialized empty Git repository in ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/.git/\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Forward fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "add",
+        "."
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "commit",
+        "-m",
+        "initial library"
+      ],
+      "exit": 0,
+      "stdout": "[main (root-commit) 3689fbd] initial library\n 2 files changed, 2 insertions(+)\n create mode 100644 orders.mjs\n create mode 100644 package.json\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "3689fbdd71fb26516e518e5961cdbd0834669cc0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_merge.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/scan-initial.json",
+        "--mode",
+        "full",
+        "--commit",
+        "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+        "--when",
+        "2026-10-23T02:15:42.991988+00:00",
+        "--title",
+        "Leitura inicial dos dois arquivos",
+        "-o",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json"
+      ],
+      "exit": 0,
+      "stdout": "merge ok → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json · full · 1 fluxos\nrode atlas_build.py para apurar score e gerar o index.html (o delta do scan mais recente é atualizado lá)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_build.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "--template",
+        "~/Developer/harness/skills/atlas-docs/assets/template.html",
+        "-o",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html"
+      ],
+      "exit": 0,
+      "stdout": "score 48 (D) · 1 fluxos · entrypoints: 1 mapeados · 0 triviais · cov: create-order=70%\nclasses: 1/1 fluxos · c4: C1 ok · C2 0 containers\nok → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html (146 KB)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_delta.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "--repo",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"mode\": \"delta\",\n  \"base\": \"3689fbdd71fb26516e518e5961cdbd0834669cc0\",\n  \"head\": \"3689fbdd71fb26516e518e5961cdbd0834669cc0\",\n  \"files\": [\n    {\n      \"status\": \"M\",\n      \"path\": \"orders.mjs\"\n    },\n    {\n      \"status\": \"M\",\n      \"path\": \"package.json\"\n    },\n    {\n      \"status\": \"?\",\n      \"path\": \"docs/atlas/app-model.json\"\n    },\n    {\n      \"status\": \"?\",\n      \"path\": \"docs/atlas/index.html\"\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_merge.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/scan-update.json",
+        "--mode",
+        "delta",
+        "--commit",
+        "3689fbdd71fb26516e518e5961cdbd0834669cc0",
+        "--when",
+        "2026-10-23T02:15:43.730777+00:00",
+        "--title",
+        "Nova função da biblioteca e range local",
+        "-o",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json"
+      ],
+      "exit": 0,
+      "stdout": "merge ok → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json · delta · 2 fluxos\nrode atlas_build.py para apurar score e gerar o index.html (o delta do scan mais recente é atualizado lá)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_build.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "--template",
+        "~/Developer/harness/skills/atlas-docs/assets/template.html",
+        "-o",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html"
+      ],
+      "exit": 0,
+      "stdout": "score 48 (D) · 2 fluxos · entrypoints: 2 mapeados · 0 triviais · cov: create-order=70%, cancel-order=70%\nclasses: 2/2 fluxos · c4: C1 ok · C2 0 containers\nok → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html (148 KB)\n",
+      "stderr": "aviso: fluxo 'cancel-order' brief incompleto (unhappy) — o card do topo precisa de what, does, happy, unhappy\n"
+    },
+    {
+      "argv": [
+        "python3",
+        "~/Developer/harness/skills/atlas-docs/scripts/atlas_build.py",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/app-model.json",
+        "--template",
+        "~/Developer/harness/skills/atlas-docs/assets/template.html",
+        "-o",
+        "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html"
+      ],
+      "exit": 0,
+      "stdout": "score 48 (D) · 2 fluxos · entrypoints: 2 mapeados · 0 triviais · cov: create-order=70%, cancel-order=70%\nclasses: 2/2 fluxos · c4: C1 ok · C2 0 containers\nok → /var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/atlas-independent-forward-ttbwkxl7/product/docs/atlas/index.html (148 KB)\n",
+      "stderr": "aviso: fluxo 'cancel-order' brief incompleto (unhappy) — o card do topo precisa de what, does, happy, unhappy\n"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # SonarQube com suporte a Swift/Objective-C.
 #
-# Swift não é analisável na Community Build: `/api/languages/list` não traz
-# `swift`, porque as linguagens Apple são exclusivas da Developer Edition.
-# Este Dockerfile preenche a lacuna com o plugin de terceiros sonar-apple.
+# A imagem Community usada aqui precisa de extensão para analisar Swift.
+# Este Dockerfile acrescenta o plugin de terceiros sonar-apple. A lista de
+# linguagens detecta suporte disponível; sozinha não identifica a edição.
 #
 # O plugin é fixado por versão E por checksum. Sem o checksum, um release
 # reescrito na origem entraria em silêncio — e o plugin declara

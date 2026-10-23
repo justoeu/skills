@@ -39,14 +39,16 @@ verdade; mudança aqui aparece na hora em todos os hosts — não existe
 Implantar / auditar a exposição:
 
 ```bash
-node scripts/check-links.mjs                 # DRIFT (cópia física) · WARN (link fora) · INFO (não exposta)
-node scripts/check-links.mjs --fix           # troca cópia por symlink SÓ se for subconjunto do harness
+node scripts/check-links.mjs                 # DRIFT (cópia física) · WARN (destino incorreto/quebrado) · INFO (não exposta)
+node scripts/check-links.mjs --fix           # troca cópia sem arquivos extras; conserva backup para revisar diferenças
 node scripts/check-links.mjs --ensure <skill> # cria os symlinks faltantes em todos os hosts
 node --test scripts/tests/*.test.mjs
 ```
 
 Rode o checker **no fim de toda mudança** — ele pega o drift antes do host
-servir skill velha (ex.: cópia de 14/09 no lugar de symlink).
+servir skill velha. O reparo conserva a cópia original em `.skill-link-backups/`, fora do root de descoberta, e informa
+o caminho; revise diferenças antes de remover qualquer backup. Links quebrados,
+para outra skill ou arquivos legados são diagnosticados sem sobrescrita automática.
 
 **Versionamento**: toda skill carrega `metadata.version` semver no frontmatter do
 `SKILL.md`. **MAJOR** quebra contrato de invocação/pack (flags, arquivos do pack
@@ -75,7 +77,7 @@ Pergunta fixa: *quem alcança, quantas vezes, quanto custa cada vez?* Sem as tr�
 
 ### [`sonar-swift-local`](sonar-swift-local/SKILL.md) · [README da skill](sonar-swift-local/README.md)
 
-Analisa **Swift e Objective-C** no SonarQube. A Community Build não suporta as linguagens Apple — são exclusivas da Developer Edition — e um scan apontado para ela indexa zero linha com o Quality Gate verde, que é pior do que não medir.
+Analisa **Swift e Objective-C** no SonarQube local com plugin. Confirma a análise atual e linhas da linguagem antes de apresentar o gate; ausência de suporte ou falha operacional não recebe aprovação antiga.
 
 A skill sobe uma instância **local** com o plugin `insideapp-fr/sonar-apple`, fixado por versão e SHA-256, e converte cobertura de SwiftPM (llvm-cov) para o formato que o SonarQube entende.
 
@@ -94,7 +96,7 @@ Nunca instala o plugin em servidor compartilhado: ele usa o classloader do Sonar
 
 Bateria de detecção em **15 lentes** (arquitetura, dirty code, complexidade,
 duplicação, segurança com painel adversarial, performance, N+1, testes, CVE,
-bugs clássicos). **Apuração por código** — o modelo não se auto-aprova — com
+bugs clássicos). Scripts validam identidade, evidências e quorum, com
 pack navegável (`FINDINGS.json` + HTML + TASKS) e correção **test-first**
 (falha antes, passa depois, provada por reversão). Predecessora temática do
 `ultra-deep-audit`; mantida como entrada mais leve.
@@ -103,14 +105,14 @@ pack navegável (`FINDINGS.json` + HTML + TASKS) e correção **test-first**
 |---|---|
 | **Quando** | Detecção ampla de problemas com correção incluída |
 | **Comando** | `/deep-audit` · `/deep-audit --full` · `/deep-audit <lente>` |
-| **Pack** | `Docs/audit/deep/<data>/` |
+| **Pack** | `docs/audits/deep-audit/<data>-<modo>-<runId>/` |
 
 Não implementa feature do zero (para isso, `make-me-happy`). Auditoria
 multi-agente completa → `ultra-deep-audit`.
 
 ### [`ultra-deep-audit`](ultra-deep-audit/SKILL.md) · [README da skill](ultra-deep-audit/README.md)
 
-Bateria **de detecção** depois que código já existe. Lentes em paralelo, apuração por script (não pelo modelo), pack HTML + TASKS.
+Bateria **de detecção** depois que código já existe. Lentes em paralelo, validação de evidências por script, pack HTML + TASKS. A análise semântica continua sob responsabilidade dos revisores.
 
 Não implementa feature. Não substitui o `make-me-happy`.
 
@@ -118,7 +120,7 @@ Não implementa feature. Não substitui o `make-me-happy`.
 |---|---|
 | **Quando** | Fim de feature (`--delta`), release (`--full`), ou uma lente só (`--only n1`) |
 | **Comando** | `/ultra-deep-audit` · `--full` · `--only n1\|dirtycode\|quality\|sentinel\|…` |
-| **Pack** | `Docs/audit/ultra-deep/<data>/` |
+| **Pack** | `Docs/audit/ultra-deep/<run_id>/` |
 
 **Agentes (o que cada um caça)**
 
@@ -148,33 +150,21 @@ Não implementa feature. Não substitui o `make-me-happy`.
 
 `--only quality` = Daedalus+Echo+Laconic+Mentor+Forge. `--mode` aqui é só `delta` \| `full`.
 
-Fix de finding = red→green + `sync-progress --done`.
+O schema 2 vincula achados, revisão, prova e documentação à execução e ao snapshot do código. `sync-progress --done` exige os artefatos de fechamento correspondentes ao modo de validação; merge não apaga pendências. O gate de auditoria verifica cobertura e o de fechamento verifica os desfechos. Packs legados são históricos e precisam de nova execução para obter aprovação atual.
 
 ---
 
 ### [`make-me-happy`](make-me-happy/SKILL.md) · [README da skill](make-me-happy/README.md)
 
-**Implementa** feature, refactor ou greenfield. Sem SDD, Etapa Zero explora e escreve o spec. Alias: **`/mmh`**.
+Implementa feature, refactor ou greenfield. Alias `/mmh`. Sem definição suficiente,
+explora o escopo; spec existente também passa pelo setup de arquitetura e regras.
+Tarefas usam red-green, caracterização ou checks conforme a mudança. Worktrees têm
+identidade por run e recuperação após interrupções; merge testa o resultado integrado
+e não descarta alterações locais. Oracle mantém os agregados com controle de versão.
 
-| | |
-|---|---|
-| **Quando** | Spec pronto; greenfield, feature ou refactor |
-| **Comando** | `/make-me-happy` · `/mmh` · `--worktree N` · `--into feature/<name>` · `--cobertura N` · `--loop full\|task` · `--spec PATH` · `--fresh` |
-| **Pack** | `docs/impl/make-me-happy/<data>-<branch>/` |
-
-O que a run faz:
-
-1. Resume se a sessão anterior crashou (pack aberto ou worktree `mmh/slice-*`).
-2. **Arch-map** (atlas-docs ou manual) antes do SDD — a Etapa Zero conhece a arquitetura que existe. Planner → `TASKS.json` (qtd de testes por task; peça estrutural exige `refs` do SDD).
-3. Git worktrees (default **3**, `--worktree N`) numa **feature branch** (`--into`; recusa merge em `main`; recusa baseline vermelha).
-4. Testes de imutabilidade (contrato que não pode andar). Só o SDD; dúvida entre caminhos → pergunta.
-5. Review em 3 eixos paralelos, consenso 3/3: **Standards** (Fowler + repo) · **Spec** · **Correctness** — e, no mesmo lote, os **hooks de verificação**: `arch-alignment` (implementação ↔ SDD ↔ arquitetura), `reinvention` (não reescrever o que stdlib/lib entrega), `security`, `performance`, `overengineering`, `deps-freshness` (dep nova na última ativa) e `ui-acceptance` (**§4z, runtime**: sobe o app, loga com cred de teste, dirige as telas tocadas — modo `fast` com driver Playwright headless em segundos, ou `guided` com Playwright MCP explorando 1× — e confere console, rede, contrato do SDD e padrão visual com evidência por código). Achado ≥ high sem waiver do usuário bloqueia o fechamento — régua da cobertura. Score 10 **e** cobertura ≥ 90% **e** hooks `PASS` fecham o pack — **não** substitui o trio/docs/i18n do `CLAUDE.md` do app.
-6. HTML interativo, arquivo único e offline (KPIs, linha do tempo, tasks com evidência red→green, fluxo, payloads, cobertura por módulo, review por eixo com rodadas, **aba Hooks** com achados/deps/waivers, score, gates do projeto). Os schemas do pack estão em `make-me-happy/references/pack-schemas.md`. `.gitignore` + `.worktrees/` se ainda não existia: alteração visível no PR. No fim, com os merges feitos, apaga worktrees, branches `mmh/slice-*` e pastas `.worktrees/mmh-*` desta run.
-7. **Bateria cross-skill pós-implementação** (rodadas até secar): `/atlas-docs --delta` (doc em dia + arch-map das próximas runs) → `/nplus1-check` → `/abuse-audit` → `/ssrf-csrf-sqli-check --full`. Achado real se corrige dentro do pack (red→green).
-
-`--fresh` abandona slices abertas e começa do zero.
-
----
+Reviews, hooks, UI aplicável, gates e acompanhamento do projeto compõem o fechamento.
+Score numérico não substitui evidências atuais; HTML recalcula e `close` sela o resultado.
+`--fresh` cria outra run sem apagar a anterior. Veja flags e schemas no entrypoint.
 
 ### [`atlas-docs`](atlas-docs/SKILL.md) · [README da skill](atlas-docs/README.md)
 

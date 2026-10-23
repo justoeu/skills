@@ -2,7 +2,7 @@
 name: abuse-audit
 description: "Encontra superfície de abuso: rota que aceita trabalho sem teto, escrita pública sem cota, chave de rate limit que o cliente controla, fan-out e leitura sem limite, limitador que vaza memória. Use quando o pedido for sobre rate limiting, DoS, exaustão de recursos, força bruta, 429, ou 'esta rota está protegida?'."
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # /abuse-audit
@@ -23,6 +23,12 @@ Um achado só existe quando as três respostas juntas formam um problema. "Sem l
 /abuse-audit --diff             # só o que mudou vs. a branch base
 /abuse-audit --lens quota       # uma lente só (nomes na tabela abaixo)
 ```
+
+Em `--diff`, use a base definida pelo projeto ou a branch padrão do remoto,
+valide a referência e calcule o merge-base antes de listar alterações. Inclua
+modificações locais e arquivos novos no escopo relevante. Registre base, HEAD e
+exclusões; base inexistente é lacuna de cobertura, nunca diff vazio bem-sucedido.
+Se não houver base verificável, faça inventário completo do escopo solicitado.
 
 ---
 
@@ -49,19 +55,23 @@ Um achado sem a coluna do **custo** é ruído: é o que produz "adicione rate li
 
 Rode as que fizerem sentido para o escopo. Cada uma tem uma forma no código, uma consulta que a encontra, e **o falso positivo que ela mais produz** — leia o falso positivo antes de reportar.
 
+Os comandos abaixo são exemplos para Go. Adapte o inventário aos registradores,
+frameworks e linguagens encontrados; busca textual vazia não prova ausência de
+rotas, controles ou trabalho assíncrono.
+
 ### 1. `quota` — rota que aceita trabalho sem teto por chamador
 
 **A forma:** um handler mutante (POST/PUT/PATCH/DELETE) alcançável com credencial válida, sem nenhum controle de quantidade. Uma sessão válida vira requisições ilimitadas.
 
-**Como achar:** liste TODA rota registrada; separe por verbo; cruze com o mapa de cobertura do middleware de cota. O cruzamento é o achado — ler handler por handler perde o que ninguém lembrou de olhar.
+**Como achar:** liste TODA rota registrada e cruze com os controles efetivamente executados antes do trabalho caro, incluindo middleware, handler, serviço e infraestrutura. Confirme o caminho alcançável antes de reportar uma guarda ausente.
 
 ```bash
 grep -rnE '\.(Post|Put|Patch|Delete)\(' --include='*.go' | grep -v _test.go
 ```
 
-**Falso positivo mais comum:** rota mutante que já é limitada por outra coisa — um upload com cap de corpo, um endpoint que exige prova de credencial fresca. Cheque antes.
+**Falso positivo mais comum:** rota já coberta por uma quota atômica compartilhada ou orçamento global suficiente. Demonstre alcance, chave e limite efetivo. Cap de corpo limita tamanho, não frequência; credencial fresca só reduz repetição quando unicidade, expiração, custo ou quota forem comprovados.
 
-**A regra que decide:** cobertura por MIDDLEWARE conta; cobertura por chamada dentro de cada handler não conta. Cobertura que depende de alguém lembrar tem buraco invisível.
+**A regra que decide:** cobertura depende do fluxo executado, não da posição da chamada. Middleware e handler com proteção equivalente contam igualmente. Uma preferência por centralizar controles é recomendação arquitetural; uma rota que contorna o controle precisa de evidência própria.
 
 ### 2. `public-write` — superfície não autenticada que ESCREVE
 
@@ -71,7 +81,7 @@ grep -rnE '\.(Post|Put|Patch|Delete)\(' --include='*.go' | grep -v _test.go
 
 **Falso positivo:** escrita idempotente e barata cujo custo é menor que o de recusá-la (um upsert de heartbeat). Diga o custo e deixe passar.
 
-**Severidade sobe** quando a escrita é **por requisição** e não por recurso: um contador de clique cresce sem teto; um upsert em linha fixa não.
+Separe quantidade de operações de crescimento de armazenamento: incrementar um contador ou atualizar uma linha fixa ainda custa I/O e pode gerar contenção, mas não cria necessariamente novas linhas. Meça amplificação, índices e custo acumulado; idempotência sozinha não limita o trabalho repetido.
 
 ### 3. `key` — chave de rate limit que o cliente controla
 
@@ -97,7 +107,7 @@ O passo mecânico lista os call sites; o passo de julgamento lê o que compõe a
 
 **Como achar:** todo `map[string]` de longa vida no processo. Para cada um: quem escreve a chave? existe sweep/TTL/LRU? existe TETO?
 
-**A pergunta que separa achado de ruído:** *a cardinalidade da chave é limitada pelo domínio ou pelo atacante?* Keyed por id de usuário = limitada pela instância. Keyed por e-mail tentado = ilimitada.
+**A pergunta que separa achado de ruído:** *qual mecanismo limita a cardinalidade ativa?* ID de usuário não basta se o atacante puder criar contas continuamente. Verifique orçamento de criação, retenção/expiração, teto de entradas e evicção; TTL sozinho também não garante teto sob alta taxa de novas chaves. E-mail tentado costuma ser controlável, mas um cache com teto efetivo pode estar protegido.
 
 **Cuidado com o segundo nível:** um conjunto POR chave (contas distintas por IP) precisa de teto próprio. Um teto no mapa externo e nenhum no conjunto interno é o mesmo defeito uma camada abaixo.
 
@@ -141,8 +151,8 @@ grep -rniE 'select .* from' --include='*.go' | grep -vi 'limit' | grep -v _test.
 1. **Meça antes de opinar.** Primeiro produza a tabela de superfície: toda rota, verbo, autenticação exigida, controles que a cobrem. Sem essa tabela, as lentes 1 e 2 viram palpite.
 2. **Rode as lentes em paralelo**, uma por vez de forma independente — elas não compartilham estado e uma achar nada não diz nada sobre as outras.
 3. **Descarte tudo que não tem as três colunas** da barra de evidência.
-4. **Tente refutar cada achado sobrevivente.** Para cada um, procure ativamente o controle que você pode não ter visto: um middleware montado acima, um cap de corpo por path, uma prova de credencial. O default é FALSO POSITIVO.
-5. **Ordene por (custo por requisição × alcance do chamador)**, não por categoria. Uma rota anônima que escreve vale mais que dez rotas autenticadas que leem.
+4. **Tente refutar cada achado sobrevivente.** Procure controles acima e abaixo do handler e verifique se limitam a dimensão do ataque (tamanho, repetição, concorrência, retenção ou gasto). Controle comprovadamente suficiente refuta; falta de ambiente/prova deixa a hipótese inconclusiva e a lacuna explícita.
+5. **Ordene pelo custo sustentado alcançável**, considerando orçamento, frequência, amplificação, concorrência e acesso do chamador. Verbo HTTP e autenticação não determinam sozinhos severidade; uma leitura autenticada pode custar mais que uma escrita anônima.
 6. **Diga o que você NÃO varreu.** Um relatório que não declara sua própria cobertura lê como completo e não é.
 
 ## Formato de saída

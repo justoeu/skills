@@ -1,0 +1,75 @@
+{
+  "base": "/var/folders/0z/c5nklh457hbfkp524n88czhc0000gn/T/ultra-independent-forward-UBsMi5",
+  "clean": {
+    "audit_complete": true,
+    "implementation_complete": true,
+    "complete": true,
+    "errors": [],
+    "intent": "audit",
+    "legacy": false
+  },
+  "resume": {
+    "audit_complete": true,
+    "implementation_complete": true,
+    "complete": true,
+    "errors": [],
+    "intent": "audit",
+    "legacy": false
+  },
+  "fix": {
+    "audit_complete": true,
+    "implementation_complete": true,
+    "complete": true,
+    "errors": [],
+    "intent": "fix",
+    "legacy": false
+  },
+  "unique_run": true,
+  "deleted_security_vote": {
+    "audit_complete": false,
+    "implementation_complete": false,
+    "complete": false,
+    "errors": [
+      "security input missing: sec-deep/votes/C1-IMPACT.json"
+    ],
+    "intent": "audit",
+    "legacy": false
+  },
+  "invalid_deps": {
+    "audit_complete": false,
+    "implementation_complete": false,
+    "complete": false,
+    "errors": [
+      "dependency coverage incomplete"
+    ],
+    "intent": "audit",
+    "legacy": false
+  },
+  "valid_zero_deps": {
+    "audit_complete": true,
+    "implementation_complete": true,
+    "complete": true,
+    "errors": [],
+    "intent": "audit",
+    "legacy": false
+  },
+  "invalid_base": {
+    "exit": 1,
+    "stderr": "invalid or unrelated Git base: refs/remotes/nonexistent/missing\n",
+    "no_pack_created": true
+  },
+  "concurrent_binds": {
+    "first": {
+      "code": 0,
+      "output": ""
+    },
+    "blocked": {
+      "exit": 1,
+      "stderr": "pack lock busy: ~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/ultra-independent-forward-UBsMi5/repo/Docs/audit/ultra-deep/2026-10-23T02-17-05-928Z-770b1ab7/.pack.lock; retry after the writer exits (inspect owner before stale-lock recovery)\n"
+    },
+    "artifacts": [
+      "a.json",
+      "b.json"
+    ]
+  }
+}

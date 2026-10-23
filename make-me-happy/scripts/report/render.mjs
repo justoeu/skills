@@ -26,7 +26,7 @@ const HOOK_DESC = {
   security: 'Superfície que o diff abre: input, authz, segredo, desserialização, SSRF, abuso.',
   performance: 'N+1, query sem teto, índice faltando, hot path — nos fluxos que o diff toca.',
   overengineering: 'Peça estrutural sem requisito que a pague (diff + SDD + arch-map).',
-  'deps-freshness': 'Dep nova resolve para a última ativa; dep velha vira proposta de follow-up.',
+  'deps-freshness': 'Compatibilidade, runtime e versões suportadas das dependências no escopo; idade da versão é advisory.',
   'ui-acceptance': 'Runtime: app sobe, login, jornadas dirigidas (driver headless/MCP), console, rede, contrato e padrão visual.',
 };
 
@@ -34,7 +34,7 @@ const AXIS_LABEL = { standards: 'Standards', spec: 'Spec', correctness: 'Correct
 const AXIS_DESC = {
   standards: 'Padrões documentados do repo + catálogo de smells (Fowler).',
   spec: 'Aderência ao SDD: faltou algo, sobrou algo, algo está errado.',
-  correctness: 'Comportamento, red→green real, imutabilidade e piso de cobertura.',
+  correctness: 'Implementação, evidência adequada ao modo de validação, imutabilidade e piso de cobertura.',
 };
 
 const GATE_INFO = {
@@ -44,9 +44,9 @@ const GATE_INFO = {
     fail: 'Há task OPEN/IN_PROGRESS: o pack não entregou tudo que o plano prometeu.',
   },
   'red-green': {
-    label: 'Red → green',
-    what: 'Cada task DONE tem pelo menos um teste novo que falhou antes da mudança e passou depois.',
-    fail: 'Alguma task DONE não tem tests_added ≥ 1 ou red_green=true — não há prova de que o teste pega o defeito.',
+    label: 'Validação por task',
+    what: 'Cada task DONE tem RED/GREEN para comportamento, caracterização antes/depois para refactor ou checks justificados para docs/config.',
+    fail: 'Alguma task DONE não tem a evidência exigida pelo seu modo de validação.',
   },
   immutability: {
     label: 'Imutabilidade',
@@ -55,7 +55,7 @@ const GATE_INFO = {
   },
   review: {
     label: 'Review 3/3',
-    what: 'Os três eixos (Standards, Spec, Correctness) votam APPROVE. Spec SKIP só quando o usuário recusou spec.',
+    what: 'Os três eixos (Standards, Spec, Correctness) precisam aprovar com evidência válida. Spec ausente ou recusado não permite fechamento.',
     fail: 'Algum eixo está REJECT ou não votou.',
   },
   worktrees: {
@@ -213,7 +213,7 @@ function header(p) {
   const app = m.app || p.repoRoot?.split('/').pop() || 'app';
   const score = p.score;
   const cov = p.coverage;
-  const status = m.status || (score?.closable ? 'closed' : 'in_progress');
+  const status = score?.historical && score.closable ? 'closed' : 'in_progress';
   const into = m.into || p.worktrees?.into || null;
   const facts = [
     ['Início', fmtDate(p.times.started_at)],
@@ -293,7 +293,7 @@ function overview(p) {
   const merged = slices.filter((s) => s.merged).length;
   const kpi = (label, value, sub, t = 'neutral') => `<div class="kpi ${t}"><div class="kpi-label">${esc(label)}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ''}</div>`;
   const verdicts = AXES.map((a) => `<span class="vchip ${tone(p.reviews[a].verdict || 'PENDING')}" title="${esc(AXIS_LABEL[a])}">${esc(AXIS_LABEL[a][0])}<span class="sr">${esc(AXIS_LABEL[a])}: ${esc(p.reviews[a].verdict || 'sem voto')}</span></span>`).join('');
-  const approved = AXES.filter((a) => ['APPROVE', 'SKIP'].includes(p.reviews[a].verdict)).length;
+  const approved = AXES.filter((a) => p.reviews[a].verdict === 'APPROVE').length;
   const kpis = `<div class="kpis">
     ${kpi('Tasks', `${done}<span class="of">/${p.tasks.length}</span>`, p.tasks.length ? stackBar([
       { label: 'DONE', value: done, tone: 'ok' },
@@ -371,9 +371,30 @@ function evidenceBlock(label, e, t) {
   </div>`;
 }
 
+function validationLabel(t) {
+  return t.validation === 'check' ? 'Checks' : t.validation === 'characterization' ? 'Caracterização' : 'R→G';
+}
+
+function taskEvidence(t) {
+  const missing = (label, hint) => `<div class="evi neutral">${chip(label, 'neutral')} <span class="muted small">${esc(hint)}</span></div>`;
+  if (t.validation === 'check') {
+    return `${t.validation_reason ? `<p class="small">${inline(t.validation_reason)}</p>` : missing('CHECKS', 'justificativa não registrada (validation_reason)')}
+      ${t.checks.length ? t.checks.map((check, i) => evidenceBlock(`CHECK ${i + 1}`, check, check.ok === true ? 'ok' : 'bad')).join('') : missing('CHECKS', 'checks não registrados (checks[])')}`;
+  }
+  if (t.validation === 'characterization') {
+    return [['ANTES', t.before], ['DEPOIS', t.after]].map(([label, proof]) => proof
+      ? evidenceBlock(label, proof, proof.ok === true ? 'ok' : 'bad')
+      : missing(label, 'caracterização não registrada (before/after)')).join('');
+  }
+  const hasRed = Boolean(t.red && (t.red.test || t.red.output || t.red.text));
+  return `${hasRed ? evidenceBlock('RED', t.red, 'bad') : missing('RED', 'sem evidência estruturada (TASKS.json → red{command, output_excerpt})')}
+    ${t.green ? evidenceBlock('GREEN', t.green, 'ok') : missing('GREEN', 'evidência não registrada (green)')}
+    ${t.reversal ? `<div class="evi ${t.reversal.done ? 'ok' : 'warn'}">${chip('REVERSÃO', t.reversal.done ? 'ok' : 'warn')} ${t.reversal.text ? `<span class="small">${inline(t.reversal.text)}</span>` : ''}${t.reversal.output ? `<pre class="code small"><code>${esc(t.reversal.output)}</code></pre>` : ''}</div>` : ''}`;
+}
+
 function taskCard(t) {
   const search = [t.id, t.title, t.status, t.description, ...t.files, ...t.refs, t.red?.test || ''].join(' ').toLowerCase();
-  const hasRed = Boolean(t.red && (t.red.test || t.red.output || t.red.text));
+  const validationTone = t.validation_ok ? 'ok' : t.status === 'DONE' ? 'bad' : 'neutral';
   return `<details class="task" data-status="${esc(t.status)}" data-wt="${esc(t.worktree ?? '')}" data-search="${esc(search)}">
     <summary>
       <code class="tid">${esc(t.id)}</code>
@@ -381,7 +402,7 @@ function taskCard(t) {
       <span class="tmeta">
         ${chip(t.status)}
         <span class="mini" title="testes adicionados">🧪 ${esc(t.tests_added)}</span>
-        <span class="mini ${t.red_green ? 'ok' : 'bad'}" title="red→green">${t.red_green ? 'R→G ✓' : 'R→G ✗'}</span>
+        <span class="mini ${validationTone}" title="validação: ${esc(t.validation)}">${validationLabel(t)} ${t.validation_ok ? '✓' : t.status === 'DONE' ? '✗' : '…'}</span>
         ${t.immutability ? '<span class="mini ok" title="coberta por teste de imutabilidade">imut ✓</span>' : ''}
         ${t.files.length ? `<span class="mini" title="arquivos">${t.files.length} arq.</span>` : ''}
         ${t.commits.length ? `<span class="mini" title="commits">${t.commits.length} commit</span>` : ''}
@@ -392,9 +413,7 @@ function taskCard(t) {
       ${t.refs.length ? `<div class="kv"><span class="k">Refs</span> ${t.refs.map((r) => `<code>${esc(r)}</code>`).join(' ')}</div>` : ''}
       ${t.depends_on.length ? `<div class="kv"><span class="k">Depende de</span> ${t.depends_on.map((r) => `<code>${esc(r)}</code>`).join(' ')}</div>` : ''}
       <div class="evi-grid">
-        ${hasRed ? evidenceBlock('RED', t.red, 'bad') : `<div class="evi neutral">${chip('RED', 'neutral')} <span class="muted small">sem evidência estruturada (TASKS.json → red{test, output_excerpt})</span></div>`}
-        ${t.green ? evidenceBlock('GREEN', t.green, 'ok') : ''}
-        ${t.reversal ? `<div class="evi ${t.reversal.done ? 'ok' : 'warn'}">${chip('REVERSÃO', t.reversal.done ? 'ok' : 'warn')} ${t.reversal.text ? `<span class="small">${inline(t.reversal.text)}</span>` : ''}${t.reversal.output ? `<pre class="code small"><code>${esc(t.reversal.output)}</code></pre>` : ''}</div>` : ''}
+        ${taskEvidence(t)}
         ${t.evidenceText ? `<div class="evi neutral">${chip('EVIDÊNCIA', 'neutral')} <span class="small">${inline(t.evidenceText)}</span></div>` : ''}
       </div>
       ${t.tests.length ? `<div class="kv"><span class="k">Testes</span></div>${collapsedList(t.tests, { label: 'testes' })}` : ''}
@@ -544,18 +563,17 @@ function testes(p) {
   }
 
   const taskRows = p.tasks.length
-    ? `<div class="card"><h2>Evidência red → green por task</h2>
+    ? `<div class="card"><h2>Evidência de validação por task</h2>
         <div class="table-wrap"><table class="evtable">
-          <thead><tr><th scope="col">Task</th><th scope="col">RED (teste que falhou)</th><th scope="col">GREEN</th><th scope="col">Reversão</th><th scope="col">Testes</th></tr></thead>
+          <thead><tr><th scope="col">Task</th><th scope="col">Modo</th><th scope="col">Evidência</th><th scope="col">Validação</th><th scope="col">Testes adicionados</th></tr></thead>
           <tbody>${p.tasks.map((x) => `<tr>
             <th scope="row"><code>${esc(x.id)}</code></th>
-            <td>${x.red ? `${x.red.test ? `<code>${esc(x.red.test)}</code>` : ''}${x.red.output ? `<details class="more"><summary>saída</summary><pre class="code small"><code>${esc(x.red.output)}</code></pre></details>` : ''}${x.red.text ? `<div class="small muted">${inline(x.red.text.slice(0, 400))}</div>` : ''}` : '<span class="muted">não registrado</span>'}</td>
-            <td>${x.green ? `${chip('GREEN', 'ok')}${x.green.output ? `<details class="more"><summary>saída</summary><pre class="code small"><code>${esc(x.green.output)}</code></pre></details>` : ''}${x.green.text ? `<div class="small muted">${inline(x.green.text)}</div>` : ''}` : x.red_green ? `${chip('red_green=true', 'ok')}` : chip('não', 'bad')}${x.evidenceText ? `<div class="small muted">${inline(x.evidenceText)}</div>` : ''}</td>
-            <td>${x.reversal ? chip(x.reversal.done ? 'provada' : 'não viável', x.reversal.done ? 'ok' : 'warn') : '<span class="muted">—</span>'}</td>
+            <td>${esc(x.validation)}</td>
+            <td>${taskEvidence(x)}${x.evidenceText ? `<div class="small muted">${inline(x.evidenceText)}</div>` : ''}</td>
+            <td>${x.validation_ok ? chip('válida', 'ok') : chip(x.status === 'DONE' ? 'incompleta' : 'pendente', x.status === 'DONE' ? 'bad' : 'neutral')}</td>
             <td>${esc(x.tests_added)}</td>
           </tr>`).join('')}</tbody>
         </table></div>
-        ${p.tasks.every((x) => !x.green && !x.reversal) ? '<p class="muted small">Pack antigo: GREEN e reversão não foram gravados por task (o implementer agora grava red/green/reversal em TASKS.json).</p>' : ''}
       </div>`
     : '';
 
@@ -680,11 +698,13 @@ function score(p) {
   if (!s) return `<div class="card"><h2>Score</h2>${emptyState('Score', { file: 'score.json', agent: 'scripts/score.mjs' })}</div>`;
   const cov = p.coverage;
   const head = `<div class="card score-head">
-    ${gauge({ value: s.score, max: 10, label: 'Score', sub: s.closable ? 'pack pode fechar' : 'pack não fecha', t: s.score === 10 ? 'ok' : s.score >= 6 ? 'warn' : 'bad', size: 150 })}
+    ${gauge({ value: s.score, max: 10, label: 'Score', sub: s.historical && s.closable ? 'pack fechado' : s.closable ? 'pack pode fechar' : 'pack não fecha', t: s.score === 10 ? 'ok' : s.score >= 6 ? 'warn' : 'bad', size: 150 })}
     ${gauge({ value: cov.pct, label: 'Cobertura', sub: `piso ${cov.floor}%`, floor: cov.floor, size: 150 })}
     <div class="score-text">
-      <h2>${s.closable ? 'Fecha: score 10 e cobertura no piso' : 'Não fecha'}</h2>
-      <p class="muted">Cada gate vale 0 ou 2. O pack só fecha com 10 <em>e</em> cobertura ≥ piso (${esc(cov.floor)}%). Score 10 fecha o pack da skill — não substitui os gates do projeto (aba "Gates do projeto").</p>
+      <h2>${s.historical && s.closable ? 'Fechado: resultado histórico verificado' : s.closable ? 'Fecha: evidências atuais e gates concluídos' : 'Não fecha'}</h2>
+      ${s.historical ? '<p class="muted">Resultado histórico validado no fechamento; não representa alterações posteriores no produto.</p>' : ''}
+      ${(s.blockers || []).length ? `<ul>${s.blockers.map(b=>`<li>${esc(b.reason)}</li>`).join('')}</ul>` : ''}
+      <p class="muted">Cada gate vale 0 ou 2. O fechamento exige evidências válidas, testes finais, hooks e gates do projeto; além de 10 <em>e</em> cobertura ≥ piso (${esc(cov.floor)}%). Score 10 sozinho não permite fechar.</p>
       ${cov.pct != null ? `<p class="small">Cobertura: ${esc(fmtPct(cov.pct))} ${cov.ok ? '≥' : '<'} ${esc(cov.floor)}%</p>` : '<p class="small bad-text">Cobertura não medida.</p>'}
     </div>
   </div>`;
@@ -708,7 +728,7 @@ function score(p) {
 
 function gates(p) {
   const pg = p.projectGates;
-  const intro = '<p class="muted">Passo 8: o que o repositório exige além dos 3 eixos do pack (CLAUDE.md / AGENTS.md / CONTRIBUTING.md). Não entra no score 10.</p>';
+  const intro = '<p class="muted">O que o repositório exige além dos 3 eixos do pack (CLAUDE.md / AGENTS.md / CONTRIBUTING.md). Estes gates são obrigatórios para fechar, embora não acrescentem pontos ao score.</p>';
   if (!pg.gates.length) {
     return `<div class="card"><h2>Gates do projeto</h2>${intro}${emptyState('Gates do projeto', { file: 'project-gates.json', agent: 'Oracle (passo 8)', hint: '[{name, source, status: DONE|OPEN|FAILED|N/A, evidence}]' })}${pg.note ? `<p class="small">${esc(pg.note)}</p>` : ''}</div>`;
   }

@@ -1,75 +1,50 @@
-# Implementer — red → green in one worktree
+# Implementer — uma slice
 
-**Agent id:** `implementer`  
-You implement **only** the tasks assigned to your `WORKTREE_I`. You edit product code in that worktree. You do not merge.
+Implemente somente as tasks atribuídas a WORKTREE_I. Você não mergeia nem escreve
+TASKS.json, TASKS.md, run-meta.json ou coverage.json agregado. Não está sozinho no
+repo: preserve alterações dos demais e respeite a propriedade dos arquivos.
 
-## Input
+## Inputs
 
-- `$OUT/TASKS.json`
-- `WORKTREE_I`, `WORKTREE_DIR`, spec path
-- `$OUT/stack.json`
+ROOT, OUT, WORKTREE_DIR e spec absolutos; WORKTREE_I; tasks com versão atual; regras
+do projeto e comando de teste. OUT fica no checkout principal, não na slice.
 
-## Red → green (every task, no exceptions)
+## Método
 
-```
-1. Write the test that fails today (RED). Run it. See it fail.
-2. Minimal production change. Run it. See it pass (GREEN).
-3. Revert only the production change; confirm the test fails again; restore.
-4. Record tests_added (count of new/changed tests for this task), red_green=true.
-```
+1. Confirme branch e estado da slice. A baseline existente deve estar verde.
+2. Só inicie tasks com dependências satisfeitas. Dependência em outra slice exige
+   Oracle executar sync depois da integração do produtor; ordem declarada não basta.
+3. Envie resultado IN_PROGRESS para o Oracle aplicar. No loop task, execute uma task
+   e devolva o controle; não antecipe a seguinte sem a confirmação combinada.
+4. Valide pelo tipo da mudança:
+   - `red-green`: falha relevante antes, mudança mínima, verde depois. Grave command,
+     output_excerpt real e timestamps; prova por reversão quando viável, justificando
+     a ausência. Não use falha de ambiente/import incidental como prova comportamental.
+   - `characterization`: teste de comportamento verde antes e depois do refactor.
+     Grave `before`/`after`, ambos com ok, command e output_excerpt; não rotule como RED.
+   - `check`: docs/config sem comportamento novo, com justificativa e checks adequados
+     (links/parser/build/schema). Não invente teste que apenas repete o texto alterado.
+5. Rode os testes da slice; não commite trabalho incompleto como DONE. Respeite o SDD,
+   resolvendo escolhas locais pelos padrões do repo. Pergunte por decisões materiais
+   ainda abertas, não por cada nome interno possível.
+6. Commite a mudança na slice. Capture tests, files e commits. Não conte novamente
+   testes já contados em uma rodada anterior. Cobertura local vai em resultado próprio
+   da slice; o Oracle mede cobertura consolidada depois da integração.
 
-## Evidence (write it into the task row, every task)
+## Saída
 
-The report shows exactly what you record here. A DONE task without `red` is flagged as missing evidence.
+Arquivo exclusivo `OUT/results/T-001-<versão>.json` ou resultado estruturado ao Oracle:
 
 ```json
-{
-  "status": "DONE",
-  "tests_added": 2,
-  "red_green": true,
-  "red": {
-    "test": "TestJobsDeleteRejectsAbove200",
-    "file": "backend/internal/httpserver/jobs_delete_cap_test.go",
-    "command": "go test ./internal/httpserver -run TestJobsDeleteRejectsAbove200",
-    "output_excerpt": "jobs_delete_cap_test.go:31: expected 400, got 200",
-    "at": "2026-10-01T01:12:00Z"
-  },
-  "green": { "command": "go test ./internal/httpserver -run TestJobsDelete", "output_excerpt": "ok  …/httpserver 0.41s", "at": "…" },
-  "reversal": { "done": true, "output_excerpt": "reverted jobs.go:88 → FAIL expected 400, got 200" },
-  "tests": ["TestJobsDeleteRejectsAbove200", "TestJobsDeleteAccepts200"],
-  "files": ["backend/internal/services/jobs.go", "backend/internal/httpserver/jobs_delete_cap_test.go"],
-  "commits": [{ "sha": "5fdc9065", "message": "fix(jobs): cap ids at 200" }]
-}
+{"id":"T-001","expected_version":0,"patch":{
+ "status":"DONE","tests_added":1,"red_green":true,
+ "red":{"command":"npm test -- cap","output_excerpt":"expected 400, got 200"},
+ "green":{"command":"npm test -- cap","output_excerpt":"1 passed"},
+ "reversal":{"done":true,"output_excerpt":"same assertion fails without the fix"},
+ "tests":["rejects above cap"],"files":["src/cap.js"],
+ "commits":[{"sha":"abc123","message":"fix cap"}]}}
 ```
 
-- `output_excerpt` = the real failing assertion or message, copied from the run, 20 lines at most. Never paraphrase it, and never write "it failed as expected".
-- Reversal not viable (pure addition, generated code): `"reversal": { "done": false, "note": "why" }`.
-- Refactor: `red` is the characterization test that was green before the cut. Say that in `red.note`.
-
-If a task is a refactor, the RED is a characterization/immutability test that is already green on current behaviour — then the refactor must keep it green. Still record it.
-
-## Method
-
-1. `cd "$WORKTREE_DIR"`. Confirm `git status` is on the slice branch.
-2. Run the repo test command **before** writing the new RED. If it is already red, **stop** — that is a red baseline, not a task. Do not stack the feature on it.
-3. Take assigned `OPEN` tasks in dependency order.
-4. Mark `IN_PROGRESS` in `$OUT/TASKS.json` (Oracle may own the pack; if you cannot write `$OUT`, print the patch for Oracle).
-5. Implement red→green. Exactly the spec — do not expand scope. If two implementations fit and the spec does not pick: **stop and ask**; do not choose.
-6. Run the repo's test command for the slice. Zero failures. Record coverage (`coverage.json` `pct`); below the floor (90, or `run-meta.coverage_floor` if higher) the task is not done.
-7. Mark `DONE`, `tests_added`, `red_green`.
-8. Commit on the slice branch: one commit per task when possible.
-
-## Avoid
-
-- Skipping the failing test because "it's obvious"
-- Empty tests (`expect(true)`, `assertNotNull` only)
-- Touching files owned by another worktree slice unless a dependency forces it — then stop and tell Oracle (merge order / slice split is wrong)
-- Merging to the base branch (Oracle + `worktrees.mjs` do that)
-- Continuing when the existing suite is red (“fix it together with the feature”)
-- Inferring a design choice the SDD left open
-
-## Output
-
-- Commits on the slice branch
-- Updated task rows with the evidence block above (or a JSON patch printed at the end)
-- The test command you ran and its result
+O Oracle aplica via run-meta.mjs task. expected_version é a versão lida, incrementada
+pelo helper a cada aplicação. Resultado desatualizado exige releitura e conciliação;
+nunca regrave todo o JSON para sobrepor uma atualização alheia.

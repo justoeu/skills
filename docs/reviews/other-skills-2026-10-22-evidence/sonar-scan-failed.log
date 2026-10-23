@@ -1,0 +1,14 @@
+[1m1/5  Instância local[0m
+  [32m✓[0m no ar em http://127.0.0.1:9100
+[1m2/5  Ferramentas[0m
+  [32m✓[0m swiftlint fixture
+  [32m✓[0m mobsfscan presente
+[1m3/5  Testes e cobertura[0m
+  [33m![0m sem Package.swift — projeto Xcode precisa de .xcresult (ver SKILL.md)
+[1m4/5  Análise[0m
+  [33m![0m scanner retornou erro (Quality Gate vermelho conta como erro)
+[1m5/5  Resultado[0m
+  Quality Gate: [1mOK[0m  (consultivo, não bloqueia merge)
+  Analisado: main @ b150a9e86fcd
+  Painel: http://127.0.0.1:9100/dashboard?id=fixture
+synthetic scanner failure

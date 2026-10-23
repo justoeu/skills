@@ -1,0 +1,65 @@
+✖ partial dependency reports cannot claim coverage; real empty scan can (1053.442125ms)
+✖ delta initialization rejects an unresolved Git base without creating a run (669.342375ms)
+✖ concurrent binds cannot both succeed while losing a binding (943.880417ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2836.837917
+
+✖ failing tests:
+
+test at ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:516:1
+✖ partial dependency reports cannot claim coverage; real empty scan can (1053.442125ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:521:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:530:1
+✖ delta initialization rejects an unresolved Git base without creating a run (669.342375ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: 0
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:534:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 0,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:538:1
+✖ concurrent binds cannot both succeed while losing a binding (943.880417ms)
+  AssertionError [ERR_ASSERTION]: both succeeded but one binding was lost
+      at TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/pack-lifecycle.test.mjs:553:33)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

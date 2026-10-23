@@ -25,8 +25,7 @@ A map that **decides allow/deny** (the limiter's own state, its key, a fail-open
 | BE | connection borrow without close |
 | BE | full body `byte[]` without size limit |
 
-Catalog: `Docs/audit/memory-leak-ultra-deep-2026-07-23.md`  
-Helper FE: `frontend/src/utils/blobUrl.ts` · BE: `RedisKeyScanner`
+Read resource ownership and limits from the current repository. Framework examples apply only when that stack is detected.
 
 ## Backpressure / exhaustion
 

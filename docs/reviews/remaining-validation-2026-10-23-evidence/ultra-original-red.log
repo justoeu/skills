@@ -1,0 +1,2836 @@
+TAP version 13
+# Subtest: every BOM-property pin in backend/pom.xml is mapped and justified
+ok 1 - every BOM-property pin in backend/pom.xml is mapped and justified
+  ---
+  duration_ms: 1.809041
+  type: 'test'
+  ...
+# Subtest: o glob dos instrumentos inclui o teste do build-report
+ok 2 - o glob dos instrumentos inclui o teste do build-report
+  ---
+  duration_ms: 0.878292
+  type: 'test'
+  ...
+# Subtest: o piso nominal do reparo de agenda exige os três métodos do IT
+not ok 3 - o piso nominal do reparo de agenda exige os três métodos do IT
+  ---
+  duration_ms: 0.684542
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    um relatório com só 1 ou 2 dos 3 métodos não pode deixar o gate verde
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:57:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: agenda-mutation preserva o núcleo já medido e acrescenta as correções desta onda
+ok 4 - agenda-mutation preserva o núcleo já medido e acrescenta as correções desta onda
+  ---
+  duration_ms: 0.406083
+  type: 'test'
+  ...
+# Subtest: assinatura-otp-mutation mede o caminho PKCS\#12 real e o diff o dispara
+ok 5 - assinatura-otp-mutation mede o caminho PKCS\#12 real e o diff o dispara
+  ---
+  duration_ms: 0.299208
+  type: 'test'
+  ...
+# Subtest: todo perfil extra passa pelo verificador de integridade do mutations.xml
+not ok 6 - todo perfil extra passa pelo verificador de integridade do mutations.xml
+  ---
+  duration_ms: 0.830458
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /rodar_pitest "pitest -P\$perfil" "\/tmp\/ci-local-pit-\$perfil\.log" "-P\$perfil"/. Input:
+    
+    '#!/usr/bin/env bash\n' +
+      '#\n' +
+      '# ci-local.sh — roda LOCALMENTE tudo que a CI roda, antes de commitar.\n' +
+      '#\n' +
+      '# POR QUE ESTE SCRIPT EXISTE (2026-08-14): o gate local do CLAUDE.md cobria\n' +
+      '# `mvn test` + `npm test` + `npm run build` + Pitest. A CI de PR (ci.yml) roda\n' +
+      '# MAIS que isso, e o workflow de release (release.yml, no push pra main) roda\n' +
+      '# um passo que nenhum PR executa: **Trivy sobre a IMAGEM Docker construída**.\n' +
+      '#\n' +
+      '# Resultado: dois PRs entraram com 16/16 verdes e o Release quebrou nos dois —\n' +
+      '# duas CVEs HIGH em `httpcore5` 5.4.2, dependência TRANSITIVA do AWS SDK que só\n' +
+      '# aparece no jar empacotado. O `Trivy FS scan` do PR não a enxerga. A `main`\n' +
+      '# ficou sem imagem publicada por um dia inteiro sem que nenhum PR ficasse\n' +
+      '# vermelho.\n' +
+      '#\n' +
+      '# Uso:\n' +
+      '#   scripts/ci-local.sh            # tudo\n' +
+      '#   scripts/ci-local.sh --fast     # pula Pitest, imagens Docker e a cobertura V8 do frontend\n' +
+      '#   scripts/ci-local.sh --images   # SÓ build de imagem + Trivy image scan (app + runtimes de deploy)\n' +
+      '#   scripts/ci-local.sh --sql-real-it\n' +
+      '#                                  # SÓ as migrações Flyway manifestadas em PostgreSQL real\n' +
+      '#\n' +
+      '#   scripts/ci-local.sh --verificar-xml-pitest <mutations.xml> [gerados] [mortos]\n' +
+      '#                                  # auto-teste do verificador do §7 (ver\n' +
+      '#                                  # checar_pitest_xml); não roda build nenhum.\n' +
+      '#\n' +
+      '# Opções, depois do modo (SDD-08 §Delta 2026-10-13, OPS-CI-LOCAL-RAPIDO):\n' +
+      '#   --listar-passos       imprime os ids dos passos, na ordem de execução, e sai\n' +
+      '#   --only <id[,id...]>   roda só esses passos (ex.: depois de corrigir um achado)\n' +
+      '#   --from <id>           roda do passo <id> em diante, na ordem do gate\n' +
+      '#   --no-cache            ignora o cache de passos: refaz tudo\n' +
+      '#   --fail-fast           para depois dos gates baratos se algum deles falhou\n' +
+      '#   --keep-containers     mantém, no fim, os containers reutilizáveis do pg-migrator\n' +
+      '#\n' +
+      '# Ambiente: CI_LOCAL_DISCO_MIN_GIB (25) · CI_LOCAL_CACHE_TTL_HORAS (24) ·\n' +
+      '#   CI_LOCAL_TEST_WORKERS (1..4; vazio = default 2 do pom; 4 só com memória para 4 heaps) ·\n' +
+      '#   CI_LOCAL_PERMITIR_SEM_DOCKER=1 (Docker fora vira PULADO em vez de abortar no preflight) ·\n' +
+      '#   CI_LOCAL_TC_REUSE=0 (sem reuso de containers do pg-migrator).\n' +
+      '#\n' +
+      '# Seleção, cache ou --fast verdes NÃO substituem o gate completo: o resumo diz "MODO FOCADO VERDE"\n' +
+      '# quando --only/--from estiver ativo. Passo reaproveitado do cache aparece como\n' +
+      '# "OK (cache: inalterado desde ...)" e só existe para entradas idênticas às de uma execução verde.\n' +
+      '#\n' +
+      '# Ferramentas necessárias: docker, trivy, gitleaks, mvn, npm, perl, shasum.\n' +
+      '# (semgrep é opcional — se ausente, o passo é PULADO e reportado como tal,\n' +
+      '#  nunca silenciosamente omitido.)\n' +
+      '\n' +
+      'set -uo pipefail\n' +
+      '\n' +
+      '# Falha ALTO se o bash for velho demais, em vez de deixar construções bash 4+\n' +
+      '# degradarem em silêncio e o gate passar sem ter verificado nada.\n' +
+      '# 4.4, não 4.0: antes dela "${array[@]}" vazio sob set -u é "unbound variable" (MVN_WORKERS vazio em todo mvn).\n' +
+      'if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ] || { [ "${BASH_VERSINFO[0]:-0}" -eq 4 ] && [ "${BASH_VERSINFO[1]:-0}" -lt 4 ]; }; then\n' +
+      "  printf 'ci-local.sh exige bash >= 4.4 (achou %s). No macOS: brew install bash\\n' \\\n" +
+      '    "${BASH_VERSION:-desconhecido}" >&2\n' +
+      '  exit 2\n' +
+      'fi\n' +
+      '\n' +
+      '# Guardado ANTES do cd: o modo --verificar-xml-pitest recebe um caminho digitado\n' +
+      '# pelo usuário, que ele espera relativo ao diretório DELE, não à raiz do repo.\n' +
+      '# BASH_SOURCE (com $0 de reserva para `bash -c`) também vale quando o script é carregado por `source`\n' +
+      '# nos testes de contrato.\n' +
+      'CWD_CHAMADOR="$PWD"\n' +
+      'SCRIPT_ABS="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)/$(basename "${BASH_SOURCE[0]:-$0}")"\n' +
+      'cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." || exit 2\n' +
+      'RAIZ="$PWD"\n' +
+      '\n' +
+      '# Logs dos passos: no diretório git DESTE worktree, não em /tmp (revisão de segurança 2026-10-13 — caminho\n' +
+      '# fixo em /tmp segue symlink plantado por outro usuário da máquina, e dois worktrees sobrescreviam o log um\n' +
+      '# do outro). Caminho só com caracteres seguros, para poder aparecer sem aspas; senão, diretório do mktemp.\n' +
+      'LOGS="$(git rev-parse --absolute-git-dir 2>/dev/null)/ci-local-logs"\n' +
+      'if ! [[ "$LOGS" =~ ^/[A-Za-z0-9._/-]+$ ]] || ! mkdir -p "$LOGS" 2>/dev/null; then\n' +
+      '  # mktemp -d: nome aleatório e 0700. Em /tmp literal, não no TMPDIR (que pode ter espaço).\n' +
+      '  LOGS=$(mktemp -d /tmp/ci-local-logs.XXXXXX) || exit 2\n' +
+      '  [[ "$LOGS" =~ ^/[A-Za-z0-9._/-]+$ ]] || exit 2\n' +
+      'fi\n' +
+      '\n' +
+      '# larger MAVEN_OPTS heap/CPU count cannot silently expand this local gate.\n' +
+      'MAVEN_OPTS="${MAVEN_OPTS:-} $(tr \'\\r\\n\' \'  \' < "$RAIZ/backend/.mvn/jvm.config")"\n' +
+      'export MAVEN_OPTS\n' +
+      'node_budget_options="${NODE_OPTIONS:-}"\n' +
+      'case "${node_budget_options//_/-}" in\n' +
+      '  *--max-old-space-size-percentage*)\n' +
+      "    printf '%s\\n' 'NODE_OPTIONS: remove --max-old-space-size-percentage; it overrides the fixed 3072 MiB budget.' >&2\n" +
+      '    exit 1\n' +
+      '    ;;\n' +
+      'esac\n' +
+      'NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=3072"\n' +
+      'export NODE_OPTIONS\n' +
+      '\n' +
+      'MODO="${1:-full}"\n' +
+      'case "$MODO" in\n' +
+      '  --fast|--images|--sql-real-it|--verificar-xml-pitest) ;;\n' +
+      '  *) MODO=full ;;\n' +
+      'esac\n' +
+      'FALHAS=()\n' +
+      'PULADOS=()\n' +
+      'OKS=0\n' +
+      'CACHE_REAPROVEITADOS=()\n' +
+      'TEMPOS=()\n' +
+      '\n' +
+      '# Passo rodando dentro de um subshell paralelo (executar_paralelo) não altera os arrays do pai:\n' +
+      '# ok/falha/pulo também anotam o desfecho num arquivo de registro, que o pai reaplica depois do wait.\n' +
+      'registrar() {\n' +
+      '  [ -n "${CI_LOCAL_REGISTRO:-}" ] || return 0\n' +
+      '  printf \'%s\\t%s\\n\' "$1" "${2//$\'\\n\'/ }" >> "$CI_LOCAL_REGISTRO"\n' +
+      '}\n' +
+      `azul()  { printf '\\n\\033[1;34m=== %s ===\\033[0m\\n' "$1"; }\n` +
+      `ok()    { printf '  \\033[32mOK\\033[0m    %s\\n' "$1"; OKS=$((OKS + 1)); registrar OK "$1"; }\n` +
+      `falha() { printf '  \\033[31mFALHA\\033[0m %s\\n' "$1"; FALHAS+=("$1"); registrar FALHA "$1"; }\n` +
+      `pulo()  { printf '  \\033[33mPULADO\\033[0m %s\\n' "$1"; PULADOS+=("$1"); registrar PULADO "$1"; }\n` +
+      `aviso() { printf '  \\033[33mAVISO\\033[0m  %s\\n' "$1"; }\n` +
+      '\n' +
+      'resumir() {\n' +
+      '  azul "RESUMO"\n' +
+      '  if [ ${#TEMPOS[@]} -gt 0 ]; then\n' +
+      '    printf \'  tempo por passo: %s\\n\' "${TEMPOS[*]}"\n' +
+      '  fi\n' +
+      '  if [ ${#CACHE_REAPROVEITADOS[@]} -gt 0 ]; then\n' +
+      "    printf '\\033[36m%d passo(s) reaproveitado(s) do cache — entradas idênticas às de uma execução verde (--no-cache refaz):\\033[0m %s\\n' \\\n" +
+      '      "${#CACHE_REAPROVEITADOS[@]}" "${CACHE_REAPROVEITADOS[*]}"\n' +
+      '  fi\n' +
+      '  if [ ${#PULADOS[@]} -gt 0 ]; then\n' +
+      '    printf \'\\033[33m%d passo(s) PULADO(S) — a CI vai rodá-los mesmo assim:\\033[0m\\n\' "${#PULADOS[@]}"\n' +
+      '    printf \'  - %s\\n\' "${PULADOS[@]}"\n' +
+      '  fi\n' +
+      '  if [ ${#FALHAS[@]} -eq 0 ]; then\n' +
+      '    if [ "$MODO" = "--sql-real-it" ] || selecao_ativa; then\n' +
+      "      printf '\\033[32mMODO FOCADO VERDE.\\033[0m Não substitui o gate completo antes de commit/push.\\n'\n" +
+      '    else\n' +
+      "      printf '\\033[32mTUDO VERDE.\\033[0m Seguro para commit/push.\\n'\n" +
+      '    fi\n' +
+      '    return 0\n' +
+      '  fi\n' +
+      '  printf \'\\033[31m%d FALHA(S) — NÃO commite:\\033[0m\\n\' "${#FALHAS[@]}"\n' +
+      '  printf \'  - %s\\n\' "${FALHAS[@]}"\n' +
+      '  return 1\n' +
+      '}\n' +
+      '\n' +
+      'precisa() { command -v "$1" >/dev/null 2>&1; }\n' +
+      '\n' +
+      '# ------------------------------------------------------------ Passos, seleção e cache\n' +
+      '# SDD-08 §Delta 2026-10-13 (OPS-CI-LOCAL-RAPIDO). Ordem de execução: os gates baratos (minutos)\n' +
+      '# antes da suíte longa, para que segredo/SAST/compose apareçam em minutos e não depois de 1 h.\n' +
+      'PASSOS_ORDEM=(\n' +
+      '  recursos instrumentos cli-symlink shards lock-drift gitleaks semgrep trivy-fs npm-audit compose\n' +
+      '  backend-test fklock mysql-it docker-it ci-it sql-real-it pg-migrator frontend-test frontend-build\n' +
+      '  sonar-diferencial frontend-coverage imagens runtime-images pitest pitest-perfis pitest-pg-migrator\n' +
+      ')\n' +
+      'PASSOS_LENTOS_DO_FULL=(frontend-coverage imagens runtime-images pitest pitest-perfis pitest-pg-migrator)\n' +
+      'PASSOS_COM_DOCKER=(fklock mysql-it docker-it ci-it sql-real-it pg-migrator imagens runtime-images pitest-pg-migrator)\n' +
+      '\n' +
+      '# Entradas de cada passo CACHEÁVEL. Passo sem entrada aqui roda SEMPRE: é o default seguro para o\n' +
+      '# que depende de dado externo que muda sem commit (feed de CVE do trivy, regras do registro do\n' +
+      '# semgrep, advisories do npm, imagens com CACHEBUST) e para o que é barato demais para valer o risco.\n' +
+      '#   "."            a árvore inteira do repositório (HEAD + tudo que está sujo/não rastreado, sem ignorados)\n' +
+      '#   <caminho>      só esse caminho (tracked + sujo); symlink não é seguido — liste o destino real\n' +
+      '#   @merge-base    o merge-base com origin/main (o disparo dos perfis de Pitest depende do diff do branch)\n' +
+      '#   @node_modules-frontend  frontend/node_modules/.package-lock.json (árvore instalada; ausente = roda)\n' +
+      '# As suítes do backend e do frontend leem arquivos do repositório INTEIRO (Docs/, compose, workflows,\n' +
+      '# frontend <-> backend), por isso usam "."; o pg-migrator só lê o próprio módulo, deployments/sqls e\n' +
+      '# o data.sql do backend — trava em ci-local-acelerar.test.mjs.\n' +
+      'declare -A PASSO_ENTRADAS=(\n' +
+      '  [backend-test]="."\n' +
+      '  [fklock]="."\n' +
+      '  [mysql-it]="."\n' +
+      '  [sql-real-it]="."\n' +
+      '  [pg-migrator]="tools/pg-migrator deployments/sqls backend/src/main/resources/data.sql"\n' +
+      '  [frontend-test]=". @node_modules-frontend"\n' +
+      '  [frontend-build]="frontend @node_modules-frontend"\n' +
+      '  [frontend-coverage]=". @node_modules-frontend"\n' +
+      '  [pitest]="."\n' +
+      '  [pitest-perfis]=". @merge-base"\n' +
+      '  [pitest-pg-migrator]="tools/pg-migrator deployments/sqls backend/src/main/resources/data.sql @merge-base"\n' +
+      ')\n' +
+      'declare -A PASSO_FERRAMENTAS=(\n' +
+      '  [backend-test]="java mvn"\n' +
+      '  [fklock]="java mvn docker"\n' +
+      '  [mysql-it]="java mvn docker"\n' +
+      '  [sql-real-it]="java mvn docker"\n' +
+      '  [pg-migrator]="java mvn docker"\n' +
+      '  [frontend-test]="node npm"\n' +
+      '  [frontend-build]="node npm"\n' +
+      '  [frontend-coverage]="node npm"\n' +
+      '  [pitest]="java mvn"\n' +
+      '  [pitest-perfis]="java mvn"\n' +
+      '  [pitest-pg-migrator]="java mvn docker"\n' +
+      ')\n' +
+      '\n' +
+      'SEM_CACHE=0\n' +
+      'MANTER_CONTAINERS=0\n' +
+      'FAIL_FAST=0\n' +
+      'LISTAR_PASSOS=0\n' +
+      'SO_PASSOS=""\n' +
+      'A_PARTIR_DE=""\n' +
+      'CACHE_DIR=""\n' +
+      'CACHE_TTL_HORAS="${CI_LOCAL_CACHE_TTL_HORAS:-24}"\n' +
+      'MVN_WORKERS=()\n' +
+      'BACKEND_TARGET_FRESCO=0\n' +
+      'TC_ESCOPO=""\n' +
+      'LIMPEZA_FEITA=0\n' +
+      'TEMPORARIOS=()\n' +
+      'PIDS_PARALELOS=()\n' +
+      'TRAVA_TC=""\n' +
+      '\n' +
+      'contem() {\n' +
+      '  local alvo="$1" item\n' +
+      '  shift\n' +
+      '  for item in "$@"; do [ "$item" = "$alvo" ] && return 0; done\n' +
+      '  return 1\n' +
+      '}\n' +
+      '\n' +
+      'indice_do_passo() {\n' +
+      '  local i\n' +
+      '  for i in "${!PASSOS_ORDEM[@]}"; do\n' +
+      '    if [ "${PASSOS_ORDEM[$i]}" = "$1" ]; then printf \'%s\' "$i"; return 0; fi\n' +
+      '  do'... 94538 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    #!/usr/bin/env bash
+    #
+    # ci-local.sh — roda LOCALMENTE tudo que a CI roda, antes de commitar.
+    #
+    # POR QUE ESTE SCRIPT EXISTE (2026-08-14): o gate local do CLAUDE.md cobria
+    # `mvn test` + `npm test` + `npm run build` + Pitest. A CI de PR (ci.yml) roda
+    # MAIS que isso, e o workflow de release (release.yml, no push pra main) roda
+    # um passo que nenhum PR executa: **Trivy sobre a IMAGEM Docker construída**.
+    #
+    # Resultado: dois PRs entraram com 16/16 verdes e o Release quebrou nos dois —
+    # duas CVEs HIGH em `httpcore5` 5.4.2, dependência TRANSITIVA do AWS SDK que só
+    # aparece no jar empacotado. O `Trivy FS scan` do PR não a enxerga. A `main`
+    # ficou sem imagem publicada por um dia inteiro sem que nenhum PR ficasse
+    # vermelho.
+    #
+    # Uso:
+    #   scripts/ci-local.sh            # tudo
+    #   scripts/ci-local.sh --fast     # pula Pitest, imagens Docker e a cobertura V8 do frontend
+    #   scripts/ci-local.sh --images   # SÓ build de imagem + Trivy image scan (app + runtimes de deploy)
+    #   scripts/ci-local.sh --sql-real-it
+    #                                  # SÓ as migrações Flyway manifestadas em PostgreSQL real
+    #
+    #   scripts/ci-local.sh --verificar-xml-pitest <mutations.xml> [gerados] [mortos]
+    #                                  # auto-teste do verificador do §7 (ver
+    #                                  # checar_pitest_xml); não roda build nenhum.
+    #
+    # Opções, depois do modo (SDD-08 §Delta 2026-10-13, OPS-CI-LOCAL-RAPIDO):
+    #   --listar-passos       imprime os ids dos passos, na ordem de execução, e sai
+    #   --only <id[,id...]>   roda só esses passos (ex.: depois de corrigir um achado)
+    #   --from <id>           roda do passo <id> em diante, na ordem do gate
+    #   --no-cache            ignora o cache de passos: refaz tudo
+    #   --fail-fast           para depois dos gates baratos se algum deles falhou
+    #   --keep-containers     mantém, no fim, os containers reutilizáveis do pg-migrator
+    #
+    # Ambiente: CI_LOCAL_DISCO_MIN_GIB (25) · CI_LOCAL_CACHE_TTL_HORAS (24) ·
+    #   CI_LOCAL_TEST_WORKERS (1..4; vazio = default 2 do pom; 4 só com memória para 4 heaps) ·
+    #   CI_LOCAL_PERMITIR_SEM_DOCKER=1 (Docker fora vira PULADO em vez de abortar no preflight) ·
+    #   CI_LOCAL_TC_REUSE=0 (sem reuso de containers do pg-migrator).
+    #
+    # Seleção, cache ou --fast verdes NÃO substituem o gate completo: o resumo diz "MODO FOCADO VERDE"
+    # quando --only/--from estiver ativo. Passo reaproveitado do cache aparece como
+    # "OK (cache: inalterado desde ...)" e só existe para entradas idênticas às de uma execução verde.
+    #
+    # Ferramentas necessárias: docker, trivy, gitleaks, mvn, npm, perl, shasum.
+    # (semgrep é opcional — se ausente, o passo é PULADO e reportado como tal,
+    #  nunca silenciosamente omitido.)
+    
+    set -uo pipefail
+    
+    # Falha ALTO se o bash for velho demais, em vez de deixar construções bash 4+
+    # degradarem em silêncio e o gate passar sem ter verificado nada.
+    # 4.4, não 4.0: antes dela "${array[@]}" vazio sob set -u é "unbound variable" (MVN_WORKERS vazio em todo mvn).
+    if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ] || { [ "${BASH_VERSINFO[0]:-0}" -eq 4 ] && [ "${BASH_VERSINFO[1]:-0}" -lt 4 ]; }; then
+      printf 'ci-local.sh exige bash >= 4.4 (achou %s). No macOS: brew install bash\n' \
+        "${BASH_VERSION:-desconhecido}" >&2
+      exit 2
+    fi
+    
+    # Guardado ANTES do cd: o modo --verificar-xml-pitest recebe um caminho digitado
+    # pelo usuário, que ele espera relativo ao diretório DELE, não à raiz do repo.
+    # BASH_SOURCE (com $0 de reserva para `bash -c`) também vale quando o script é carregado por `source`
+    # nos testes de contrato.
+    CWD_CHAMADOR="$PWD"
+    SCRIPT_ABS="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)/$(basename "${BASH_SOURCE[0]:-$0}")"
+    cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." || exit 2
+    RAIZ="$PWD"
+    
+    # Logs dos passos: no diretório git DESTE worktree, não em /tmp (revisão de segurança 2026-10-13 — caminho
+    # fixo em /tmp segue symlink plantado por outro usuário da máquina, e dois worktrees sobrescreviam o log um
+    # do outro). Caminho só com caracteres seguros, para poder aparecer sem aspas; senão, diretório do mktemp.
+    LOGS="$(git rev-parse --absolute-git-dir 2>/dev/null)/ci-local-logs"
+    if ! [[ "$LOGS" =~ ^/[A-Za-z0-9._/-]+$ ]] || ! mkdir -p "$LOGS" 2>/dev/null; then
+      # mktemp -d: nome aleatório e 0700. Em /tmp literal, não no TMPDIR (que pode ter espaço).
+      LOGS=$(mktemp -d /tmp/ci-local-logs.XXXXXX) || exit 2
+      [[ "$LOGS" =~ ^/[A-Za-z0-9._/-]+$ ]] || exit 2
+    fi
+    
+    # larger MAVEN_OPTS heap/CPU count cannot silently expand this local gate.
+    MAVEN_OPTS="${MAVEN_OPTS:-} $(tr '\r\n' '  ' < "$RAIZ/backend/.mvn/jvm.config")"
+    export MAVEN_OPTS
+    node_budget_options="${NODE_OPTIONS:-}"
+    case "${node_budget_options//_/-}" in
+      *--max-old-space-size-percentage*)
+        printf '%s\n' 'NODE_OPTIONS: remove --max-old-space-size-percentage; it overrides the fixed 3072 MiB budget.' >&2
+        exit 1
+        ;;
+    esac
+    NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=3072"
+    export NODE_OPTIONS
+    
+    MODO="${1:-full}"
+    case "$MODO" in
+      --fast|--images|--sql-real-it|--verificar-xml-pitest) ;;
+      *) MODO=full ;;
+    esac
+    FALHAS=()
+    PULADOS=()
+    OKS=0
+    CACHE_REAPROVEITADOS=()
+    TEMPOS=()
+    
+    # Passo rodando dentro de um subshell paralelo (executar_paralelo) não altera os arrays do pai:
+    # ok/falha/pulo também anotam o desfecho num arquivo de registro, que o pai reaplica depois do wait.
+    registrar() {
+      [ -n "${CI_LOCAL_REGISTRO:-}" ] || return 0
+      printf '%s\t%s\n' "$1" "${2//$'\n'/ }" >> "$CI_LOCAL_REGISTRO"
+    }
+    azul()  { printf '\n\033[1;34m=== %s ===\033[0m\n' "$1"; }
+    ok()    { printf '  \033[32mOK\033[0m    %s\n' "$1"; OKS=$((OKS + 1)); registrar OK "$1"; }
+    falha() { printf '  \033[31mFALHA\033[0m %s\n' "$1"; FALHAS+=("$1"); registrar FALHA "$1"; }
+    pulo()  { printf '  \033[33mPULADO\033[0m %s\n' "$1"; PULADOS+=("$1"); registrar PULADO "$1"; }
+    aviso() { printf '  \033[33mAVISO\033[0m  %s\n' "$1"; }
+    
+    resumir() {
+      azul "RESUMO"
+      if [ ${#TEMPOS[@]} -gt 0 ]; then
+        printf '  tempo por passo: %s\n' "${TEMPOS[*]}"
+      fi
+      if [ ${#CACHE_REAPROVEITADOS[@]} -gt 0 ]; then
+        printf '\033[36m%d passo(s) reaproveitado(s) do cache — entradas idênticas às de uma execução verde (--no-cache refaz):\033[0m %s\n' \
+          "${#CACHE_REAPROVEITADOS[@]}" "${CACHE_REAPROVEITADOS[*]}"
+      fi
+      if [ ${#PULADOS[@]} -gt 0 ]; then
+        printf '\033[33m%d passo(s) PULADO(S) — a CI vai rodá-los mesmo assim:\033[0m\n' "${#PULADOS[@]}"
+        printf '  - %s\n' "${PULADOS[@]}"
+      fi
+      if [ ${#FALHAS[@]} -eq 0 ]; then
+        if [ "$MODO" = "--sql-real-it" ] || selecao_ativa; then
+          printf '\033[32mMODO FOCADO VERDE.\033[0m Não substitui o gate completo antes de commit/push.\n'
+        else
+          printf '\033[32mTUDO VERDE.\033[0m Seguro para commit/push.\n'
+        fi
+        return 0
+      fi
+      printf '\033[31m%d FALHA(S) — NÃO commite:\033[0m\n' "${#FALHAS[@]}"
+      printf '  - %s\n' "${FALHAS[@]}"
+      return 1
+    }
+    
+    precisa() { command -v "$1" >/dev/null 2>&1; }
+    
+    # ------------------------------------------------------------ Passos, seleção e cache
+    # SDD-08 §Delta 2026-10-13 (OPS-CI-LOCAL-RAPIDO). Ordem de execução: os gates baratos (minutos)
+    # antes da suíte longa, para que segredo/SAST/compose apareçam em minutos e não depois de 1 h.
+    PASSOS_ORDEM=(
+      recursos instrumentos cli-symlink shards lock-drift gitleaks semgrep trivy-fs npm-audit compose
+      backend-test fklock mysql-it docker-it ci-it sql-real-it pg-migrator frontend-test frontend-build
+      sonar-diferencial frontend-coverage imagens runtime-images pitest pitest-perfis pitest-pg-migrator
+    )
+    PASSOS_LENTOS_DO_FULL=(frontend-coverage imagens runtime-images pitest pitest-perfis pitest-pg-migrator)
+    PASSOS_COM_DOCKER=(fklock mysql-it docker-it ci-it sql-real-it pg-migrator imagens runtime-images pitest-pg-migrator)
+    
+    # Entradas de cada passo CACHEÁVEL. Passo sem entrada aqui roda SEMPRE: é o default seguro para o
+    # que depende de dado externo que muda sem commit (feed de CVE do trivy, regras do registro do
+    # semgrep, advisories do npm, imagens com CACHEBUST) e para o que é barato demais para valer o risco.
+    #   "."            a árvore inteira do repositório (HEAD + tudo que está sujo/não rastreado, sem ignorados)
+    #   <caminho>      só esse caminho (tracked + sujo); symlink não é seguido — liste o destino real
+    #   @merge-base    o merge-base com origin/main (o disparo dos perfis de Pitest depende do diff do branch)
+    #   @node_modules-frontend  frontend/node_modules/.package-lock.json (árvore instalada; ausente = roda)
+    # As suítes do backend e do frontend leem arquivos do repositório INTEIRO (Docs/, compose, workflows,
+    # frontend <-> backend), por isso usam "."; o pg-migrator só lê o próprio módulo, deployments/sqls e
+    # o data.sql do backend — trava em ci-local-acelerar.test.mjs.
+    declare -A PASSO_ENTRADAS=(
+      [backend-test]="."
+      [fklock]="."
+      [mysql-it]="."
+      [sql-real-it]="."
+      [pg-migrator]="tools/pg-migrator deployments/sqls backend/src/main/resources/data.sql"
+      [frontend-test]=". @node_modules-frontend"
+      [frontend-build]="frontend @node_modules-frontend"
+      [frontend-coverage]=". @node_modules-frontend"
+      [pitest]="."
+      [pitest-perfis]=". @merge-base"
+      [pitest-pg-migrator]="tools/pg-migrator deployments/sqls backend/src/main/resources/data.sql @merge-base"
+    )
+    declare -A PASSO_FERRAMENTAS=(
+      [backend-test]="java mvn"
+      [fklock]="java mvn docker"
+      [mysql-it]="java mvn docker"
+      [sql-real-it]="java mvn docker"
+      [pg-migrator]="java mvn docker"
+      [frontend-test]="node npm"
+      [frontend-build]="node npm"
+      [frontend-coverage]="node npm"
+      [pitest]="java mvn"
+      [pitest-perfis]="java mvn"
+      [pitest-pg-migrator]="java mvn docker"
+    )
+    
+    SEM_CACHE=0
+    MANTER_CONTAINERS=0
+    FAIL_FAST=0
+    LISTAR_PASSOS=0
+    SO_PASSOS=""
+    A_PARTIR_DE=""
+    CACHE_DIR=""
+    CACHE_TTL_HORAS="${CI_LOCAL_CACHE_TTL_HORAS:-24}"
+    MVN_WORKERS=()
+    BACKEND_TARGET_FRESCO=0
+    TC_ESCOPO=""
+    LIMPEZA_FEITA=0
+    TEMPORARIOS=()
+    PIDS_PARALELOS=()
+    TRAVA_TC=""
+    
+    contem() {
+      local alvo="$1" item
+      shift
+      for item in "$@"; do [ "$item" = "$alvo" ] && return 0; done
+      return 1
+    }
+    
+    indice_do_passo() {
+      local i
+      for i in "${!PASSOS_ORDEM[@]}"; do
+        if [ "${PASSOS_ORDEM[$i]}" = "$1" ]; then printf '%s' "$i"; return 0; fi
+      done
+      return 1
+    }
+    
+    analisar_argumentos() {
+      local primeiro=1 id
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --fast|--images|--sql-real-it)
+            if [ "$primeiro" -ne 1 ]; then
+              printf 'ci-local.sh: o modo %s precisa ser o primeiro argumento\n' "$1" >&2
+              return 2
+            fi ;;
+          --no-cache) SEM_CACHE=1 ;;
+          --keep-containers) MANTER_CONTAINERS=1 ;;
+          --fail-fast) FAIL_FAST=1 ;;
+          --listar-passos) LISTAR_PASSOS=1 ;;
+          --only=*) SO_PASSOS="${1#--only=}" ;;
+          --from=*) A_PARTIR_DE="${1#--from=}" ;;
+          --only|--from)
+            if [ $# -lt 2 ] || [ -z "$2" ]; then
+              printf 'ci-local.sh: %s exige um id de passo (veja --listar-passos)\n' "$1" >&2
+              return 2
+            fi
+            if [ "$1" = "--only" ]; then SO_PASSOS="$2"; else A_PARTIR_DE="$2"; fi
+            shift ;;
+          *)
+            printf 'ci-local.sh: argumento desconhecido: %s\n' "$1" >&2
+            return 2 ;;
+        esac
+        primeiro=0
+        shift
+      done
+      if [ -n "$SO_PASSOS" ] && [ -n "$A_PARTIR_DE" ]; then
+        printf 'ci-local.sh: use --only OU --from, não os dois\n' >&2
+        return 2
+      fi
+      local ids=()
+      [ -n "$SO_PASSOS" ] && IFS=',' read -r -a ids <<< "$SO_PASSOS"
+      [ -n "$A_PARTIR_DE" ] && ids+=("$A_PARTIR_DE")
+      for id in "${ids[@]}"; do
+        if ! indice_do_passo "$id" >/dev/null; then
+          printf 'ci-local.sh: passo desconhecido: %s. Passos: %s\n' "$id" "${PASSOS_ORDEM[*]}" >&2
+          return 2
+        fi
+      done
+      # Modo + seleção que não deixam nenhum passo (ex.: --fast --only pitest) seriam um "verde" sem medir nada.
+      if selecao_ativa; then
+        local algum=0
+        for id in "${PASSOS_ORDEM[@]}"; do
+          [ "$id" != recursos ] && selecionado "$id" && algum=1
+        done
+        if [ "$algum" -eq 0 ]; then
+          printf 'ci-local.sh: a seleção --only/--from não tem nenhum passo no modo %s\n' "$MODO" >&2
+          return 2
+        fi
+      fi
+      return 0
+    }
+    
+    configurar_workers() {
+      MVN_WORKERS=()
+      [ -n "${CI_LOCAL_TEST_WORKERS:-}" ] || return 0
+      # Mesmo domínio do enforcer do pom (bound-test-workers): contagem fixa 1..4, nunca por núcleo.
+      if ! [[ "$CI_LOCAL_TEST_WORKERS" =~ ^[1-4]$ ]]; then
+        printf 'ci-local.sh: CI_LOCAL_TEST_WORKERS deve ser 1, 2, 3 ou 4 (contrato de recursos); achou %s\n' \
+          "$CI_LOCAL_TEST_WORKERS" >&2
+        return 2
+      fi
+      MVN_WORKERS=("-Dtest.workers=$CI_LOCAL_TEST_WORKERS")
+    }
+    
+    selecao_ativa() { [ -n "$SO_PASSOS" ] || [ -n "$A_PARTIR_DE" ]; }
+    
+    # O passo pertence ao MODO (full, --fast, --images, --sql-real-it)?
+    no_modo() {
+      case "$MODO" in
+        --images) [ "$1" = imagens ] || [ "$1" = runtime-images ] ;;
+        --sql-real-it) [ "$1" = sql-real-it ] ;;
+        --fast) ! contem "$1" "${PASSOS_LENTOS_DO_FULL[@]}" ;;
+        *) return 0 ;;
+      esac
+    }
+    
+    # O passo foi escolhido por --only/--from? O contrato de recursos (barato e guarda dos tetos de
+    # CPU/memória) roda sempre que o modo o inclui.
+    na_selecao() {
+      [ "$1" = recursos ] && return 0
+      if [ -n "$SO_PASSOS" ]; then
+        local ids=()
+        IFS=',' read -r -a ids <<< "$SO_PASSOS"
+        contem "$1" "${ids[@]}"
+        return
+      fi
+      if [ -n "$A_PARTIR_DE" ]; then
+        [ "$(indice_do_passo "$1")" -ge "$(indice_do_passo "$A_PARTIR_DE")" ]
+        return
+      fi
+      return 0
+    }
+    
+    selecionado() { no_modo "$1" && na_selecao "$1"; }
+    
+    listar_passos() {
+      local id marca
+      for id in "${PASSOS_ORDEM[@]}"; do
+        marca=""
+        [ -n "${PASSO_ENTRADAS[$id]:-}" ] && marca=" (cacheável)"
+        contem "$id" "${PASSOS_COM_DOCKER[@]}" && marca="$marca (Docker)"
+        contem "$id" "${PASSOS_LENTOS_DO_FULL[@]}" && marca="$marca (fora do --fast)"
+        printf '%s%s\n' "$id" "$marca"
+      done
+    }
+    
+    # Cache por worktree, dentro do diretório git (nunca rastreado, nunca varrido por gitleaks/trivy).
+    iniciar_cache() {
+      local gd
+      if ! [[ "$CACHE_TTL_HORAS" =~ ^[0-9]+$ ]]; then
+        printf 'ci-local.sh: CI_LOCAL_CACHE_TTL_HORAS deve ser inteiro; achou %s\n' "$CACHE_TTL_HORAS" >&2
+        return 2
+      fi
+      gd=$(git rev-parse --absolute-git-dir 2>/dev/null) || return 0
+      CACHE_DIR="$gd/ci-local-cache"
+      mkdir -p "$CACHE_DIR" 2>/dev/null || CACHE_DIR=""
+      return 0
+    }
+    
+    base_do_branch() {
+      git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || echo ""
+    }
+    
+    declare -A VERSOES_MEMO=()
+    versao_ferramenta() {
+      local f="$1"
+      if [ -z "${VERSOES_MEMO[$f]+definida}" ]; then
+        case "$f" in
+          java)   VERSOES_MEMO[$f]="$(java -version 2>&1 | head -3 | tr '\n' ' ')" ;;
+          mvn)    VERSOES_MEMO[$f]="$(mvn -v 2>/dev/null | head -1)" ;;
+          node)   VERSOES_MEMO[$f]="$(node -v 2>/dev/null)" ;;
+          npm)    VERSOES_MEMO[$f]="$(npm -v 2>/dev/null)" ;;
+          docker) VERSOES_MEMO[$f]="$(docker version --format '{{.Server.Version}}' 2>/dev/null)" ;;
+          *)      VERSOES_MEMO[$f]="?" ;;
+        esac
+      fi
+      printf '%s' "${VERSOES_MEMO[$f]}"
+    }
+    
+    # Tudo que está sujo nos caminhos: modificado, staged, apagado e NÃO rastreado (não ignorado), cada
+    # um com o hash do conteúdo em disco. Conservador por construção: qualquer entrada suja diferente
+    # de uma execução anterior muda a chave (no pior caso, cache miss — nunca acerto falso).
+    #
+    # Revisão de segurança 2026-10-13 — três pontos cegos fechados:
+    # - arquivo rastreado com skip-worktree/assume-unchanged some do `git status`: entrada indeterminável
+    #   (o passo roda);
+    # - arquivo IGNORADO que a ferramenta lê por convenção (`.env*` do Vite, `application-local*` do Spring)
+    #   entra pelo conteúdo — os demais ignorados (target/, node_modules/) continuam fora;
+    # - caminhos saem com %q: um nome com quebra de linha não forja outra linha do texto da chave.
+    IGNORADOS_LIDOS=('.env*' 'application-local*')
+    estado_sujo() {
+      local lista registro st caminho origem conteudo erro=0 p g base
+      local escopo_ignorados=()
+      # Sem pipe para `grep -q`: ele fecha a leitura no primeiro casamento, o git leva SIGPIPE e, sob pipefail,
+      # o `if` vê 141 e PULA a guarda (revisão 2026-10-13). Falha do próprio git também é indeterminável.
+      local marcados
+      marcados=$(git ls-files -v -- "$@" 2>/dev/null) || return 1
+      if grep -qE '^([a-z]|S) ' <<< "$marcados"; then
+        return 1
+      fi
+      lista=$(mktemp "${TMPDIR:-/tmp}/ci-local-sujo.XXXXXX") || return 1
+      if ! git status --porcelain=v1 -z --untracked-files=all -- "$@" > "$lista" 2>/dev/null; then
+        rm -f "$lista"
+        return 1
+      fi
+      while IFS= read -r -d '' registro; do
+        st="${registro:0:2}"
+        caminho="${registro:3}"
+        case "$st" in
+          R*|C*) IFS= read -r -d '' origem; printf 'origem %q\n' "$origem" ;;
+        esac
+        if [ -f "$caminho" ] || [ -L "$caminho" ]; then
+          conteudo=$(git hash-object -- "$caminho" 2>/dev/null) || { erro=1; break; }
+        else
+          conteudo=ausente
+        fi
+        printf 'sujo %s %q %s\n' "$st" "$caminho" "$conteudo"
+      done < "$lista"
+      if [ "$erro" -eq 0 ]; then
+        for p in "$@"; do
+          base="${p%/}/"
+          [ "$p" = "." ] && base=""
+          for g in "${IGNORADOS_LIDOS[@]}"; do escopo_ignorados+=(":(glob)${base}**/$g"); done
+        done
+        if git ls-files -z --others --ignored --exclude-standard -- "${escopo_ignorados[@]}" > "$lista" 2>/dev/null; then
+          while IFS= read -r -d '' caminho; do
+            conteudo=$(git hash-object -- "$caminho" 2>/dev/null) || { erro=1; break; }
+            printf 'ignorado-lido %q %s\n' "$caminho" "$conteudo"
+          done < <(LC_ALL=C sort -z "$lista")
+        else
+          erro=1
+        fi
+      fi
+      rm -f "$lista"
+      return "$erro"
+    }
+    
+    # Texto canônico das entradas de um passo; a chave é o sha256 dele. Devolve 1 quando alguma entrada
+    # não pôde ser determinada — e aí o passo roda (nunca se reaproveita o que não se sabe medir).
+    compor_entradas() {
+      local id="$1" e f valor caminhos=()
+      [ -n "${PASSO_ENTRADAS[$id]:-}" ] || return 1
+      printf 'formato 1\npasso %s\n' "$id"
+      valor=$(shasum -a 256 < "$SCRIPT_ABS" | cut -c1-64) || return 1
+      printf 'ci-local %s\n' "$valor"
+      printf 'MAVEN_OPTS=%s\nNODE_OPTIONS=%s\nworkers=%s\n' "$MAVEN_OPTS" "$NODE_OPTIONS" "${MVN_WORKERS[*]}"
+      for f in ${PASSO_FERRAMENTAS[$id]:-}; do
+        printf 'ferramenta %s %s\n' "$f" "$(versao_ferramenta "$f")"
+      done
+      for e in ${PASSO_ENTRADAS[$id]}; do
+        case "$e" in
+          @merge-base)
+            printf 'merge-base %s\n' "$(base_do_branch)" ;;
+          @node_modules-frontend)
+            [ -f frontend/node_modules/.package-lock.json ] || return 1
+            valor=$(git hash-object frontend/node_modules/.package-lock.json) || return 1
+            printf 'node_modules-frontend %s\n' "$valor" ;;
+          .)
+            valor=$(git rev-parse 'HEAD^{tree}' 2>/dev/null) || return 1
+            printf 'arvore . %s\n' "$valor"
+            caminhos+=(".") ;;
+          @*)
+            return 1 ;;
+          *)
+            valor=$(git rev-parse "HEAD:$e" 2>/dev/null) || valor=ausente
+            printf 'arvore %s %s\n' "$e" "$valor"
+            caminhos+=("$e") ;;
+        esac
+      done
+      if [ ${#caminhos[@]} -gt 0 ]; then
+        estado_sujo "${caminhos[@]}" || return 1
+      fi
+    }
+    
+    chave_do_passo() {
+      local texto
+      texto=$(compor_entradas "$1") || return 1
+      printf '%s' "$texto" | shasum -a 256 | cut -c1-64
+    }
+    
+    # Acerto = mesma chave de uma execução que terminou VERDE (sem FALHA nem PULADO) há menos de
+    # CI_LOCAL_CACHE_TTL_HORAS. O TTL limita o que a chave não enxerga (relógio, rede, daemon).
+    consultar_cache() {
+      local arq="$CACHE_DIR/passo-$1" chave quando cabeca agora
+      [ -n "$CACHE_DIR" ] && [ -f "$arq" ] || return 1
+      chave=$(sed -n 's/^chave //p' "$arq")
+      quando=$(sed -n 's/^quando //p' "$arq")
+      cabeca=$(sed -n 's/^head //p' "$arq")
+      [ -n "$chave" ] && [ "$chave" = "$2" ] || return 1
+      [[ "$quando" =~ ^[0-9]+$ ]] || return 1
+      agora=$(date +%s)
+      [ $((agora - quando)) -le $((CACHE_TTL_HORAS * 3600)) ] || return 1
+      printf '%s, %s' "${cabeca:0:9}" \
+        "$(date -r "$quando" '+%Y-%m-%d %H:%M' 2>/dev/null || date -d "@$quando" '+%Y-%m-%d %H:%M' 2>/dev/null)"
+    }
+    
+    gravar_cache() {
+      [ -n "$CACHE_DIR" ] || return 0
+      local arq="$CACHE_DIR/passo-$1"
+      printf 'chave %s\nquando %s\nhead %s\n' "$2" "$(date +%s)" "$(git rev-parse HEAD 2>/dev/null)" > "$arq.tmp.$$" \
+        && mv -f "$arq.tmp.$$" "$arq"
+    }
+    
+    apagar_cache() {
+      [ -n "$CACHE_DIR" ] || return 0
+      rm -f "$CACHE_DIR/passo-$1"
+    }
+    
+    # passo <id> <função> [args...]: aplica modo, seleção e cache, cronometra e só grava o cache quando
+    # a função terminou com ao menos um OK, sem FALHA e sem PULADO — e com as entradas iguais às do início (edição durante
+    # a execução não vira acerto). Qualquer FALHA ou PULADO apaga o acerto anterior do passo.
+    passo() {
+      local id="$1"
+      shift
+      if ! no_modo "$id"; then
+        registrar FORA "$id"
+        return 0
+      fi
+      if ! na_selecao "$id"; then
+        printf '  \033[90m--\033[0m    %s (fora da seleção --only/--from)\n' "$id"
+        registrar FORA "$id"
+        return 0
+      fi
+      local chave="" desde inicio duracao f0=${#FALHAS[@]} p0=${#PULADOS[@]} o0=$OKS
+      if [ -n "$CACHE_DIR" ] && [ -n "${PASSO_ENTRADAS[$id]:-}" ]; then
+        chave=$(chave_do_passo "$id") || chave=""
+        if [ -n "$chave" ] && [ "$SEM_CACHE" -eq 0 ] && desde=$(consultar_cache "$id" "$chave"); then
+          azul "$id — reaproveitado do cache"
+          ok "$id (cache: inalterado desde $desde)"
+          CACHE_REAPROVEITADOS+=("$id")
+          registrar CACHE "$id"
+          return 0
+        fi
+      fi
+      inicio=$(date +%s)
+      "$@"
+      duracao=$(( $(date +%s) - inicio ))
+      TEMPOS+=("$id=${duracao}s")
+      registrar TEMPO "$id=${duracao}s"
+      printf '  \033[90m(%s: %ss)\033[0m\n' "$id" "$duracao"
+      if [ ${#FALHAS[@]} -eq "$f0" ] && [ ${#PULADOS[@]} -eq "$p0" ] && [ "$OKS" -gt "$o0" ]; then
+        if [ -n "$chave" ] && [ "$(chave_do_passo "$id")" = "$chave" ]; then
+          gravar_cache "$id" "$chave"
+        fi
+      else
+        apagar_cache "$id"
+      fi
+      return 0
+    }
+    
+    # executar_paralelo <id>:<função> ...: os scans leves (só leem a árvore; cada um tem log próprio)
+    # rodam juntos. A saída de cada um é reimpressa inteira e na ordem dada, e os desfechos voltam para
+    # FALHAS/PULADOS do processo principal pelo arquivo de registro — o resumo final não muda.
+    executar_paralelo() {
+      local dir par n=0 pids=() ids=() rcs=() tipo msg desfechos
+      dir=$(mktemp -d "${TMPDIR:-/tmp}/ci-local-paralelo.XXXXXX") || { falha "não foi possível criar diretório temporário dos scans paralelos"; return; }
+      for par in "$@"; do
+        ( CI_LOCAL_REGISTRO="$dir/$n.reg"; : > "$CI_LOCAL_REGISTRO"; passo "${par%%:*}" "${par#*:}" ) > "$dir/$n.out" 2>&1 &
+        pids+=("$!")
+        PIDS_PARALELOS+=("$!")
+        ids+=("${par%%:*}")
+        n=$((n + 1))
+      done
+      for par in "${!pids[@]}"; do
+        wait "${pids[$par]}"
+        rcs[par]=$?
+        # Já colhido: o PID pode ser reciclado por outro processo enquanto os demais scans rodam, e o ao_sair
+        # não pode matá-lo (revisão de segurança 2026-10-13).
+        remover_pid_paralelo "${pids[$par]}"
+      done
+      # Subshell que morre antes de ok/falha/pulo (set -u, kill, OOM, exit perdido) NÃO é verde: exit
+      # diferente de zero ou nenhum desfecho registrado vira FALHA do scan.
+      for ((par = 0; par < n; par++)); do
+        cat "$dir/$par.out"
+        desfechos=0
+        if [ -f "$dir/$par.reg" ]; then
+          while IFS=$'\t' read -r tipo msg; do
+            case "$tipo" in
+              OK|FORA) desfechos=$((desfechos + 1)) ;;
+              FALHA) FALHAS+=("$msg"); desfechos=$((desfechos + 1)) ;;
+              PULADO) PULADOS+=("$msg"); desfechos=$((desfechos + 1)) ;;
+              CACHE) CACHE_REAPROVEITADOS+=("$msg") ;;
+              TEMPO) TEMPOS+=("$msg") ;;
+            esac
+          done < "$dir/$par.reg"
+        fi
+        if [ "${rcs[$par]}" -ne 0 ] || [ "$desfechos" -eq 0 ]; then
+          falha "${ids[$par]} — scan paralelo terminou sem desfecho (rc=${rcs[$par]}); não é verde — ver a saída acima"
+        fi
+      done
+      PIDS_PARALELOS=()
+      rm -rf "$dir"
+    }
+    
+    # ------------------------------------------------------------------ Preflight
+    # No macOS o `df` não conta o espaço purgeable do APFS (snapshots locais do Time Machine, caches), que o
+    # sistema libera sozinho sob demanda: em 2026-10-15 o `df` dava 20 GiB e o Finder 326 GiB. Lá vale a
+    # capacidade "para uso importante" do Foundation — a mesma que o Finder mostra; sem swift, cai no `df`.
+    espaco_livre_gib() {
+      local kib bytes
+      if [ "$(uname -s)" = Darwin ] && command -v swift >/dev/null 2>&1; then
+        # perl alarm: swift com cache de módulos frio ou licença do Xcode pendente não pode travar o preflight.
+        bytes=$(perl -e 'alarm 20; exec @ARGV' swift -e 'import Foundation
+    let v = try? URL(fileURLWithPath: CommandLine.arguments[1]).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+    if let b = v?.volumeAvailableCapacityForImportantUsage { print(b) }' "$1" 2>/dev/null)
+        if [[ "$bytes" =~ ^[0-9]+$ ]]; then
+          printf '%s' $((bytes / 1073741824))
+          return 0
+        fi
+      fi
+      kib=$(df -Pk "$1" 2>/dev/null | awk 'NR == 2 { print $4 }')
+      [[ "$kib" =~ ^[0-9]+$ ]] || return 1
+      printf '%s' $((kib / 1048576))
+    }
+    
+    # Arquivo/diretório RASTREADO sem permissão de escrita quebra checkout/reset — inclusive o do
+    # semgrep na cópia descartável (o incidente de 2026-10-12). Imprime até 20 caminhos.
+    somente_leitura_rastreados() {
+      git ls-files -z 2>/dev/null | perl -0ne '
+        chomp;
+        next unless lstat($_);
+        next if -l _;
+        print "$_\n" unless -w $_;
+        my $d = $_;
+        while ($d =~ s{/[^/]*$}{}) { last if $seen{$d}++; print "$d/\n" unless -w $d; }
+      ' | head -20
+    }
+    
+    # Outra suíte pesada (surefire/maven/pitest/outro ci-local) disputando CPU, memória e Docker. Exclui
+    # este processo e os ancestrais dele, e linhas que só MENCIONAM o padrão (grep, sh -c de monitor).
+    suites_pesadas_concorrentes() {
+      # Sobe a partir de BASHPID: dentro de $(...) e de pipelines, os subshells deste próprio script (mesma linha
+      # de comando) ficam entre ele e $$ — e não podem ser contados como "outra suíte".
+      local proprios=" " p=$BASHPID
+      while [[ "$p" =~ ^[0-9]+$ ]] && [ "$p" -gt 1 ]; do
+        proprios+="$p "
+        p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+      done
+      ps -Ao pid=,command= 2>/dev/null | awk -v proprios="$proprios" '
+        { pid = $1; cmd = $0; sub(/^ *[0-9]+ +/, "", cmd) }
+        index(proprios, " " pid " ") { next }
+        cmd ~ /^(\/[^ ]*\/)?(awk|grep|pgrep|ps) / { next }
+        cmd ~ /^(\/[^ ]*\/)?(ba|z|da)?sh +(-[^ ]+ +)*-[a-z]*c / { next }
+        # Só pid + o marcador casado: a linha de comando inteira de outro processo pode carregar -Dsegredo=...
+        match(cmd, /surefirebooter|plexus-classworlds|org\.pitest|ci-local\.sh/) { print pid " " substr(cmd, RSTART, RLENGTH) }
+      '
+    }
+    
+    preflight() {
+      azul "Preflight (antes de qualquer suíte)"
+      local erros=0 min_gib livre ro outros id docker_na_selecao=()
+      min_gib="${CI_LOCAL_DISCO_MIN_GIB:-25}"
+      if ! [[ "$min_gib" =~ ^[0-9]+$ ]]; then
+        falha "preflight — CI_LOCAL_DISCO_MIN_GIB precisa ser inteiro (GiB); achou '$min_gib'"
+        erros=1
+      elif ! livre=$(espaco_livre_gib "$RAIZ"); then
+        falha "preflight — não consegui medir o disco livre de $RAIZ (Foundation/df)"
+        erros=1
+      elif [ "$livre" -lt "$min_gib" ]; then
+        falha "preflight — disco: ${livre} GiB livres em $RAIZ, mínimo ${min_gib} GiB (CI_LOCAL_DISCO_MIN_GIB). Em 2026-10 duas execuções morreram com o SSD a 99%: libere espaço antes"
+        erros=1
+      else
+        ok "disco: ${livre} GiB livres (mínimo ${min_gib} GiB)"
+      fi
+    
+      for id in "${PASSOS_COM_DOCKER[@]}"; do
+        selecionado "$id" && docker_na_selecao+=("$id")
+      done
+      if [ ${#docker_na_selecao[@]} -gt 0 ]; then
+        if docker info >/dev/null 2>&1; then
+          ok "Docker acessível (passos: ${docker_na_selecao[*]})"
+        elif [ "${CI_LOCAL_PERMITIR_SEM_DOCKER:-0}" = "1" ]; then
+          aviso "Docker inacessível; CI_LOCAL_PERMITIR_SEM_DOCKER=1 — ${docker_na_selecao[*]} vão sair como PULADO"
+        else
+          falha "preflight — Docker inacessível (docker info falhou) e a seleção tem passos que precisam dele: ${docker_na_selecao[*]}. Suba o OrbStack/Docker ou use CI_LOCAL_PERMITIR_SEM_DOCKER=1 para aceitá-los como PULADO"
+          erros=1
+        fi
+      fi
+    
+      ro=$(somente_leitura_rastreados)
+      if [ -n "$ro" ]; then
+        falha "preflight — caminho(s) rastreado(s) sem permissão de escrita (quebram checkout/worktree do semgrep; corrija com chmod u+w): $(printf '%s' "$ro" | tr '\n' ' ')"
+        erros=1
+      else
+        ok "nenhum arquivo rastreado somente leitura"
+      fi
+    
+      outros=$(suites_pesadas_concorrentes | head -5)
+      if [ -n "$outros" ]; then
+        aviso "outra suíte pesada em execução — divide CPU/memória/Docker e produz timeout/RUN_ERROR; espere ou interrompa: $(printf '%s' "$outros" | tr '\n' ';')"
+      fi
+      return "$erros"
+    }
+    
+    # ------------------------------------------------------- Limpeza e Testcontainers
+    registrar_temporario() { TEMPORARIOS+=("$@"); }
+    
+    # Reuso de Testcontainers SÓ no ci-local (nunca na CI): o pg-migrator sobe 1 MySQL + 1 PostgreSQL por
+    # JVM e cada minion do Pitest é uma JVM nova — sem reuso, cada uma pagava o boot dos dois bancos.
+    # Bancos.java só pede reuso quando APPGP_CI_LOCAL_TC_ESCOPO está definido, e rotula o container com o
+    # escopo deste worktree; a limpeza abaixo remove SÓ containers com esse rótulo.
+    TC_ROTULO="com.appgp.ci-local.escopo"
+    definir_escopo_tc() {
+      TC_ESCOPO=""
+      [ "${CI_LOCAL_TC_REUSE:-1}" = "1" ] || return 0
+      # Sem diretório de cache não há trava; sem trava, nem reuso nem limpeza (revisão 2026-10-13).
+      [ -n "$CACHE_DIR" ] || return 0
+      TC_ESCOPO="ci-local-$(printf '%s' "$RAIZ" | shasum -a 256 | cut -c1-12)"
+    }
+    
+    limpar_containers_do_ci_local() {
+      [ -n "$TC_ESCOPO" ] || return 0
+      local ids
+      # Só quem segura a trava do escopo remove (revisão de segurança 2026-10-13): um segundo ci-local no
+      # mesmo worktree (`--only gitleaks`, ou um que perdeu a trava) apagava no EXIT os bancos de quem ainda
+      # rodava pitest-pg-migrator. Sem trava própria, tenta pegá-la; trava de processo vivo = não toca.
+      if [ -z "$TRAVA_TC" ] && ! adquirir_trava_tc quieto; then
+        printf '  \033[90mcontainers reutilizáveis mantidos: outro ci-local segura a trava do escopo %s\033[0m\n' "$TC_ESCOPO"
+        return 0
+      fi
+      ids=$(docker ps -aq --filter "label=$TC_ROTULO=$TC_ESCOPO" 2>/dev/null) || return 0
+      [ -n "$ids" ] || return 0
+      if [ "$MANTER_CONTAINERS" -eq 1 ]; then
+        printf '  \033[90mcontainers reutilizáveis mantidos (--keep-containers): %s\033[0m\n' "$(printf '%s' "$ids" | tr '\n' ' ')"
+        return 0
+      fi
+      # shellcheck disable=SC2086  # ids do docker ps, um por linha, sem espaço
+      if docker rm -f -v $ids >/dev/null 2>&1; then
+        printf '  \033[90mlimpeza: %s container(s) do ci-local removido(s) (rótulo %s=%s)\033[0m\n' \
+          "$(printf '%s\n' "$ids" | wc -l | tr -d ' ')" "$TC_ROTULO" "$TC_ESCOPO"
+      else
+        aviso "não consegui remover os containers do ci-local (rótulo $TC_ROTULO=$TC_ESCOPO)"
+      fi
+    }
+    
+    # Os containers reutilizáveis são de UM ci-local por vez: cada JVM redefine a senha dos roles, e duas
+    # execuções no mesmo worktree se derrubariam (erro de autenticação disfarçado de teste vermelho).
+    # rename(2) atômico de diretório: falha se o destino existe e não está vazio (a trava sempre tem o pid).
+    renomear_atomico() { perl -e 'rename($ARGV[0], $ARGV[1]) or exit 1' "$1" "$2"; }
+    
+    # adquirir_trava_tc [quieto]: "quieto" (usado pela limpeza) devolve 1 sem registrar FALHA.
+    # A trava nasce COMPLETA (diretório com o pid montado à parte e renomeado no lugar): ninguém a vê sem pid.
+    # Trava de pid morto é tomada renomeando-a para longe e conferindo que era MESMO a do morto — se dois
+    # disputarem a mesma trava velha, o segundo não apaga a trava nova do primeiro (revisão 2026-10-13).
+    adquirir_trava_tc() {
+      local modo="${1:-}"
+      [ -n "$TC_ESCOPO" ] && [ -n "$CACHE_DIR" ] || return 0
+      [ -n "$TRAVA_TC" ] && return 0
+      local trava="$CACHE_DIR/trava-$TC_ESCOPO" nova velha dono tentativa
+      nova=$(mktemp -d "$CACHE_DIR/trava-nova.XXXXXX") || {
+        [ "$modo" = quieto ] || falha "não consegui travar os containers do escopo $TC_ESCOPO ($CACHE_DIR)"
+        return 1
+      }
+      printf '%s\n' "$$" > "$nova/pid"
+      for tentativa in 1 2 3; do
+        if renomear_atomico "$nova" "$trava"; then
+          TRAVA_TC="$trava"
+          return 0
+        fi
+        dono=$(cat "$trava/pid" 2>/dev/null)
+        if [[ "$dono" =~ ^[0-9]+$ ]] && kill -0 "$dono" 2>/dev/null; then
+          rm -rf "$nova"
+          [ "$modo" = quieto ] || falha "containers reutilizáveis do escopo $TC_ESCOPO em uso por outro ci-local (pid $dono); espere ou use CI_LOCAL_TC_REUSE=0"
+          return 1
+        fi
+        velha="$CACHE_DIR/trava-velha.$$.$tentativa"
+        rm -rf "$velha"
+        renomear_atomico "$trava" "$velha" || continue
+        if [ "$(cat "$velha/pid" 2>/dev/null)" != "$dono" ]; then
+          # Outro processo trocou a trava entre a leitura e o rename: devolve e trata como ocupada.
+          renomear_atomico "$velha" "$trava" || rm -rf "$velha"
+          rm -rf "$nova"
+          [ "$modo" = quieto ] || falha "containers reutilizáveis do escopo $TC_ESCOPO disputados por outro ci-local; tente de novo"
+          return 1
+        fi
+        rm -rf "$velha"
+      done
+      rm -rf "$nova"
+      [ "$modo" = quieto ] || falha "não consegui travar os containers do escopo $TC_ESCOPO ($trava)"
+      return 1
+    }
+    
+    liberar_trava_tc() {
+      [ -n "$TRAVA_TC" ] || return 0
+      # Só apaga se a trava ainda é desta execução.
+      [ "$(cat "$TRAVA_TC/pid" 2>/dev/null)" = "$$" ] && rm -rf "$TRAVA_TC"
+      TRAVA_TC=""
+    }
+    
+    # Prefixo do worktree descartável do semgrep: leva o PID deste ci-local ($$ vale o mesmo nos subshells),
+    # para que a limpeza de saída remova só o DESTA execução — outro ci-local do mesmo repositório compartilha
+    # a lista de worktrees.
+    # Sem barra final (o TMPDIR do macOS termina em "/"); `pwd -P` porque o git grava o caminho real
+    # (~/tmp/... no lugar de /var/...).
+    prefixo_worktree_semgrep() {
+      local dir
+      dir=$(cd "${TMPDIR:-/tmp}" 2>/dev/null && pwd -P) || dir="${TMPDIR:-/tmp}"
+      printf '%s/ci-local-semgrep-%s' "${dir%/}" "$$"
+    }
+    
+    remover_pid_paralelo() {
+      local p restantes=()
+      for p in "${PIDS_PARALELOS[@]}"; do [ "$p" = "$1" ] || restantes+=("$p"); done
+      PIDS_PARALELOS=("${restantes[@]}")
+    }
+    
+    # Mata o processo e todos os descendentes (de baixo para cima). `kill` só no subshell do scan deixava o
+    # semgrep/trivy/npm audit filho rodando órfão (revisão 2026-10-13).
+    matar_arvore() {
+      local filho
+      for filho in $(pgrep -P "$1" 2>/dev/null); do matar_arvore "$filho"; done
+      kill "$1" 2>/dev/null
+    }
+    
+    ao_sair() {
+      local t prefixo
+      # INT/TERM no meio dos scans paralelos: não deixa gitleaks/semgrep/trivy/npm audit órfãos.
+      # Só filho direto deste shell: um PID reciclado por processo alheio não tem $$ como pai.
+      for t in "${PIDS_PARALELOS[@]}"; do
+        [ "$(ps -o ppid= -p "$t" 2>/dev/null | tr -d ' ')" = "$$" ] && matar_arvore "$t"
+      done
+      for t in "${TEMPORARIOS[@]}"; do rm -rf "$t"; done
+      prefixo=$(prefixo_worktree_semgrep)
+      git worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p' | while IFS= read -r t; do
+        case "$t" in "$prefixo".*) git worktree remove --force "$t" >/dev/null 2>&1 || rm -rf "$t" ;; esac
+      done
+      if [ "$LIMPEZA_FEITA" -eq 0 ]; then
+        LIMPEZA_FEITA=1
+        limpar_containers_do_ci_local
+      fi
+      # Depois da limpeza: a trava é o que autoriza remover os containers do escopo.
+      liberar_trava_tc
+    }
+    
+    # Se o `mvn clean test` do backend NÃO rodou nesta execução (cache ou seleção), o primeiro passo
+    # Maven seguinte limpa backend/target antes: compilação incremental sobre target/ antigo pode pular
+    # fonte desatualizado e devolver BUILD SUCCESS falso (medido em 2026-08-15, ver passo_backend_test).
+    garantir_target_backend() {
+      [ "$BACKEND_TARGET_FRESCO" -eq 1 ] && return 0
+      printf '  limpando backend/target (o mvn clean test desta execução não rodou)\n'
+      if (cd backend && mvn -q clean > $LOGS/be-clean.log 2>&1); then
+        BACKEND_TARGET_FRESCO=1
+        return 0
+      fi
+      falha "mvn clean do backend — ver $LOGS/be-clean.log"
+      return 1
+    }
+    
+    # Piso de EXECUCAO do backend. NAO e metrica de cobertura: separa "a suite rodou"
+    # de "a suite nao rodou". `mvn` devolve exit 0 tanto para 11827 testes verdes
+    # quanto para ZERO teste executado (um -DskipTests herdado, um perfil que desliga
+    # o surefire, um filtro -Dtest que nao casa nada). Sem este piso o gate reporta OK
+    # nos dois casos.
+    #
+    # Calibragem (medida em 2026-08-21, 11827 testes em 4 shards de 2568/3016/3054/3188):
+    # perder um shard INTEIRO custa no minimo 2568 testes e derruba o total para 9259,
+    # 2241 abaixo do piso — pega com folga de 7,8x. A janela de perda silenciosa e de
+    # 327 testes (2,8%), o equivalente as duas maiores classes juntas; essas duas estao
+    # no conjunto fixo do gate Pitest, entao o mutation score acusaria.
+    #
+    # ATENCAO a regra "threshold so SOBE" do CLAUDE.md: ela vale para cobertura e
+    # mutacao. Este aqui e piso de execucao, e ele acompanha o tamanho real da suite —
+    # numa remocao JUSTIFICADA de testes, abaixar este numero junto e o ajuste correto,
+    # nao um contorno. O que nao se faz e abaixa-lo para deixar de ver uma suite que
+    # parou de rodar.
+    PISO_TESTES_BACKEND=11500
+    
+    # Soma os relatorios do surefire. Le do XML, nao do stdout do Maven: o stdout
+    # depende de flag (`-q` suprime a linha `Tests run:`) e some quando a saida muda
+    # de formato; o XML e o artefato que a propria CI publica.
+    # Imprime SEMPRE "<testes> <falhas> <erros>" — tres inteiros, uma linha.
+    #
+    # O `find ... -exec cat {} +` no lugar de um glob NAO e estilo: com o diretorio
+    # vazio, `"$dir"/TEST-*.xml` nao expande, o awk recebe o caminho literal e a
+    # funcao devolve string VAZIA. Ai `[ "" -lt PISO ]` erra, o `if` e o `elif` caem
+    # os dois, e o fluxo chega no `else` imprimindo OK — exatamente o falso verde
+    # que este piso existe para impedir. Medido ao escrever esta funcao.
+    # O `cat` pode rodar em lotes, mas a saida vira UM stream para UM awk, entao o
+    # resultado continua sendo uma linha so mesmo com milhares de relatorios.
+    somar_surefire() {
+      find "$1" -maxdepth 1 -name 'TEST-*.xml' -exec cat {} + 2>/dev/null \
+      | awk 'BEGIN { RS = "<testsuite " }
+           NR > 1 {
+             # Limita a busca a EXATAMENTE a tag de abertura, delimitada pelo primeiro ">".
+             # A versao anterior cortava em 400 bytes fixos e isso era um falso-verde a
+             # espera de acontecer: o prefixo do surefire ja gasta 232 bytes e `failures`
+             # e o ULTIMO atributo, entao a folga era o comprimento do FQCN. Medido: a
+             # classe de nome mais longo do repo termina `failures="0"` no byte 358 — 42
+             # bytes de sobra. Com um FQCN ~145 chars o `match` de failures/errors falha e
+             # eles viram 0, enquanto `tests` (atributo anterior) continua certo e passa o
+             # piso. Resultado: suite VERMELHA reportada como OK.
+             # Se nao houver ">" o registro esta malformado: nao soma nada, e o total cai
+             # abaixo do piso — falha, que e a direcao segura.
+             fim = index($0, ">")
+             if (fim > 0) {
+               cab = substr($0, 1, fim)
+               if (match(cab, /tests="[0-9]+/))    { T += substr(cab, RSTART + 7,  RLENGTH - 7)  }
+               if (match(cab, /failures="[0-9]+/)) { F += substr(cab, RSTART + 10, RLENGTH - 10) }
+               if (match(cab, /errors="[0-9]+/))   { E += substr(cab, RSTART + 8,  RLENGTH - 8)  }
+               if (match(cab, /skipped="[0-9]+/))  { S += substr(cab, RSTART + 9,  RLENGTH - 9)  }
+             }
+           }
+           # `tests` do surefire INCLUI os skipped. Descontar e o que faz o piso medir
+           # "quantos testes rodaram" em vez de "quantos foram listados" — sem isso uma
+           # suite inteira marcada como skipped passaria o piso.
+           END { printf "%d %d %d\n", T - S, F, E }'
+    }
+    
+    # Executa o IT PostgreSQL real de cada migração Flyway de sqls/postgres/ (SDD-20 §7.3, T-501): o manifesto
+    # sqls/postgres-real-it-manifest.tsv cobre TODAS as migrações (SqlScriptPostgresRealCoverageTest). Substitui o antigo
+    # manifesto MySQL, aposentado com o histórico congelado em sqls/legacy-mysql/ (que não roda no alvo PostgreSQL).
+    # O contrato: tudo que foi manifestado existe, roda e devolve XML nominal.
+    #
+    # OPS-MVN-INCREMENTAL: a árvore de classes é um mktemp novo por execução. Isso torna impossível
+    # reutilizar .class de target/ deixado por checkout/worktree com mtime mais novo que o .java, sem
+    # `mvn clean` nem remoção ampla de diretório. O único rm -rf alcança o diretório que este processo
+    # acabou de criar e validou.
+    rodar_sql_real_its() {
+      azul "Backend - migrações Flyway manifestadas em PostgreSQL real (-Pit)"
+      if ! docker info >/dev/null 2>&1; then
+        pulo "migrações PostgreSQL manifestadas — Docker indisponível; a CI vai rodá-los"
+        return
+      fi
+    
+      local SQL_REAL_IT_MANIFEST="sqls/postgres-real-it-manifest.tsv"
+      if [ ! -f "$SQL_REAL_IT_MANIFEST" ]; then
+        falha "migrações em PostgreSQL — manifesto ausente: $SQL_REAL_IT_MANIFEST"
+        return
+      fi
+    
+      local SQL_REAL_IT_SCRIPTS=()
+      local SQL_REAL_IT_CLASSES=()
+      local -A SQL_REAL_IT_SCRIPTS_VISTOS=()
+      local -A SQL_REAL_IT_CLASSES_VISTAS=()
+      local sql classe extra
+      local manifesto_invalido=0
+      while IFS=$'\t' read -r sql classe extra || [ -n "${sql:-}${classe:-}${extra:-}" ]; do
+        [ -z "${sql:-}" ] && continue
+        [[ "$sql" = \#* ]] && continue
+        if [ -n "${extra:-}" ] || ! [[ "$sql" =~ ^[A-Za-z0-9._-]+\.sql$ ]] \
+            || ! [[ "$classe" =~ ^com\.appgp\.backend\.[A-Za-z0-9_.]+$ ]]; then
+          falha "migrações em PostgreSQL — entrada inválida no manifesto: '$sql' '$classe' '$extra'"
+          manifesto_invalido=1
+          continue
+        fi
+        local teste_relativo="${classe//.//}.java"
+        if [ ! -f "sqls/postgres/$sql" ] || [ ! -f "backend/src/test/java/$teste_relativo" ]; then
+          falha "migrações em PostgreSQL — par manifestado não existe: sqls/postgres/$sql -> $classe"
+          manifesto_invalido=1
+          continue
+        fi
+        if [ -n "${SQL_REAL_IT_SCRIPTS_VISTOS[$sql]:-}" ] \
+            || [ -n "${SQL_REAL_IT_CLASSES_VISTAS[$classe]:-}" ]; then
+          falha "migrações em PostgreSQL — script ou classe duplicado no manifesto: $sql -> $classe"
+          manifesto_invalido=1
+          continue
+        fi
+        SQL_REAL_IT_SCRIPTS_VISTOS[$sql]=1
+        SQL_REAL_IT_CLASSES_VISTAS[$classe]=1
+        SQL_REAL_IT_SCRIPTS+=("$sql")
+        SQL_REAL_IT_CLASSES+=("$classe")
+      done < "$SQL_REAL_IT_MANIFEST"
+    
+      if [ "$manifesto_invalido" -ne 0 ]; then
+        return
+      fi
+      if [ ${#SQL_REAL_IT_CLASSES[@]} -lt 1 ]; then
+        falha "migrações em PostgreSQL — manifesto vazio; zero migração executada não é verde"
+        return
+      fi
+    
+      local SQL_REAL_IT_TESTES
+      SQL_REAL_IT_TESTES=$(printf '%s\n' "${SQL_REAL_IT_CLASSES[@]}" | paste -sd, -)
+      local SQL_REAL_IT_BUILD
+      SQL_REAL_IT_BUILD=$(mktemp -d "${TMPDIR:-/tmp}/appgp-sql-real-it.XXXXXX")
+      if [ -z "$SQL_REAL_IT_BUILD" ] || [ ! -d "$SQL_REAL_IT_BUILD" ]; then
+        falha "migrações em PostgreSQL — não foi possível criar árvore de build efêmera"
+        return
+      fi
+    
+      local log="$LOGS/sql-real-it.log"
+      if (cd backend && mvn -Pci-local-focused,it "${MVN_WORKERS[@]}" \
+          -Dci.local.focused.build="$SQL_REAL_IT_BUILD" \
+          -Dtest="$SQL_REAL_IT_TESTES" test > "$log" 2>&1); then
+        local SQL_REAL_IT_AUSENTES=()
+        for classe in "${SQL_REAL_IT_CLASSES[@]}"; do
+          if [ ! -f "$SQL_REAL_IT_BUILD/surefire-reports/TEST-$classe.xml" ]; then
+            SQL_REAL_IT_AUSENTES+=("$classe")
+          fi
+        done
+        local SQL_REAL_IT_TESTES_RODADOS SQL_REAL_IT_FALHAS SQL_REAL_IT_ERROS
+        read -r SQL_REAL_IT_TESTES_RODADOS SQL_REAL_IT_FALHAS SQL_REAL_IT_ERROS \
+          <<< "$(somar_surefire "$SQL_REAL_IT_BUILD/surefire-reports")"
+        if [ ${#SQL_REAL_IT_AUSENTES[@]} -gt 0 ]; then
+          falha "migrações em PostgreSQL — XML nominal ausente para: ${SQL_REAL_IT_AUSENTES[*]}"
+        elif [[ "$SQL_REAL_IT_TESTES_RODADOS" =~ ^[0-9]+$ ]] \
+            && [ "$SQL_REAL_IT_TESTES_RODADOS" -ge "${#SQL_REAL_IT_CLASSES[@]}" ] \
+            && [ "${SQL_REAL_IT_FALHAS:-1}" = "0" ] && [ "${SQL_REAL_IT_ERROS:-1}" = "0" ]; then
+          ok "migrações em PostgreSQL (${#SQL_REAL_IT_SCRIPTS[@]} migrações, ${#SQL_REAL_IT_CLASSES[@]} ITs, $SQL_REAL_IT_TESTES_RODADOS testes)"
+        else
+          falha "migrações em PostgreSQL — surefire: $SQL_REAL_IT_TESTES_RODADOS testes, $SQL_REAL_IT_FALHAS falhas, $SQL_REAL_IT_ERROS erros — ver $log"
+        fi
+      else
+        falha "migrações em PostgreSQL — ver $log"
+      fi
+    
+      rm -rf "$SQL_REAL_IT_BUILD"
+    }
+    
+    # Verifica o mutations.xml do Pitest. EXISTE PORQUE O SCORE DO STDOUT MENTE SOB
+    # CARGA: `Killed N (X%)` é a contagem de mutantes com `detected="true"`, e
+    # `status="RUN_ERROR"` sai com `detected="true" numberOfTestsRun="0"
+    # <killingTest />` — ou seja, mutante que NUNCA EXECUTOU entra no numerador do
+    # score e o Maven devolve BUILD SUCCESS.
+    #
+    # Reproduzido DUAS vezes, de forma independente. Primeiro por um revisor: 323 de
+    # 1062 mutantes RUN_ERROR, Pitest imprimindo `Killed 913 (85.97%)` = 590 KILLED +
+    # 323 RUN_ERROR, BUILD SUCCESS. Depois aqui, ao escrever esta função, com
+    # `load average: 26` (agentes construindo em paralelo): **609 de 1062**
+    # RUN_ERROR, Pitest imprimindo `Generated 1062 mutations Killed 951 (89.55%)` e
+    # BUILD SUCCESS — 342 KILLED + 609 RUN_ERROR = 951. Ou seja 57% dos mutantes
+    # NUNCA EXECUTARAM e o gate obrigatório do CLAUDE.md §3/§6 declarou 89,55%.
+    # A distribuição por classe do run de 89,55%: AuthService 96, AgendamentoService
+    # 96, LoginRateLimiter 87, AgendamentoStatusService 67, AgendamentoValidationService
+    # 49, UserAdminAuthorizationService 48, PacienteAuthorizationService 48,
+    # ForgotPasswordTokenService 37, PacienteFinanceiroService 33, TrustedDeviceService
+    # 29, TwoFactorLoginService 19 — as guardas de IDOR, de authz de admin e de step-up
+    # entre elas. Execuções com a máquina ociosa dão 87%+ com ZERO RUN_ERROR.
+    # Não é regressão de PR nenhum — é o instrumento não distinguindo "morto por
+    # assert" de "nunca rodou", exatamente a mesma patologia dos outros gates deste
+    # script.
+    #
+    # DUAS armadilhas na contagem, as duas medidas contra o relatório REAL do PIT
+    # 1.25.9 deste pom, não deduzidas:
+    #
+    # (a) O PIT escreve os atributos com ASPA SIMPLES —
+    #     `<mutation detected='true' status='RUN_ERROR' numberOfTestsRun='0'>`. Um
+    #     padrão escrito com aspa dupla (a forma que aparece na documentação e nos
+    #     relatos) casa ZERO ocorrência SEMPRE: seria um gate que nunca dispara,
+    #     trocando um instrumento cego por outro. Por isso o padrão aceita as duas.
+    # (b) `grep -o ... | wc -l` e NÃO `grep -c`: `grep -c` conta LINHAS que casam. O
+    #     relatório de hoje sai com uma `<mutation>` por linha, mas isso é detalhe do
+    #     serializador, não contrato; num relatório escrito numa linha só, centenas de
+    #     RUN_ERROR virariam a contagem 1 e o gate passaria. Medido: o mesmo XML numa
+    #     linha só dá `grep -c`=1 contra `grep -o|wc -l`=2.
+    #
+    # Imprime o diagnóstico em stdout e devolve 1 quando há problema; 0 quando o
+    # relatório é coerente.
+    checar_pitest_xml() {
+      local xml="${1:-}" gerados="${2:-}" mortos="${3:-}"
+      if [ -z "$xml" ] || [ ! -f "$xml" ]; then
+        echo "mutations.xml ausente (${xml:-caminho não resolvido}) — sem ele não dá para afirmar que os mutantes contados como mortos chegaram a rodar"
+        return 1
+      fi
+      local total killed timed_out run_error memory_error
+      contar_status() { grep -oE "status=['\"]$1['\"]" "$xml" | wc -l | tr -d ' '; }
+      total=$(grep -o '<mutation ' "$xml" | wc -l | tr -d ' ')
+      killed=$(contar_status KILLED)
+      timed_out=$(contar_status TIMED_OUT)
+      run_error=$(contar_status RUN_ERROR)
+      memory_error=$(contar_status MEMORY_ERROR)
+    
+      if [ "$total" -eq 0 ]; then
+        echo "mutations.xml sem nenhum <mutation> ($xml) — o relatório existe mas não mede nada"
+        return 1
+      fi
+      # MEMORY_ERROR entra junto porque é a mesma classe de defeito (mutante contado
+      # como detectado sem que assert nenhum o tenha matado), e aparece pelo mesmo
+      # motivo: máquina sem folga.
+      if [ "$run_error" -gt 0 ] || [ "$memory_error" -gt 0 ]; then
+        echo "$run_error mutante(s) RUN_ERROR e $memory_error MEMORY_ERROR de $total — NUNCA EXECUTADOS, mas contados como mortos no score. Rode de novo com a máquina ociosa; o número impresso pelo Pitest não vale"
+        return 1
+      fi
+      # Assert aritmético — o mais forte dos dois. O numerador que o Pitest imprimiu
+      # tem de ser EXATAMENTE KILLED + TIMED_OUT. Qualquer outro status
+      # `detected="true"` (o RUN_ERROR de hoje, ou um status novo numa versão futura
+      # do PIT que este script ainda não conheça) quebra a igualdade em vez de passar
+      # despercebido.
+      if [ -n "$gerados" ] && [ "$gerados" != "$total" ]; then
+        echo "incoerência: o stdout diz $gerados mutantes gerados e o mutations.xml traz $total"
+        return 1
+      fi
+      if [ -n "$mortos" ] && [ "$mortos" -ne $((killed + timed_out)) ]; then
+        echo "incoerência: o stdout conta $mortos mortos e o mutations.xml só tem $killed KILLED + $timed_out TIMED_OUT — há status detected=\"true\" que não é morte por teste"
+        return 1
+      fi
+      echo "$total mutantes: $killed KILLED + $timed_out TIMED_OUT, 0 RUN_ERROR/MEMORY_ERROR"
+      return 0
+    }
+    
+    # Roda o Pitest e valida o desfecho por DOIS caminhos independentes: o score do
+    # stdout e o mutations.xml. Um sozinho não basta — ver checar_pitest_xml.
+    # Uso: rodar_pitest <rótulo> <arquivo de log> [args extras do mvn, ex.: -Pperfil]
+    rodar_pitest() {
+      local rotulo="$1" log="$2"
+      shift 2
+      # PIT_MODULO: diretório do módulo Maven (default backend; tools/pg-migrator tem Pitest próprio).
+      local modulo="${PIT_MODULO:-backend}"
+      local xml="$modulo/target/pit-reports/mutations.xml"
+      local workers=()
+      if [ "$modulo" = "backend" ]; then
+        garantir_target_backend || return
+        workers=("${MVN_WORKERS[@]}")
+      fi
+      # SEM histórico incremental (SDD-08 §Delta 2026-10-13): o PIT open-source (1.30 neste pom) não tem mais a análise
+      # incremental embutida — `-DhistoryInputFile`/`-DwithHistory` agora derrubam o build com "History has
+      # been enabled but no history plugin has been installed" (só o plugin comercial arcmutate a reativa).
+      # O reaproveitamento do Pitest é o cache por entradas do passo (passo/chave_do_passo); medido em 2026-10-13.
+      # Apagar ANTES: sem isso, um run que morre sem escrever relatório deixaria o
+      # mutations.xml da execução anterior no lugar, e a verificação mediria o run
+      # errado — "não rodou" outra vez travestido de verde.
+      rm -rf "$modulo/target/pit-reports"
+      if ! (cd "$modulo" && mvn -q "$@" "${workers[@]}" test-compile org.pitest:pitest-maven:mutationCoverage > "$log" 2>&1); then
+        falha "$rotulo — ver $log"
+        return
+      fi
+      # O percentual tem decimal (">> Generated 889 mutations Killed 768 (86.39%)").
+      # O regex antigo exigia inteiro, nunca casava, e o passo imprimia "pitest — "
+      # com o score VAZIO — um gate que reporta OK sem exibir a evidência convida a
+      # confiar nele sem ter olhado. O threshold em si é do Maven (mutationThreshold
+      # 80 no pom), então o exit code já é confiável; o que faltava era mostrar.
+      local score gerados mortos diag
+      score=$(grep -oE "Generated [0-9]+ mutations Killed [0-9]+ \([0-9.]+%\)" "$log" | tail -1)
+      if [ -z "$score" ]; then
+        falha "$rotulo — build passou mas o score não pôde ser lido de $log (formato mudou?)"
+        return
+      fi
+      gerados=$(printf '%s' "$score" | awk '{print $2}')
+      mortos=$(printf '%s'  "$score" | awk '{print $5}')
+      [ -f "$xml" ] || xml=$(find "$modulo/target/pit-reports" -name mutations.xml -type f 2>/dev/null | head -1)
+      if diag=$(checar_pitest_xml "$xml" "$gerados" "$mortos"); then
+        ok "$rotulo — $score [$diag]"
+      else
+        falha "$rotulo — $diag (score impresso pelo Pitest: $score)"
+      fi
+    }
+    
+    # União dos arquivos que ESTE branch toca: commits desde a merge-base + staged +
+    # modificados rastreados + não-rastreados. Um por linha.
+    #
+    # Diferente do bloco do gitleaks, aqui NÃO se usa `-z`/`read -d ''`: esta lista
+    # só é comparada contra nomes de classe Java (ASCII por definição da linguagem) e
+    # nenhum arquivo é aberto, então o C-quoting de caminho não-ASCII do git não pode
+    # esconder um alvo — no máximo deixa de casar um nome que nunca seria Java.
+    arquivos_do_branch() {
+      local base
+      base=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || echo "")
+      {
+        if [ -n "$base" ] && [ "$base" != "$(git rev-parse HEAD 2>/dev/null)" ]; then
+          git diff --name-only --diff-filter=ACMR "$base..HEAD" 2>/dev/null
+        fi
+        git diff --cached --name-only --diff-filter=ACMR 2>/dev/null
+        git diff        --name-only --diff-filter=ACMR 2>/dev/null
+        git ls-files --others --exclude-standard 2>/dev/null
+      } | awk 'NF && !vistos[$0]++'
+    }
+    
+    # ---------------------------------------------------------------- Passos (na ordem do arquivo;
+    # a ordem de EXECUÇÃO é a do bloco Execução, no fim)
+    passo_recursos() {
+      azul "Testes - contrato de CPU/memória"
+      if ! python3 -B -m unittest discover -s scripts/tests -p test_test_resource_limits.py \
+          > $LOGS/resource-budget.log 2>&1; then
+        falha "contrato de recursos — ver $LOGS/resource-budget.log"
+        resumir
+        exit 1
+      fi
+      ok "Maven/Surefire/Pitest: até 4 CPUs e 3 GiB por JVM; suítes pesadas sequenciais"
+    }
+    
+    passo_backend_test() {
+      azul "Backend - Test (ci.yml: backend-shard x4)"
+      # `clean` NAO e paranoia: sem ele a compilacao incremental do Maven pode PULAR
+      # fontes de teste desatualizados e devolver BUILD SUCCESS falso. Medido em
+      # 2026-08-15: apos mudar a assinatura de markPagoIfAVencer (8 -> 9 params),
+      # `mvn test-compile` passou verde enquanto 8 chamadas nos testes ainda usavam a
+      # assinatura antiga; `mvn clean test-compile` acusou os 8 erros. A CI sempre
+      # parte de checkout limpo, entao o gate local sem `clean` mede MENOS que ela —
+      # mesma classe do buraco do scan de imagem.
+      # Sem `-q`: era ele que apagava a linha `Tests run:` e o `BUILD SUCCESS` do
+      # log, deixando o rotulo "mvn test ()" vazio e o log inutil para diagnostico.
+      BACKEND_TARGET_FRESCO=0
+      if (cd backend && mvn clean test "${MVN_WORKERS[@]}" > $LOGS/be.log 2>&1); then
+        read -r BE_TESTES BE_FALHAS BE_ERROS <<< "$(somar_surefire backend/target/surefire-reports)"
+        # Guarda de tipo: se a apuracao devolver qualquer coisa que nao seja inteiro,
+        # o caminho de comparacao inteira abaixo erra e o fluxo escorrega para o
+        # `else`, imprimindo OK. Falha explicita em vez de verde silencioso.
+        if ! [[ "$BE_TESTES" =~ ^[0-9]+$ && "$BE_FALHAS" =~ ^[0-9]+$ && "$BE_ERROS" =~ ^[0-9]+$ ]]; then
+          falha "mvn test — apuracao do surefire devolveu algo nao-numerico ('$BE_TESTES' '$BE_FALHAS' '$BE_ERROS'); nao da para afirmar que a suite rodou"
+        elif [ "$BE_TESTES" -lt "$PISO_TESTES_BACKEND" ]; then
+          falha "mvn test — surefire reportou $BE_TESTES teste(s), abaixo do piso $PISO_TESTES_BACKEND. Exit 0 com suite vazia ou parcial NAO e verde — ver $LOGS/be.log"
+        elif [ "$BE_FALHAS" -gt 0 ] || [ "$BE_ERROS" -gt 0 ]; then
+          falha "mvn test — $BE_FALHAS falha(s) e $BE_ERROS erro(s) no surefire apesar do exit 0 do Maven — ver $LOGS/be.log"
+        else
+          ok "mvn test ($BE_TESTES testes, 0 falhas, 0 erros)"
+        fi
+      else
+        falha "mvn test — ver $LOGS/be.log"
+      fi
+      # Depois do `clean`, backend/target é desta árvore (verde ou não): os passos Maven seguintes
+      # não precisam limpar de novo.
+      BACKEND_TARGET_FRESCO=1
+    }
+    
+    passo_fklock() {
+      # Os *FkLockPostgresIT provam em PostgreSQL real (Testcontainers) que nenhum insert em REQUIRES_NEW
+      # espera lock de FK na linha que o caller já escreveu (50 s de lock wait no MySQL em 2026-09-02; no PG,
+      # lock_timeout -> 55P03). SDD-20 T-401: os *FkLockIT MySQL foram apagados após o porte.
+      # A CI os roda no job Docker junto do EmailOutboxPublisherConfirmDockerIT; aqui só com Docker.
+      azul "Backend - FK lock ITs em PostgreSQL (ci.yml: Rabbit Publisher Confirm IT, -Pit)"
+      garantir_target_backend || return
+      if docker info >/dev/null 2>&1; then
+        # Piso NOMINAL: o número de classes *FkLockPostgresIT.java no fonte é o que o gate exige de
+        # volta em relatórios TEST-*FkLockPostgresIT.xml. Sem isso um IT que o surefire nem carregou
+        # (pattern errado, @Tag trocado, classe renomeada) sumia em silêncio e o passo ficava
+        # verde com os que sobraram. Os relatórios antigos são apagados ANTES do mvn: o `-Pit`
+        # não limpa o diretório e um xml da rodada anterior contaria como classe executada.
+        # Sem `-Dsurefire.failIfNoSpecifiedTests=false`: se o pattern não casar nenhuma classe,
+        # o próprio Maven falha — zero IT rodado NÃO é verde.
+        FK_CLASSES="$(find backend/src/test -name '*FkLockPostgresIT.java' | wc -l | tr -d ' ')"
+        rm -f backend/target/surefire-reports/TEST-*FkLockPostgresIT.xml
+        if [ "$FK_CLASSES" -lt 1 ]; then
+          falha "FK lock ITs em PostgreSQL — nenhuma classe *FkLockPostgresIT.java em backend/src/test; o gate não tem o que provar"
+        elif (cd backend && mvn -Pit "${MVN_WORKERS[@]}" -Dtest='*FkLockPostgresIT' test > $LOGS/fklock.log 2>&1); then
+          # Soma SÓ os relatórios dos *FkLockPostgresIT: o `-Pit` não limpa o diretório e o mvn test
+          # anterior deixou ~12k testes lá — somar tudo mascararia um IT que nem rodou.
+          FK_DIR="$(mktemp -d)"; cp backend/target/surefire-reports/TEST-*FkLockPostgresIT.xml "$FK_DIR"/ 2>/dev/null || true
+          FK_RELATORIOS="$(find "$FK_DIR" -maxdepth 1 -name 'TEST-*FkLockPostgresIT.xml' | wc -l | tr -d ' ')"
+          read -r FK_TESTES FK_FALHAS FK_ERROS <<< "$(somar_surefire "$FK_DIR")"; rm -rf "$FK_DIR"
+          if [ "$FK_RELATORIOS" -ne "$FK_CLASSES" ]; then
+            falha "FK lock ITs em PostgreSQL — $FK_CLASSES classe(s) *FkLockPostgresIT no fonte, $FK_RELATORIOS relatório(s) TEST-*FkLockPostgresIT.xml gerado(s); algum IT não rodou — ver $LOGS/fklock.log"
+          elif [[ "$FK_TESTES" =~ ^[0-9]+$ ]] && [ "$FK_TESTES" -ge "$FK_CLASSES" ] && [ "${FK_FALHAS:-1}" = "0" ] && [ "${FK_ERROS:-1}" = "0" ]; then
+            ok "FK lock ITs em PostgreSQL ($FK_CLASSES classe(s), $FK_TESTES teste(s), 0 falhas, 0 erros)"
+          else
+            falha "FK lock ITs em PostgreSQL — surefire: $FK_TESTES teste(s) para $FK_CLASSES classe(s), $FK_FALHAS falha(s), $FK_ERROS erro(s) — ver $LOGS/fklock.log"
+          fi
+        else
+          falha "FK lock ITs em PostgreSQL — ver $LOGS/fklock.log"
+        fi
+      else
+        pulo "FK lock ITs em PostgreSQL — Docker indisponível; a CI vai rodá-los no job -Pit"
+      fi
+    }
+    
+    passo_mysql_it() {
+      # QLT-HIG-071: a CI sempre selecionou *MySqlIT, mas o gate local só selecionava
+      # *FkLockIT. O piso nominal fecha o mesmo falso verde: classe nova sem relatório
+      # não pode desaparecer por pattern/tag/configuração do surefire.
+      # SDD-20 T-501: só restam os *MySqlIT de INFRA da migração (inventário de produção, corpus de busca,
+      # colação; W8 os aposenta) — os ITs de script legado saíram com o manifesto MySQL (MySqlItCiCoverageTest).
+      azul "Backend - Todos os *MySqlIT em MySQL (ci.yml: Rabbit Publisher Confirm IT, -Pit)"
+      garantir_target_backend || return
+      if docker info >/dev/null 2>&1; then
+        MYSQL_IT_CLASSES="$(find backend/src/test -name '*MySqlIT.java' | wc -l | tr -d ' ')"
+        rm -f backend/target/surefire-reports/TEST-*MySqlIT.xml
+        if [ "$MYSQL_IT_CLASSES" -lt 1 ]; then
+          falha "*MySqlIT em MySQL — nenhuma classe no fonte; o gate não tem o que provar"
+        elif (cd backend && mvn -Pit "${MVN_WORKERS[@]}" -Dtest='*MySqlIT' test > $LOGS/mysql-it.log 2>&1); then
+          MYSQL_IT_DIR="$(mktemp -d)"
+          cp backend/target/surefire-reports/TEST-*MySqlIT.xml "$MYSQL_IT_DIR"/ 2>/dev/null || true
+          MYSQL_IT_RELATORIOS="$(find "$MYSQL_IT_DIR" -maxdepth 1 -name 'TEST-*MySqlIT.xml' | wc -l | tr -d ' ')"
+          read -r MYSQL_IT_TESTES MYSQL_IT_FALHAS MYSQL_IT_ERROS <<< "$(somar_surefire "$MYSQL_IT_DIR")"
+          rm -rf "$MYSQL_IT_DIR"
+          if [ "$MYSQL_IT_RELATORIOS" -ne "$MYSQL_IT_CLASSES" ]; then
+            falha "*MySqlIT em MySQL — $MYSQL_IT_CLASSES classe(s) no fonte, $MYSQL_IT_RELATORIOS relatório(s); algum IT não rodou — ver $LOGS/mysql-it.log"
+          elif [[ "$MYSQL_IT_TESTES" =~ ^[0-9]+$ ]] && [ "$MYSQL_IT_TESTES" -ge "$MYSQL_IT_CLASSES" ] \
+              && [ "${MYSQL_IT_FALHAS:-1}" = "0" ] && [ "${MYSQL_IT_ERROS:-1}" = "0" ]; then
+            ok "*MySqlIT em MySQL ($MYSQL_IT_CLASSES classe(s), $MYSQL_IT_TESTES teste(s), 0 falhas, 0 erros)"
+          else
+            falha "*MySqlIT em MySQL — surefire: $MYSQL_IT_TESTES teste(s), $MYSQL_IT_FALHAS falha(s), $MYSQL_IT_ERROS erro(s) — ver $LOGS/mysql-it.log"
+          fi
+        else
+          falha "*MySqlIT em MySQL — ver $LOGS/mysql-it.log"
+        fi
+      else
+        pulo "*MySqlIT em MySQL — Docker indisponível; a CI vai rodá-los no job -Pit"
+      fi
+    }
+    
+    passo_docker_it() {
+      # OPS-IT-DOCKER-SERIAL (CI run 36529973890): os @Tag("docker") dirigem o daemon por script
+      # (MinioImageCveGateIT: pull + Trivy + Compose) e saturavam o Docker quando rodavam junto dos
+      # ITs Testcontainers. No perfil it eles têm execução própria (it-docker-serial: 1 fork por vez,
+      # depois da paralela). Aqui cada passo é um `mvn` separado e sequencial, então nada concorre:
+      # este vem depois dos passos *FkLockPostgresIT/*MySqlIT, e os ITs dos scripts SQL (rodar_sql_real_its)
+      # vêm depois dele. Invoca exatamente aquela execução, sem lista de classes duplicada. Piso
+      # nominal: nº de classes @Tag("docker") no fonte = nº de relatórios TEST-<fqcn>.xml gerados.
+      azul "Backend - ITs Docker em série (ci.yml: Rabbit Publisher Confirm IT, -Pit it-docker-serial)"
+      garantir_target_backend || return
+      if docker info >/dev/null 2>&1 && precisa trivy; then
+        local arq fqcn rel
+        DOCKER_IT_ARQUIVOS=()
+        while IFS= read -r arq; do DOCKER_IT_ARQUIVOS+=("$arq"); done \
+          < <(grep -rlE '^[[:space:]]*@Tag\("docker"\)' backend/src/test/java | sort)
+        DOCKER_IT_CLASSES="${#DOCKER_IT_ARQUIVOS[@]}"
+        DOCKER_IT_RELATORIOS_ESPERADOS=()
+        for arq in "${DOCKER_IT_ARQUIVOS[@]}"; do
+          fqcn="${arq#backend/src/test/java/}"; fqcn="${fqcn%.java}"; fqcn="${fqcn//\//.}"
+          DOCKER_IT_RELATORIOS_ESPERADOS+=("backend/target/surefire-reports/TEST-$fqcn.xml")
+        done
+        rm -f "${DOCKER_IT_RELATORIOS_ESPERADOS[@]}"
+        if [ "$DOCKER_IT_CLASSES" -lt 1 ]; then
+          falha "ITs Docker em série — nenhuma classe @Tag(\"docker\") no fonte; o gate não tem o que provar"
+        elif (cd backend && mvn -Pit test-compile surefire:test@it-docker-serial "${MVN_WORKERS[@]}" > $LOGS/docker-it.log 2>&1); then
+          DOCKER_IT_DIR="$(mktemp -d)"
+          for rel in "${DOCKER_IT_RELATORIOS_ESPERADOS[@]}"; do cp "$rel" "$DOCKER_IT_DIR"/ 2>/dev/null || true; done
+          DOCKER_IT_RELATORIOS="$(find "$DOCKER_IT_DIR" -maxdepth 1 -name 'TEST-*.xml' | wc -l | tr -d ' ')"
+          read -r DOCKER_IT_TESTES DOCKER_IT_FALHAS DOCKER_IT_ERROS <<< "$(somar_surefire "$DOCKER_IT_DIR")"
+          rm -rf "$DOCKER_IT_DIR"
+          if [ "$DOCKER_IT_RELATORIOS" -ne "$DOCKER_IT_CLASSES" ]; then
+            falha "ITs Docker em série — $DOCKER_IT_CLASSES classe(s) @Tag(\"docker\"), $DOCKER_IT_RELATORIOS relatório(s); algum IT não rodou — ver $LOGS/docker-it.log"
+          elif [[ "$DOCKER_IT_TESTES" =~ ^[0-9]+$ ]] && [ "$DOCKER_IT_TESTES" -ge "$DOCKER_IT_CLASSES" ] \
+              && [ "${DOCKER_IT_FALHAS:-1}" = "0" ] && [ "${DOCKER_IT_ERROS:-1}" = "0" ]; then
+            ok "ITs Docker em série ($DOCKER_IT_CLASSES classe(s), $DOCKER_IT_TESTES teste(s), 0 falhas, 0 erros)"
+          else
+            falha "ITs Docker em série — surefire: $DOCKER_IT_TESTES teste(s), $DOCKER_IT_FALHAS falha(s), $DOCKER_IT_ERROS erro(s) — ver $LOGS/docker-it.log"
+          fi
+        else
+          falha "ITs Docker em série — ver $LOGS/docker-it.log"
+        fi
+      else
+        pulo "ITs Docker em série — Docker ou trivy indisponível; a CI vai rodá-los no job -Pit"
+      fi
+    }
+    
+    passo_ci_it() {
+      # PARIDADE com o job "Rabbit Publisher Confirm IT" do ci.yml: a MESMA lista -Dtest, lida do
+      # próprio ci.yml (fonte única — nada de cópia que diverge). Os passos acima só cobriam *FkLockPostgresIT,
+      # *MySqlIT e os @Tag("docker"); EmailOutbox, LoginRateLimiterRedisITTest, os *RaceIT/concorrência e
+      # o CacheInvalidacaoNudgeRabbitDockerIT só rodavam na CI — foi assim que o slice do
+      # LoginRateLimiterRedisITTest quebrou no PR #616 com o ci-local inteiro verde. Piso nominal: toda
+      # entrada sem glob precisa deixar um TEST-*.<Classe>.xml desta execução, com teste executado.
+      azul "Backend - Rabbit Publisher Confirm IT (ci.yml: mesma lista -Dtest, -Pit)"
+      garantir_target_backend || return
+      CI_IT_LISTA="$(sed -n "s/^ *mvn -Pit -Dtest='\([^']*\)' test -B$/\1/p" .github/workflows/ci.yml)"
+      if [ -z "$CI_IT_LISTA" ] || [ "$(printf '%s\n' "$CI_IT_LISTA" | wc -l | tr -d ' ')" != "1" ]; then
+        falha "Rabbit Publisher Confirm IT — não achei exatamente UMA linha mvn -Pit -Dtest='...' test -B no ci.yml"
+      elif docker info >/dev/null 2>&1 && precisa trivy; then
+        CI_IT_MARCA="$(mktemp)"
+        if (cd backend && mvn -Pit "${MVN_WORKERS[@]}" -Dtest="$CI_IT_LISTA" test > $LOGS/ci-it.log 2>&1); then
+          CI_IT_DIR="$(mktemp -d)"
+          find backend/target/surefire-reports -maxdepth 1 -name 'TEST-*.xml' -newer "$CI_IT_MARCA" \
+            -exec cp {} "$CI_IT_DIR"/ \;
+          CI_IT_SEM_RELATORIO=()
+          IFS=',' read -r -a CI_IT_ENTRADAS <<< "$CI_IT_LISTA"
+          local entrada
+          for entrada in "${CI_IT_ENTRADAS[@]}"; do
+            case "$entrada" in *'*'*) continue ;; esac
+            ls "$CI_IT_DIR"/TEST-*."$entrada".xml >/dev/null 2>&1 || CI_IT_SEM_RELATORIO+=("$entrada")
+          done
+          read -r CI_IT_TESTES CI_IT_FALHAS CI_IT_ERROS <<< "$(somar_surefire "$CI_IT_DIR")"
+          rm -rf "$CI_IT_DIR"
+          if [ "${#CI_IT_SEM_RELATORIO[@]}" -gt 0 ]; then
+            falha "Rabbit Publisher Confirm IT — sem relatório desta execução: ${CI_IT_SEM_RELATORIO[*]} — ver $LOGS/ci-it.log"
+          elif [[ "$CI_IT_TESTES" =~ ^[0-9]+$ ]] && [ "$CI_IT_TESTES" -gt 0 ] \
+              && [ "${CI_IT_FALHAS:-1}" = "0" ] && [ "${CI_IT_ERROS:-1}" = "0" ]; then
+            ok "Rabbit Publisher Confirm IT ($CI_IT_TESTES teste(s), 0 falhas, 0 erros — lista do ci.yml)"
+          else
+            falha "Rabbit Publisher Confirm IT — surefire: $CI_IT_TESTES teste(s), $CI_IT_FALHAS falha(s), $CI_IT_ERROS erro(s) — ver $LOGS/ci-it.log"
+          fi
+        else
+          falha "Rabbit Publisher Confirm IT — ver $LOGS/ci-it.log"
+        fi
+        rm -f "$CI_IT_MARCA"
+      else
+        pulo "Rabbit Publisher Confirm IT — Docker ou trivy indisponível; a CI vai rodá-lo"
+      fi
+    }
+    
+    passo_pg_migrator() {
+      # SDD-20 W6: o job "Tools - pg-migrator" do ci.yml — módulo Maven próprio (sem o backend) com o
+      # copiador MySQL -> PostgreSQL. `verify` = testes Testcontainers (1 MySQL + 1 PostgreSQL, um fork) +
+      # gate JaCoCo >= 95% de linhas. Piso de execução: relatório com teste executado, como nos outros passos.
+      azul "Tools - pg-migrator (ci.yml: Tools - pg-migrator)"
+      # Reuso de Testcontainers só no ci-local (ver definir_escopo_tc): o mesmo MySQL + PostgreSQL
+      # serve este verify e o Pitest do módulo. A CI nunca define estas variáveis.
+      if [ -n "$TC_ESCOPO" ]; then
+        adquirir_trava_tc || return
+        local -x TESTCONTAINERS_REUSE_ENABLE=true APPGP_CI_LOCAL_TC_ESCOPO="$TC_ESCOPO"
+      fi
+      if docker info >/dev/null 2>&1; then
+        rm -f tools/pg-migrator/target/surefire-reports/TEST-*.xml
+        if (cd tools/pg-migrator && mvn -B verify > $LOGS/pg-migrator.log 2>&1); then
+          read -r PGM_TESTES PGM_FALHAS PGM_ERROS <<< "$(somar_surefire tools/pg-migrator/target/surefire-reports)"
+          if [[ "$PGM_TESTES" =~ ^[0-9]+$ ]] && [ "$PGM_TESTES" -gt 0 ] && [ "${PGM_FALHAS:-1}" = "0" ] \
+              && [ "${PGM_ERROS:-1}" = "0" ]; then
+            ok "pg-migrator ($PGM_TESTES testes, 0 falhas, JaCoCo >= 95% de linhas)"
+          else
+            falha "pg-migrator — surefire: $PGM_TESTES teste(s), $PGM_FALHAS falha(s), $PGM_ERROS erro(s) — ver $LOGS/pg-migrator.log"
+          fi
+        else
+          falha "pg-migrator (testes ou cobertura) — ver $LOGS/pg-migrator.log"
+        fi
+      else
+        pulo "pg-migrator — Docker indisponível; a CI vai rodá-lo no job Tools - pg-migrator"
+      fi
+    }
+    
+    passo_shards() {
+      azul "Backend - descoberta de shards (ci.yml: Verify shard test discovery)"
+      if (cd backend && bash .ci/shard-tests-test.sh >/dev/null 2>&1); then
+        ok "shard-tests-test.sh"
+      else
+        falha "shard-tests-test.sh — algum teste ficou fora dos shards"
+      fi
+    }
+    
+    passo_instrumentos() {
+      # POR QUE ESTE PASSO EXISTE (2026-08-31, TOOL-ORC-002 / TOOL-PRI-108): os scripts
+      # de apuracao da auditoria sao instrumentos, e os dois estavam cegos em silencio.
+      # `measure-quality.mjs` cortava a travessia em `depth > 8` — backend/src/main/java/
+      # com/appgp/backend/<camada>/<pacote>/ e nivel 9, entao TODO o Java ficava fora das
+      # metricas (1191 arquivos medidos de 3628) sem uma linha de erro. E
+      # `check-deps-latest.mjs` so lia <dependency><version>, entao os pins de CVE que
+      # existem apenas como override de property do BOM (rabbit-amqp-client, netty,
+      # jackson-bom) nunca entravam no inventario. Estes testes rodam os proprios
+      # scripts contra fixtures e contra o backend/pom.xml real: falham se a travessia
+      # voltar a truncar em silencio, ou se aparecer um pin de property novo sem
+      # coordenada mapeada / sem comentario dizendo por que existe.
+      azul "Auditoria - testes dos instrumentos (.claude/skills/ultra-deep-audit/scripts)"
+      if precisa node; then
+        if node --test .claude/skills/ultra-deep-audit/scripts/tests/*.test.mjs \
+            > $LOGS/audit-tools.log 2>&1; then
+          ok "instrumentos de auditoria ($(grep -oE '^# pass [0-9]+|^ℹ pass [0-9]+' $LOGS/audit-tools.log | tail -1))"
+        else
+          falha "testes dos instrumentos de auditoria — ver $LOGS/audit-tools.log"
+        fi
+      else
+        pulo "instrumentos de auditoria — node ausente"
+      fi
+      # 2026-10-20: o .graphifyignore substitui o .gitignore para o grafo; linha do .gitignore
+      # que não for copiada para lá volta a ser indexada sem aviso.
+      if precisa python3; then
+        if python3 -B -m unittest discover -s scripts/tests -p test_graphify_update.py \
+            > $LOGS/graphify-update-unit.log 2>&1; then
+          ok "guarda do graphify (.graphifyignore = cópia do .gitignore + exclusões, sem negação extra)"
+        else
+          falha "testes do graphify-update.py — ver $LOGS/graphify-update-unit.log"
+        fi
+      else
+        pulo "guarda do graphify — python3 ausente"
+      fi
+    }
+    
+    passo_cli_symlink() {
+      # `scripts` e symlink para `deployments/scripts`: uma guarda de CLI que compare
+      # `argv[1]` com `import.meta.url` sem realpath vira no-op e o gate sai 0 sem rodar
+      # (quebrou o workflow do Sonar por 5 execucoes em 2026-09).
+      azul "Scripts - CLI executa via symlink scripts/"
+      if precisa node; then
+        if node --test scripts/tests/test_cli_symlink_entry.mjs > $LOGS/cli-symlink.log 2>&1; then
+          ok "CLIs via symlink ($(grep -oE '^ℹ pass [0-9]+' $LOGS/cli-symlink.log | tail -1))"
+        else
+          falha "CLI inerte via symlink — ver $LOGS/cli-symlink.log"
+        fi
+      else
+        pulo "CLIs via symlink — node ausente"
+      fi
+    }
+    
+    passo_frontend_test() {
+      # --------------------------------------------------------------- 2. Frontend
+      azul "Frontend - Test + Build (ci.yml: frontend-shard x4, Frontend - Build)"
+      if (cd frontend && npm test -- --maxWorkers=4 > $LOGS/fe.log 2>&1); then
+        ok "npm test ($(grep -oE 'Tests +[0-9]+ passed' $LOGS/fe.log | tail -1))"
+      else
+        falha "npm test — ver $LOGS/fe.log"
+      fi
+    }
+    
+    passo_frontend_build() {
+      azul "Frontend - Build (ci.yml: Frontend - Build)"
+      if (cd frontend && npm run build > $LOGS/feb.log 2>&1); then
+        ok "npm run build (tsc + vite)"
+      else
+        falha "npm run build — ver $LOGS/feb.log"
+      fi
+    }
+    
+    passo_sonar_diferencial() {
+      # POR QUE ESTE PASSO EXISTE (2026-10-19): o sonarqube.yml só roda no push para a main, então o
+      # Quality Gate nunca aparece num PR. O scan diferencial era manual e cada agente escolhia o
+      # escopo — "só produto", "N/A: diff só de testes", nenhum — e quatro issues em testes Java
+      # (S5778, S8745, 2x S6126) deixaram o gate da main em ERROR por três merges. O script escaneia
+      # TODO arquivo do branch que o projeto real analisa (testes e Java incluídos) e compara com os
+      # issues já abertos na main. Sem token/scanner/servidor ele sai 3: PULADO, nunca verde.
+      azul "Sonar diferencial (sonarqube.yml só roda na main: o gate da main medido antes do PR)"
+      if ! precisa python3; then
+        pulo "Sonar diferencial — python3 ausente"
+        return 0
+      fi
+      if ! python3 -B -m unittest discover -s scripts/tests -p test_sonar_diferencial.py \
+          > $LOGS/sonar-diferencial-unit.log 2>&1; then
+        falha "testes do sonar-diferencial.py — ver $LOGS/sonar-diferencial-unit.log"
+        return 0
+      fi
+      if python3 scripts/sonar-diferencial.py --listar 2>/dev/null | grep -qE '^ +(main|test) +.*\.java$'; then
+        # O analisador Java lê bytecode: compila só o que mudou desde a suíte (ou tudo, se cacheada).
+        if ! (cd backend && mvn -B -q "${MVN_WORKERS[@]}" -DskipTests test-compile > $LOGS/sonar-compile.log 2>&1); then
+          falha "Sonar diferencial — test-compile do backend falhou, ver $LOGS/sonar-compile.log"
+          return 0
+        fi
+      fi
+      python3 scripts/sonar-diferencial.py > $LOGS/sonar-diferencial.log 2>&1
+      case $? in
+        0) ok "Sonar diferencial ($(grep -oE 'NOVOS: [0-9]+ · hotspots novos: [0-9]+|nada a medir' $LOGS/sonar-diferencial.log | tail -1))" ;;
+        3) pulo "Sonar diferencial — não rodou: $(grep -oE 'NÃO RODOU: .*' $LOGS/sonar-diferencial.log | tail -1)" ;;
+        *) falha "Sonar diferencial — issue novo no branch, ver $LOGS/sonar-diferencial.log" ;;
+      esac
+    }
+    
+    passo_frontend_coverage() {
+      # POR QUE ESTE PASSO EXISTE (2026-10-19): o sonarqube.yml roda o Vitest com cobertura V8 em
+      # quatro shards de UM worker; instrumentado e serial, o relógio de parede é outro, e um
+      # snapshot que dependia de um timer de animação (ripple da MUI, 550 ms) passou em todo PR e
+      # quebrou o shard 4/4 na main (run 39213770326). Mesmos argumentos do workflow, sem o blob.
+      azul "Frontend - cobertura V8 (sonarqube.yml: Cobertura frontend x4, maxWorkers=1)"
+      local shard falhou=0
+      for shard in 1 2 3 4; do
+        if ! (cd frontend && CI=true npm test -- --coverage --shard=$shard/4 --maxWorkers=1 \
+            --coverage.processingConcurrency=1 --coverage.reporter=json \
+            --coverage.reportsDirectory="$LOGS/fe-coverage-$shard" > $LOGS/fe-coverage-$shard.log 2>&1); then
+          falha "cobertura frontend (shard $shard/4) — ver $LOGS/fe-coverage-$shard.log"
+          falhou=1
+        fi
+      done
+      [ "$falhou" -eq 0 ] && ok "cobertura frontend 4/4 shards (maxWorkers=1, como o sonarqube.yml)"
+      return 0
+    }
+    
+    passo_lock_drift() {
+      # POR QUE ESTE PASSO EXISTE (2026-08-21): ate esta data nenhum gate do projeto
+      # perguntava ao registro de advisories do npm. Medido: o `Trivy FS scan` da CI
+      # NAO reportou GHSA-2v37-7h3g-55p8 e o `.trivyignore` esta vazio — entao nao foi
+      # supressao. (Por que o Trivy nao a viu nao foi apurado; o fato e que ninguem
+      # consultava o npm.)
+      # O que passou por isso: o override de `nanoid` estava fixado em 3.3.17 enquanto
+      # a advisory afeta `<3.3.18`. O override existia, estava ativo, e nao corrigia
+      # nada — duas advisories HIGH (nanoid, e postcss que a herda) vivas com 16/16
+      # verdes. Mesma classe do buraco do scan de imagem: o gate media menos do que
+      # dizia. O job `npm-audit` do ci.yml passou a rodar o mesmo comando no PR.
+      # DEP-PRI-106: `npm audit` resolve pelo package-lock.json, NAO pelo node_modules.
+      # Medido em 2026-08-12: lock em brace-expansion 5.0.9, disco em 5.0.8
+      # (GHSA-rgw5-rvv9-x895, HIGH) e o audit devolvia 0 vulnerabilidades — verde sobre a
+      # arvore que roda aqui. `npm ls --all` nao serve: valida contra o RANGE do dependente
+      # (5.0.8 satisfaz ^5.0.5) e neste repo ja sai 1 pelo peer do jsx-a11y. O passo abaixo
+      # compara pacote a pacote a arvore instalada com o lock e FALHA no drift — antes do
+      # audit, senao o audit mede uma arvore que nao e a instalada. Cura: `npm ci`.
+      azul "Frontend - node_modules x package-lock.json (DEP-PRI-106)"
+      if node scripts/npm-lock-drift.mjs frontend > $LOGS/lock-drift.log 2>&1; then
+        ok "$(tail -1 $LOGS/lock-drift.log)"
+      else
+        falha "node_modules do frontend diverge do package-lock.json — rode \`cd frontend && npm ci\`; ver $LOGS/lock-drift.log"
+      fi
+    }
+    
+    passo_npm_audit() {
+      azul "Frontend - npm audit (ci.yml: Security - npm audit)"
+      # Mesma distincao do job da CI (2026-09-12): `npm audit` devolve exit 1 tanto
+      # para "achou HIGH" quanto para "o registro respondeu Bad Request". Sem separar
+      # os dois, um gate vermelho por motivo alheio vira um gate que se aprende a
+      # pular — e aqui o custo e pior que na CI, porque o dev esta com o commit na mao.
+      # Erro de registro retenta; achado reprova na hora, sem retry.
+      local npm_audit_rc=1 tentativa
+      for tentativa in 1 2 3; do
+        (cd frontend && npm audit --audit-level=high > $LOGS/audit.log 2>&1)
+        npm_audit_rc=$?
+        [ "$npm_audit_rc" -eq 0 ] && break
+        if grep -qE 'audit endpoint returned an error|Bad Request|ECONNRESET|ETIMEDOUT|socket hang up|503 Service Unavailable|429 Too Many Requests' $LOGS/audit.log; then
+          printf "  \033[33mRETRY\033[0m npm audit: erro do registro npm (tentativa %s/3)\n" "$tentativa"
+          sleep $((tentativa * 5))
+          continue
+        fi
+        break
+      done
+      if [ "$npm_audit_rc" -eq 0 ]; then
+        ok "npm audit (0 HIGH/CRITICAL)"
+      elif grep -qE 'audit endpoint returned an error|Bad Request|ECONNRESET|ETIMEDOUT|socket hang up|503 Service Unavailable|429 Too Many Requests' $LOGS/audit.log; then
+        falha "npm audit NAO RODOU — o registro npm falhou nas 3 tentativas. Isto nao e achado de vulnerabilidade; ver $LOGS/audit.log"
+      else
+        falha "npm audit — $(grep -oE '[0-9]+ (high|critical)' $LOGS/audit.log | tr '\n' ' ')ver $LOGS/audit.log"
+      fi
+    }
+    
+    passo_gitleaks() {
+      # ------------------------------------------------------------- 3. Segredos
+      azul "Gitleaks scan (ci.yml: Gitleaks scan)"
+      if precisa gitleaks; then
+        # Espelha o gitleaks-action: varre o que ESTE PR introduz, e nada além.
+        #
+        # NUNCA usar `--no-git` como fallback: ele ignora o .gitignore e varreu 4,92 GB
+        # de scratch local (strix_runs/, logs de agente) reportando 142 "leaks" em
+        # 13m39s — nenhum deles commitável. Gate que sempre grita é gate ignorado.
+        # Os DOIS lados rodam sempre: commits já feitos na branch E o que ainda está no
+        # working tree. Eram alternativos (`if commits; else working tree`), e bastava um
+        # commit na branch para o gate parar de olhar staged/modificado/não-rastreado — que é
+        # justamente o estado ao rodar isto antes do SEGUNDO commit exigido pelo §6.
+        local gl_total=0 base arq alvos unicos gl_falhou gl_pulados
+        base=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || echo "")
+        if [ -n "$base" ] && [ "$base" != "$(git rev-parse HEAD)" ]; then
+          # Já há commits na branch: varre exatamente eles, como a action faz.
+          if gitleaks git --config .gitleaks.toml --no-banner --redact -v \
+               --log-opts="$base..HEAD" . > $LOGS/gitleaks.log 2>&1; then
+            ok "gitleaks (commits $base..HEAD)"
+          else
+            falha "gitleaks — SEGREDO nos commits desta branch, ver $LOGS/gitleaks.log"
+          fi
+        fi
+        if true; then
+          # E sempre: TUDO que entraria no PRÓXIMO commit — staged, modificado
+          # rastreado E não-rastreado.
+          #
+          # As três fontes são UNIDAS, nunca alternativas. A versão anterior usava
+          # "staged; se nada staged, os modificados", e um único `git mv` bastava para
+          # tornar o ramo staged não-vazio e o fallback inalcançável: o gate varria 1
+          # arquivo de um diff de 17 e reportava OK. Pior, arquivo NÃO-RASTREADO não
+          # era varrido por nenhum dos dois ramos — ou seja, um arquivo NOVO contendo
+          # segredo (o caso mais provável de todos) passava batido. É a mesma
+          # patologia dos outros gates desta base: não distinguir "varreu e não achou"
+          # de "não varreu".
+          #
+          # while-read em vez de mapfile: mapfile é bash 4+, e o bash de fábrica do
+          # macOS é 3.2 — lá ele falharia em silêncio, deixando `alvos` vazio e o
+          # gate passando sem ter varrido nada.
+          # -z / read -d '': sem isso o git devolve caminho com byte não-ASCII em forma
+          # C-quoted ("Docs/integra\303\247\303\243o.md", core.quotePath=true é o default),
+          # o teste `[ -f "$arq" ]` falha sobre a string com aspas e o arquivo é PULADO EM
+          # SILÊNCIO — enquanto o contador ainda o soma. Numa base toda em português, com
+          # Docs/ nomeado por domínio, esse é o caminho mais provável de um arquivo NOVO
+          # escapar do gate. Medido em repositório descartável.
+          alvos=()
+          while IFS= read -r -d '' arq; do [ -n "$arq" ] && alvos+=("$arq"); done \
+            < <(git diff --cached -z --name-only --diff-filter=ACMR)
+          while IFS= read -r -d '' arq; do [ -n "$arq" ] && alvos+=("$arq"); done \
+            < <(git diff -z --name-only --diff-filter=ACMR)
+          while IFS= read -r -d '' arq; do [ -n "$arq" ] && alvos+=("$arq"); done \
+            < <(git ls-files --others --exclude-standard -z)
+          # dedup preservando ordem (o mesmo arquivo pode estar staged e modificado)
+          if [ ${#alvos[@]} -gt 0 ]; then
+            unicos=()
+            while IFS= read -r arq; do [ -n "$arq" ] && unicos+=("$arq"); done \
+              < <(printf '%s\n' "${alvos[@]}" | awk '!vistos[$0]++')
+            alvos=("${unicos[@]}")
+          fi
+          if [ ${#alvos[@]} -eq 0 ]; then
+            [ -z "$base" ] || [ "$base" = "$(git rev-parse HEAD)" ] \
+              && ok "gitleaks (nada a varrer: sem commits novos e sem alterações)"
+          else
+            : > $LOGS/gitleaks.log
+            gl_falhou=0
+            gl_pulados=0
+            for arq in "${alvos[@]}"; do
+              # Alvo listado pelo git e ausente do disco é DEFEITO DO GATE, não motivo para
+              # silenciar: era assim que o arquivo com nome não-ASCII sumia sem deixar rastro.
+              if [ ! -f "$arq" ]; then
+                gl_pulados=$((gl_pulados + 1))
+                echo "gitleaks: alvo listado mas ausente: $arq" >> $LOGS/gitleaks.log
+                continue
+              fi
+              if ! gitleaks dir --config .gitleaks.toml --no-banner --redact -v "$arq" \
+                     >> $LOGS/gitleaks.log 2>&1; then
+                gl_falhou=1
+              fi
+            done
+            gl_total=${#alvos[@]}
+            if [ "$gl_pulados" -gt 0 ]; then
+              falha "gitleaks — ${gl_pulados} alvo(s) NÃO varrido(s), ver $LOGS/gitleaks.log"
+            elif [ "$gl_falhou" -eq 0 ]; then
+              ok "gitleaks (${gl_total} arquivo(s) na árvore de trabalho)"
+            else
+              falha "gitleaks — SEGREDO em arquivo a commitar, ver $LOGS/gitleaks.log"
+            fi
+          fi
+        fi
+      else
+        pulo "gitleaks não instalado (brew install gitleaks)"
+      fi
+    }
+    
+    passo_semgrep() {
+      # ----------------------------------------------------------------- 4. SAST
+      azul "Security - Semgrep SAST (ci.yml)"
+      if precisa semgrep; then
+        local base sg_tmp
+        base=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || echo "")
+        if [ -n "$base" ]; then
+          # O --baseline-commit faz reset/checkout da base NO DIRETÓRIO em que roda e depois volta. Em
+          # 2026-10-12, rodado na árvore de trabalho, uma falha no meio (arquivo somente leitura) deixou a
+          # branch na base e a pasta misturada. Por isso ele roda numa CÓPIA descartável: worktree destacado
+          # do HEAD + o estado não commitado (alterados/novos copiados, apagados removidos).
+          sg_tmp="$(mktemp -d "$(prefixo_worktree_semgrep).XXXXXX")"
+          rmdir "$sg_tmp"
+          if git worktree add --detach "$sg_tmp" HEAD >/dev/null 2>&1; then
+            git ls-files -z -m -o --exclude-standard | rsync -a --from0 --files-from=- ./ "$sg_tmp"/ 2>/dev/null
+            git ls-files -z -d | (cd "$sg_tmp" && xargs -0 rm -f -- 2>/dev/null) || true
+            if (cd "$sg_tmp" && semgrep scan \
+                 --config p/default \
+                 --config p/owasp-top-ten \
+                 --config p/secrets \
+                 --config p/java \
+                 --config p/typescript \
+                 --config p/react \
+                 --config p/dockerfile \
+                 --baseline-commit "$base" \
+                 --severity ERROR \
+                 --error \
+                 --metrics off \
+                 --exclude graphify-out \
+                 --exclude Docs/audit/ultra-deep \
+                 --exclude '*.test.ts' \
+                 --exclude '*.test.tsx' \
+                 --exclude '*.test.js') > $LOGS/semgrep.log 2>&1; then
+              ok "semgrep (diff-aware vs ${base:0:8}, em cópia descartável)"
+            else
+              falha "semgrep — ver $LOGS/semgrep.log"
+            fi
+            git worktree remove --force "$sg_tmp" >/dev/null 2>&1 || rm -rf "$sg_tmp"
+          else
+            falha "semgrep — não foi possível criar a cópia descartável (git worktree add)"
+          fi
+        elif semgrep --config=auto --error -q . > $LOGS/semgrep.log 2>&1; then
+          ok "semgrep"
+        else
+          falha "semgrep — ver $LOGS/semgrep.log"
+        fi
+      else
+        pulo "semgrep não instalado (pipx install semgrep) — a CI AINDA vai rodá-lo"
+      fi
+    }
+    
+    passo_trivy_fs() {
+      # ------------------------------------------------------------- 5. Trivy FS
+      azul "Security - Trivy FS scan (ci.yml)"
+      if precisa trivy; then
+        # --scanners vuln: o job "Security - Trivy FS scan" da CI é o gate de
+        # DEPENDÊNCIAS (é o que o comentário dele diz). Ligar secret/misconfig aqui
+        # reencontra as chaves AWS históricas em Docs/ (SEC-ORC-003, já conhecidas) e
+        # o gate passa a falhar sempre — gate que sempre grita é gate ignorado.
+        # Segredo é coberto pelo gitleaks acima, no escopo certo.
+        # Worktrees de agentes (.claude/worktrees, .worktrees) são gitignored e não existem no checkout
+        # da CI: varrê-los multiplica o scan por N cópias do repo e estoura o timeout do trivy.
+        # --timeout 15m: a análise do pom.xml resolve POMs-pai pela rede (Maven Central); medido em
+        # 2026-10-08, ~570-590 s nesta máquina, acima do default de 5 min. Não muda o que é reportado.
+        if trivy fs --timeout 15m --scanners vuln --severity HIGH,CRITICAL \
+             --skip-dirs .claude/worktrees --skip-dirs .worktrees \
+             --ignore-unfixed --ignorefile .trivyignore --exit-code 1 . \
+             > $LOGS/trivyfs.log 2>&1; then
+          ok "trivy fs"
+        else
+          falha "trivy fs — ver $LOGS/trivyfs.log"
+        fi
+      else
+        pulo "trivy não instalado (brew install trivy)"
+      fi
+    }
+    
+    passo_compose() {
+      # ------------------------------------------------------ 5b. Compose - Validate
+      # 2026-09-01: o PR #539 entrou com 12.659 testes verdes e o job "Compose - Validate"
+      # quebrou em `services.backend.environment.[15]: unexpected type map` — um item de
+      # `environment:` com `: ` sem aspas vira MAPA para o YAML. O SnakeYAML do
+      # DockerComposeValidityTest aceitava; só o `docker compose config` rejeita. Este
+      # passo roda o mesmo comando da CI, com um .env efêmero equivalente ao dela, e
+      # NUNCA toca o .env real da raiz (usa --env-file num temporário). Variável
+      # exportada no shell VENCE o --env-file no compose, então cada chamada roda num
+      # subshell com as chaves do .env efêmero desfeitas — senão um
+      # `export AWS_KMS_ARNS_PERMITIDOS=...` no shell do dev mascara o `:?` do arquivo.
+      # Deliberadamente NÃO espelha o 3º passo do job ("Infra realmente sobe": `up -d`
+      # de rabbitmq + postgres até ficarem healthy) — sobe containers e leva minutos; a CI
+      # continua a executá-lo.
+      azul "Compose - Validate (ci.yml)"
+      if precisa docker && precisa openssl && docker compose version >/dev/null 2>&1; then
+        local compose_env compose_pg_secrets s v f
+        compose_env="$(mktemp /tmp/ci-local-compose-env.XXXXXX)"
+        # SDD-20 W7 #3: arquivos de senha efêmeros do PostgreSQL de deploy (Docker secrets), como na CI.
+        compose_pg_secrets="$(mktemp -d /tmp/ci-local-pg-secrets.XXXXXX)"
+        registrar_temporario "$compose_env" "$compose_pg_secrets"
+        gen() { openssl rand -base64 48 | tr -d '\n=+/' | cut -c1-48; }
+        for s in postgres_superuser_password appgp_owner_password appgp_app_password; do
+          gen > "$compose_pg_secrets/$s"
+        done
+        {
+          for v in POSTGRES_PASSWORD POSTGRES_OWNER_PASSWORD POSTGRES_APP_PASSWORD \
+                   RABBITMQ_ADMIN_PASSWORD \
+                   RABBITMQ_PASSWORD MINIO_ROOT_PASSWORD REDIS_PASSWORD JWT_SECRET \
+                   PII_ENCRYPTION_SEED PII_BLIND_INDEX_SEED AUTH_GRACE_CACHE_ENCRYPTION_SEED \
+                   CERTIFICATE_ENCRYPTION_SEED DOCUMENTO_ACESSO_ENCRYPTION_SEED \
+                   GATEWAY_ENCRYPTION_SEED RECEITA_ENCRYPTION_SEED \
+                   RECEITA_INTEGRACAO_ENCRYPTION_SEED; do
+            echo "$v=$(gen)"
+          done
+          echo "OTP_HMAC_SECRET=$(openssl rand -hex 32)"
+          echo "MINIO_ROOT_USER=civalidate$(openssl rand -hex 4)"
+          echo "POSTGRES_SECRETS_DIR=$compose_pg_secrets"
+          echo "TRUSTED_PROXY_CIDRS=none"
+          echo "APP_FRONTEND_BASE_URL=https://ci.example.invalid"
+          echo "CORS_ALLOWED_ORIGINS=https://ci.example.invalid"
+          echo "DOCUMENTO_PUBLIC_BASE_URL=https://ci.example.invalid/documentos/publico/"
+          echo "AWS_S3_BACKUP_DESTINOS_PERMITIDOS=sa-east-1/ci-example-invalid-backup"
+          echo "AWS_KMS_ARNS_PERMITIDOS=arn:aws:kms:sa-east-1:111122223333:"
+          echo "STORAGE_PRIMARY_SSE_MODE=SSE_S3"
+          echo "POSTGRES_RUNTIME_IMAGE=registry.invalid/app-gp-postgres-runtime@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          echo "REDIS_RUNTIME_IMAGE=registry.invalid/app-gp-redis-runtime@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          echo "FLYWAY_RUNTIME_IMAGE=registry.invalid/app-gp-flyway-runtime@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          echo "CONFIG_SERVER_HOST=config-server.invalid"
+          echo "CONFIG_SERVER_PASSWORD=$(gen)"
+          echo "VITE_API_URL=https://api.ci.example.invalid/api"
+          echo "VITE_ENV_LABEL=CI"
+          echo "VITE_JOBRUNR_DASHBOARD_URL=https://jobs.ci.example.invalid"
+          echo "API_ORIGIN=https://api.ci.example.invalid"
+          echo "WS_ORIGIN=wss://api.ci.example.invalid"
+        } > "$compose_env"
+        : > $LOGS/compose.log
+        compose_hermetico() {
+          ( while IFS='=' read -r k _; do unset "$k"; done < "$compose_env"
+            docker compose --env-file "$compose_env" "$@" config -q )
+        }
+        for f in docker-compose.yml docker-compose.services.yml docker-compose.app.yml; do
+          if compose_hermetico -f "$f" >> $LOGS/compose.log 2>&1; then
+            ok "docker compose config: $f"
+          else
+            falha "docker compose config: $f — ver $LOGS/compose.log"
+          fi
+        done
+        if compose_hermetico -f docker-compose.yml -f docker-compose.dast.yml \
+             >> $LOGS/compose.log 2>&1; then
+          ok "docker compose config: docker-compose.yml + docker-compose.dast.yml"
+        else
+          falha "docker compose config: overlay DAST — ver $LOGS/compose.log"
+        fi
+        rm -f "$compose_env"
+        # Ambiente local HTTPS (deployments/local): o teste gera segredos/CA num diretório efêmero
+        # e valida os quatro arranjos do compose + o contrato do local.sh. Mesmo passo do ci.yml.
+        # CI=1: sem docker/jq/curl os casos que dependem deles FALHAM em vez de serem pulados em silêncio.
+        if CI=1 python3 -B -m unittest discover -s deployments/local/tests >> $LOGS/compose.log 2>&1; then
+          ok "ambiente local: deployments/local/tests"
+        else
+          falha "ambiente local: deployments/local/tests — ver $LOGS/compose.log"
+        fi
+      else
+        pulo "docker compose ou openssl ausente — a CI AINDA vai validar os compose"
+      fi
+    }
+    
+    passo_imagens() {
+    # --------------------------------------------- 6. IMAGENS — o passo que faltava
+      azul "release.yml — Trivy IMAGE scan (o passo que NENHUM PR executa)"
+      if ! precisa trivy || ! precisa docker; then
+        pulo "trivy e/ou docker ausentes — este é o passo que quebrou a main em 2026-08-14"
+      else
+        # O release publica índice linux/amd64 + linux/arm64 e escaneia AS DUAS variantes
+        # (SDD-08 §Delta 2026-10-06): CVE só da variante arm64 também quebra o release.
+        # O estágio de build usa --platform=$BUILDPLATFORM, então a plataforma não nativa só
+        # emula o estágio final (segundos). Sem emulação para ela, PULADO explícito; a
+        # plataforma NATIVA nunca é pulada (sem buildx, o build falha e aparece como FALHA).
+        local plataformas_builder plataforma_nativa alvo plataforma arch tag CACHEBUST_LOCAL
+        plataformas_builder="$(docker buildx inspect 2>/dev/null | grep -E '^ *Platforms:' || true)"
+        case "$(docker version --format '{{.Server.Arch}}' 2>/dev/null)" in
+          arm64|aarch64) plataforma_nativa=linux/arm64 ;;
+          *) plataforma_nativa=linux/amd64 ;;
+        esac
+        CACHEBUST_LOCAL="$(date +%s)"
+        for alvo in backend frontend; do
+          for plataforma in linux/amd64 linux/arm64; do
+            arch="${plataforma#linux/}"
+            if [ "$plataforma" != "$plataforma_nativa" ] && ! grep -q "$plataforma" <<<"$plataformas_builder"; then
+              pulo "docker build $alvo $plataforma — builder buildx sem $plataforma (instale binfmt/QEMU); a CI AINDA vai escanear"
+              continue
+            fi
+            tag="appgp-${alvo}:ci-local-${arch}"
+            printf '  construindo %s...\n' "$tag"
+            # CACHEBUST espelha o release.yml (github.run_id): sem ele a camada do
+            # `apk upgrade` fica cacheada e o scan local passa/falha com CVEs de
+            # semanas atrás em vez do estado real do build da CI.
+            if docker buildx build --platform "$plataforma" --load --build-arg "CACHEBUST=$CACHEBUST_LOCAL" \
+                 -t "$tag" "$RAIZ/$alvo" > "$LOGS/build-$alvo-$arch.log" 2>&1; then
+              # Mesmas flags do release.yml: severity HIGH,CRITICAL + ignore-unfixed + .trivyignore
+              if trivy image --severity HIGH,CRITICAL --ignore-unfixed \
+                   --ignorefile .trivyignore --exit-code 1 "$tag" \
+                   > "$LOGS/trivyimg-$alvo-$arch.log" 2>&1; then
+                ok "trivy image $alvo $plataforma"
+              else
+                falha "trivy image $alvo $plataforma — CVE na imagem, ver $LOGS/trivyimg-$alvo-$arch.log"
+                grep -E "CVE-|Total:" "$LOGS/trivyimg-$alvo-$arch.log" | head -10 | sed 's/^/      /'
+              fi
+            else
+              falha "docker build $alvo $plataforma — ver $LOGS/build-$alvo-$arch.log"
+            fi
+          done
+        done
+      fi
+    }
+    
+    passo_runtime_images() {
+      # OPS-RUNTIME-LIBEXPAT (SDD-08 §Delta 2026-10-18): espelho do job "Security - Runtime Images Supply
+      # Chain" do ci.yml. Em 2026-10-17 o feed do Trivy passou a marcar libexpat no flyway-runtime e TODO PR
+      # quebrou sem que este gate pudesse avisar, porque ele não rodava o script. Depende de feed externo:
+      # nunca cacheável. Paridade ci.yml x ci-local travada em ci-local-acelerar.test.mjs.
+      azul "ci.yml — Security - Runtime Images Supply Chain (runtimes de deploy, amd64 + arm64)"
+      if ! precisa trivy || ! precisa docker; then
+        pulo "runtime-images — trivy e/ou docker ausentes; a CI AINDA vai escanear os runtimes de deploy"
+        return
+      fi
+      local plataformas_builder plataforma_nativa plataforma plataformas=""
+      plataformas_builder="$(docker buildx inspect 2>/dev/null | grep -E '^ *Platforms:' || true)"
+      case "$(docker version --format '{{.Server.Arch}}' 2>/dev/null)" in
+        arm64|aarch64) plataforma_nativa=linux/arm64 ;;
+        *) plataforma_nativa=linux/amd64 ;;
+      esac
+      for plataforma in linux/amd64 linux/arm64; do
+        if [ "$plataforma" != "$plataforma_nativa" ] && ! grep -q "$plataforma" <<<"$plataformas_builder"; then
+          pulo "runtime-images $plataforma — builder buildx sem $plataforma (instale binfmt/QEMU); a CI AINDA vai escanear"
+          continue
+        fi
+        plataformas="${plataformas:+$plataformas,}$plataforma"
+      done
+      # Nunca em modo publicação nem com compose/.trivyignore/binários trocados pelo ambiente de quem roda.
+      if env -u RUNTIME_IMAGE_PUBLISH_REGISTRY -u RUNTIME_IMAGE_PUBLISH_TAG -u RUNTIME_IMAGE_ENV_FILE \
+           -u RUNTIME_IMAGE_COMPOSE_FILES -u TRIVY_IGNORE_FILE -u TRIVY_BIN -u DOCKER_BIN \
+           RUNTIME_IMAGE_PLATFORMS="$plataformas" bash "$RAIZ/scripts/runtime-images-supply-chain-gate.sh" \
+           > "$LOGS/runtime-images.log" 2>&1; then
+        ok "runtime-images — gate de supply chain dos runtimes ($plataformas)"
+      else
+        falha "runtime-images — CVE ou pin inválido nos runtimes de deploy, ver $LOGS/runtime-images.log"
+        grep -E "CVE-|Total:|must|missing|required" "$LOGS/runtime-images.log" | head -10 | sed 's/^/      /'
+      fi
+    }
+    
+    passo_pitest() {
+      # ------------------------------------------------------------- 7. Pitest
+      azul "Pitest (gate LOCAL do CLAUDE.md §6 — não roda na CI)"
+      rodar_pitest "pitest" $LOGS/pit.log
+    }
+    
+    passo_pitest_perfis() {
+      # -------------------------------------------- 7b. Perfis extras de mutação
+      # POR QUE ESTE PASSO EXISTE (2026-08-27): os perfis `*-mutation` do
+      # pom.xml cobrem exatamente o que o gate default NÃO cobre — pipeline de
+      # e-mail/outbox, assinatura PAdES + OTP, cleanup de comprovante e o NÚCLEO DE
+      # AUTENTICAÇÃO (JwtUtil, RefreshTokenService, TokenFamilyRevocationService,
+      # UserAdminAuthorizationService), além do perfil focado de agenda criado depois.
+      # Até esta data NENHUM gate os executava: o
+      # `ci-local.sh` roda o Pitest sem `-P` (só o perfil default) e o Pitest não roda
+      # na CI por decisão registrada. A única coisa que os invocava era um comentário
+      # no pom e uma linha no AGENTS.md dizendo "rode ao tocar X" — convenção humana,
+      # não gate. Consequência: no primeiro refactor dessas classes a pressão de
+      # mutação sobre emissão de JWT e rotação de refresh token sumiria sem sinal
+      # nenhum, e os perfis continuariam verdes por nunca terem rodado.
+      #
+      # Por que CONDICIONAL ao diff em vez de sempre: medido em 2026-08-27 (máquina
+      # sob carga, então são teto e não piso) — default 112s, outbox-mutation 64s,
+      # assinatura-otp-mutation 84s, comprovante-cleanup-mutation 15s,
+      # auth-mutation 13s. Esses quatro já custam ~176s em cima dos 112s do default;
+      # `agenda-mutation`, criado depois, acrescenta outro conjunto focado. Rodar todos
+      # sempre seria quase sempre medir código que o PR não tocou. Condicionar ao diff
+      # mantém o custo em ZERO na maioria das execuções e dispara o perfil exatamente
+      # quando o comentário do pom manda — só que sem depender de alguém lembrar.
+      #
+        azul "Pitest — perfis extras (condicionais ao diff do branch)"
+        # <id do perfil>:<alternativas de nome de classe-alvo>
+        perfis_mutacao=(
+          "agenda-mutation:Agendamento|AgendaConfiguracaoService|AgendaEffectiveGradeResolver|AgendaGradeChangePolicyService|AgendaSlotLockService|AgendaConflictChecker|AgendaHorarioResolver|UserOpeningPeriodAvailability|ClinicaHorarioChangeGuardService|RecorrenciaPreviewService|UserConsultationDurationService|UserAgendaSettingsService|UserOpeningPeriodService|UserScheduleRestrictionsService|GatewayKeySelectionService|GatewayOutboundOutboxDispatcher"
+          "aikido-policy-mutation:FinanceAccessContextService|FinanceiroAlertRecipientPolicy|FinanceiroOwnershipPolicy|PacienteFinanceiroAlertaInadimplencia|AnamnesePacienteService|UserContextService|ParcelaResponseMapper"
+          "outbox-mutation:EmailOutbox|EmailDeliveryDedup|EmailMessageProducer|EmailMessageConsumer"
+          "assinatura-otp-mutation:DocumentoAssinatura|PadesSignatureService|PfxValidationService|Pkcs12KeyMaterial|TwoFactorCode|EmailVerificationCode|OtpCodeSupport|EmailOtpCode"
+          "comprovante-cleanup-mutation:PacienteFinanceiroComprovante"
+          "auth-mutation:JwtUtil|RefreshTokenService|RefreshTokenRotationCoordinator|TokenFamilyRevocationService|UserAdminAuthorizationService"
+          # SDD-01 §Delta 2026-10-18 / SDD-08 §Delta 2026-10-19c: caches de autorização e guardas dos pins.
+          "auth-cache-mutation:JwtAuthenticationFilter|PermissionCacheService|CacheInvalidationService|VinculoClinicaAtivoConsulta|GaugeDeNegocioEmCache|PinsDeSegurancaGuard|PostgresDatasourceGuard"
+          # SDD-20 §11.6: o adapter de advisory lock do PostgreSQL.
+          "advisory-lock-mutation:PostgresAdvisoryLockAdapter"
+          # SDD-19: derivacao/** é glob no pom — o último ramo casa qualquer arquivo do pacote (e o teste dele).
+          "catalogo-sync-mutation:CatalogoSyncDiffService|CatalogoSyncAprovacaoService|ReautenticacaoService|ReautenticacaoRateLimiter|HostPermitidoNormalizador|UrlFonteValidator|PadraoLinkValidator|CatalogoSyncConfigService|catalogosync/derivacao/[A-Za-z0-9]+"
+          "metrics-mutation:ManagementSecurity|ManagementContextRequestMatcher|MetricsScrape|RedisWindowRateLimiter"
+          # SDD-21 §13: política de aviso, ponto único de entrega, escopo/preferências/contagens e o serviço da Central.
+          "notificacoes-mutation:PoliticaDeAvisoNotificacao|NivelPrioridadeNotificacao|NotificacaoEntregaService|EscopoDaCentral|PreferenciasNotificacaoService|ContagensNotificacoesService|SystemNotificationService"
+        )
+        local alterados entrada perfil padrao
+        alterados=$(arquivos_do_branch)
+        for entrada in "${perfis_mutacao[@]}"; do
+          perfil="${entrada%%:*}"
+          padrao="${entrada#*:}"
+          # Casa o BASENAME: `.../security/JwtUtil.java` e `.../security/JwtUtilTest.java`
+          # disparam o mesmo perfil — o teste é parte da medição tanto quanto a classe.
+          # O sufixo livre faz o gate errar para o lado SEGURO (dispara a mais), nunca
+          # para o lado de não medir.
+          if printf '%s\n' "$alterados" | grep -qE "/(${padrao})[A-Za-z0-9]*\.java$"; then
+            rodar_pitest "pitest -P$perfil" "$LOGS/pit-$perfil.log" "-P$perfil"
+          else
+            printf '  \033[90m--\033[0m    %s (diff não toca as classes-alvo)\n' "$perfil"
+          fi
+        done
+    }
+    
+    passo_pitest_pg_migrator() {
+        azul "Pitest — pg-migrator (condicional ao diff do branch)"
+        # SDD-20 §11.6: Pitest do copiador (tools/pg-migrator, módulo autônomo com pitest-maven no próprio pom).
+        # As ITs dele sobem MySQL + PostgreSQL por Testcontainers: sem Docker o passo é PULADO, nunca omitido.
+        PG_MIGRATOR_PIT_GATILHO='^tools/pg-migrator/(pom\.xml|src/(main|test)/java/.+\.java)$'
+        local alterados
+        alterados=$(arquivos_do_branch)
+        if printf '%s\n' "$alterados" | grep -qE "$PG_MIGRATOR_PIT_GATILHO"; then
+          if docker info >/dev/null 2>&1; then
+            if [ -n "$TC_ESCOPO" ]; then
+              adquirir_trava_tc || return
+              local -x TESTCONTAINERS_REUSE_ENABLE=true APPGP_CI_LOCAL_TC_ESCOPO="$TC_ESCOPO"
+            fi
+            PIT_MODULO=tools/pg-migrator rodar_pitest "pitest pg-migrator" $LOGS/pit-pg-migrator.log
+          else
+            pulo "pitest pg-migrator — Docker indisponível (as ITs do copiador exigem Testcontainers)"
+          fi
+        else
+          printf '  \033[90m--\033[0m    %s (diff não toca tools/pg-migrator)\n' "pitest pg-migrator"
+        fi
+    }
+    
+    
+    # --fail-fast: depois dos gates baratos, qualquer FALHA encerra antes da suíte longa (devolve 1).
+    seguir_apos_gates_baratos() {
+      [ "$FAIL_FAST" -eq 1 ] && [ ${#FALHAS[@]} -gt 0 ] || return 0
+      printf '\n\033[31m--fail-fast: %d falha(s) nos gates baratos; a suíte longa não foi executada.\033[0m\n' "${#FALHAS[@]}"
+      return 1
+    }
+    
+    # ================================================================== Execução
+    # `source scripts/ci-local.sh` (testes de contrato) só define as funções: nenhum passo roda.
+    if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+      return 0
+    fi
+    
+    # Auto-teste do verificador acima. Sem ele, o ÚNICO jeito de exercitar o ramo de
+    # FALHA seria carregar a máquina até o Pitest produzir RUN_ERROR de verdade — ou
+    # seja, o ramo que existe justamente para pegar o falso verde nunca seria
+    # exercitado, e o gate novo teria o mesmo defeito que veio consertar.
+    #   printf "<mutations><mutation detected='true' status='RUN_ERROR' numberOfTestsRun='0'><killingTest /></mutation></mutations>" > /tmp/m.xml
+    #   scripts/ci-local.sh --verificar-xml-pitest /tmp/m.xml 1 1   # deve sair 1
+    if [ "$MODO" = "--verificar-xml-pitest" ]; then
+      if [ $# -lt 2 ]; then
+        printf 'uso: ci-local.sh --verificar-xml-pitest <mutations.xml> [gerados] [mortos]\n' >&2
+        exit 2
+      fi
+      xml_alvo="$2"
+      [ -f "$xml_alvo" ] || [ "${xml_alvo#/}" != "$xml_alvo" ] || xml_alvo="$CWD_CHAMADOR/$xml_alvo"
+      checar_pitest_xml "$xml_alvo" "${3:-}" "${4:-}"
+      exit $?
+    fi
+    
+    ARGUMENTOS=("$@")
+    [ "$MODO" = "full" ] || ARGUMENTOS=("${ARGUMENTOS[@]:1}")
+    analisar_argumentos "${ARGUMENTOS[@]}" || exit 2
+    configurar_workers || exit 2
+    if [ "$LISTAR_PASSOS" -eq 1 ]; then
+      listar_passos
+      exit 0
+    fi
+    iniciar_cache || exit 2
+    definir_escopo_tc
+    trap ao_sair EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    
+    if ! preflight; then
+      resumir
+      exit 1
+    fi
+    
+    # Fase 1 — gates baratos (minutos). Segredo, SAST, compose e instrumentos aparecem ANTES da suíte
+    # longa: em 2026-10 uma falha de gitleaks/semgrep só surgia depois de mais de 1 h de mvn test.
+    passo recursos passo_recursos
+    passo instrumentos passo_instrumentos
+    passo cli-symlink passo_cli_symlink
+    passo shards passo_shards
+    passo lock-drift passo_lock_drift
+    executar_paralelo gitleaks:passo_gitleaks semgrep:passo_semgrep trivy-fs:passo_trivy_fs npm-audit:passo_npm_audit
+    passo compose passo_compose
+    if ! seguir_apos_gates_baratos; then
+      resumir
+      exit 1
+    fi
+    
+    # Fase 2 — suítes (Maven sequencial: nunca dois mvn pesados ao mesmo tempo).
+    passo backend-test passo_backend_test
+    passo fklock passo_fklock
+    passo mysql-it passo_mysql_it
+    passo docker-it passo_docker_it
+    passo ci-it passo_ci_it
+    passo sql-real-it rodar_sql_real_its
+    passo pg-migrator passo_pg_migrator
+    passo frontend-test passo_frontend_test
+    passo frontend-build passo_frontend_build
+    passo sonar-diferencial passo_sonar_diferencial
+    
+    # Fase 3 — fora do --fast: cobertura frontend, imagens e mutação.
+    passo frontend-coverage passo_frontend_coverage
+    passo imagens passo_imagens
+    passo runtime-images passo_runtime_images
+    passo pitest passo_pitest
+    passo pitest-perfis passo_pitest_perfis
+    passo pitest-pg-migrator passo_pitest_pg_migrator
+    
+    # ------------------------------------------------------------------ Resumo
+    LIMPEZA_FEITA=1
+    limpar_containers_do_ci_local
+    liberar_trava_tc
+    resumir
+    exit $?
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/ci-local-contracts.test.mjs:138:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: verificador real rejeita mutations.xml ausente
+ok 7 - verificador real rejeita mutations.xml ausente
+  ---
+  duration_ms: 270.315459
+  type: 'test'
+  ...
+# Subtest: verificador real rejeita relatório vazio
+ok 8 - verificador real rejeita relatório vazio
+  ---
+  duration_ms: 45.793375
+  type: 'test'
+  ...
+# Subtest: verificador real rejeita todos os RUN_ERROR, inclusive com aspas simples e na mesma linha
+ok 9 - verificador real rejeita todos os RUN_ERROR, inclusive com aspas simples e na mesma linha
+  ---
+  duration_ms: 39.417083
+  type: 'test'
+  ...
+# Subtest: verificador real rejeita MEMORY_ERROR com aspas duplas
+ok 10 - verificador real rejeita MEMORY_ERROR com aspas duplas
+  ---
+  duration_ms: 40.283583
+  type: 'test'
+  ...
+# Subtest: verificador real rejeita divergência no total gerado
+ok 11 - verificador real rejeita divergência no total gerado
+  ---
+  duration_ms: 41.808791
+  type: 'test'
+  ...
+# Subtest: verificador real rejeita mortos divergentes de KILLED mais TIMED_OUT
+ok 12 - verificador real rejeita mortos divergentes de KILLED mais TIMED_OUT
+  ---
+  duration_ms: 39.159458
+  type: 'test'
+  ...
+# Subtest: verificador real aceita somente relatório coerente com aspas mistas e múltiplos mutantes por linha
+ok 13 - verificador real aceita somente relatório coerente com aspas mistas e múltiplos mutantes por linha
+  ---
+  duration_ms: 42.29525
+  type: 'test'
+  ...
+# Subtest: runtime image gate rejects a required image without immutable digest
+not ok 14 - runtime image gate rejects a required image without immutable digest
+  ---
+  duration_ms: 25.845083
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /digest/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:113:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.start (node:internal/test_runner/test:1262:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: runtime image gate rejects an incomplete required image set
+not ok 15 - runtime image gate rejects an incomplete required image set
+  ---
+  duration_ms: 21.940916
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /redis/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:129:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: runtime image gate resolves release env references to the checked-in runtime images
+not ok 16 - runtime image gate resolves release env references to the checked-in runtime images
+  ---
+  duration_ms: 20.277
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:156:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:-attacker.example/runtime:latest}
+not ok 17 - runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:-attacker.example/runtime:latest}
+  ---
+  duration_ms: 21.908792
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /MYSQL/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:+attacker.example/runtime:latest}
+not ok 18 - runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE:+attacker.example/runtime:latest}
+  ---
+  duration_ms: 20.180834
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /MYSQL/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE}
+not ok 19 - runtime image gate rejects unsupported Compose interpolation ${MYSQL_RUNTIME_IMAGE}
+  ---
+  duration_ms: 20.236916
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /MYSQL/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest}
+not ok 20 - runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:-attacker.example/runtime:latest}
+  ---
+  duration_ms: 19.626167
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /REDIS/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest}
+not ok 21 - runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE:+attacker.example/runtime:latest}
+  ---
+  duration_ms: 19.510666
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /REDIS/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE}
+not ok 22 - runtime image gate rejects unsupported Compose interpolation ${REDIS_RUNTIME_IMAGE}
+  ---
+  duration_ms: 19.143708
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /REDIS/i. Input:
+    
+    "required runtime image 'postgres' must appear exactly once after deduplication; found 0\n"
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:205:16)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate accepts the checked-in development and deployment compose files
+not ok 23 - runtime image gate accepts the checked-in development and deployment compose files
+  ---
+  duration_ms: 879.80225
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    MySQL and Redis must each build on both platforms
+    
+    6 !== 4
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 4
+  actual: 6
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:242:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate scans four images on two platforms and emits eight CycloneDX SBOMs
+not ok 24 - runtime image gate scans four images on two platforms and emits eight CycloneDX SBOMs
+  ---
+  duration_ms: 20.051792
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:277:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure
+not ok 25 - runtime image gate preserves all CycloneDX SBOMs before propagating a Trivy vulnerability failure
+  ---
+  duration_ms: 20.5015
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/ultra-project-integration-20261023-q0_hmmk7/runtime-images-fail-PTAqGh/trivy.log'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:624:20)
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:332:22)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: runtime image gate executes both checked-in Dockerfiles for both local platforms
+not ok 26 - runtime image gate executes both checked-in Dockerfiles for both local platforms
+  ---
+  duration_ms: 23.226792
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:367:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: release mode publishes each local runtime once and scans the published multiarch digest
+not ok 27 - release mode publishes each local runtime once and scans the published multiarch digest
+  ---
+  duration_ms: 22.515416
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    required runtime image 'postgres' must appear exactly once after deduplication; found 0
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:416:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: publish mode exposes runtime-images.env only after every vulnerability scan passes
+not ok 28 - publish mode exposes runtime-images.env only after every vulnerability scan passes
+  ---
+  duration_ms: 21.841125
+  type: 'test'
+  location: '~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:4:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    failed publish scan must not expose a stale or partially generated deploy artifact
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://~/Developer/harness/skills/ultra-deep-audit/scripts/tests/runtime-images-supply-chain-gate.test.mjs:510:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 11
+# fail 17
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1882.474208

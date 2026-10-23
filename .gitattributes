@@ -1,0 +1,2 @@
+# Preserve verbatim tool output, including whitespace emitted in failure logs.
+docs/reviews/*-evidence/*.log -whitespace

@@ -78,6 +78,9 @@ Return **only** JSON:
 
 ```json
 {
+  "component": "component-name",
+  "lens": "authorization",
+  "status": "complete",
   "findings": [
     {
       "title": "short",
@@ -105,3 +108,5 @@ Return **only** JSON:
 ```
 
 Empty `findings: []` is a good result. Do not pad.
+
+status=complete only when the assigned paths/lens were examined. Use incomplete and explain unread coverage if interrupted; an empty findings array does not erase incomplete work.

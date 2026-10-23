@@ -10,12 +10,13 @@
  * Pre-releases (beta/rc/alpha/canary/…) are never treated as "latest".
  * Writes deps-latest.json (update_map + suggestions) + optional Prism findings.
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import https from 'node:https';
-import http from 'node:http';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs";
+import crypto from "node:crypto";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import https from "node:https";
+import http from "node:http";
+import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,20 +30,27 @@ function hasFlag(name) {
   return process.argv.includes(`--${name}`);
 }
 
-const root = path.resolve(arg('root', '.'));
-const outPath = arg('out', '');
-const findingsPath = arg('findings', '');
-const includeIndirect = hasFlag('include-indirect');
-const includeDev = !hasFlag('no-dev');
-const concurrency = Math.max(1, Number(arg('concurrency', '8')) || 8);
-const DEPENDENCY_POLICY_FILE = path.join(
-  root, '.claude', 'skills', 'ultra-deep-audit', 'dependency-policy.json',
-);
+const root = path.resolve(arg("root", "."));
+const outPath = arg("out", "");
+const findingsPath = arg("findings", "");
+const includeIndirect = hasFlag("include-indirect");
+const includeDev = !hasFlag("no-dev");
+const concurrency = Math.max(1, Number(arg("concurrency", "8")) || 8);
+const explicitPolicy = arg("policy", "");
+const DEPENDENCY_POLICY_FILE = explicitPolicy
+  ? path.resolve(root, explicitPolicy)
+  : path.join(root, ".ultra-deep-audit", "dependency-policy.json");
 
 function loadDependencyPolicy() {
-  if (!fs.existsSync(DEPENDENCY_POLICY_FILE)) return { docker: {}, release_managed_images: [] };
-  const parsed = JSON.parse(fs.readFileSync(DEPENDENCY_POLICY_FILE, 'utf8'));
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (!fs.existsSync(DEPENDENCY_POLICY_FILE)) {
+    if (explicitPolicy)
+      throw Error(
+        `missing explicit dependency policy: ${DEPENDENCY_POLICY_FILE}`,
+      );
+    return { docker: {}, release_managed_images: [] };
+  }
+  const parsed = JSON.parse(fs.readFileSync(DEPENDENCY_POLICY_FILE, "utf8"));
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error(`${DEPENDENCY_POLICY_FILE} must contain a JSON object`);
   }
   return {
@@ -53,24 +61,25 @@ function loadDependencyPolicy() {
 
 const dependencyPolicy = loadDependencyPolicy();
 
-const PRE_RE = /(?:^|[.\-+_])(alpha|beta|rc|pre|preview|dev|canary|snapshot|experimental|nightly|unstable|next)(?:[.\-+_]|$|\d)/i;
+const PRE_RE =
+  /(?:^|[.\-+_])(alpha|beta|rc|pre|preview|dev|canary|snapshot|experimental|nightly|unstable|next)(?:[.\-+_]|$|\d)/i;
 
 function isPrerelease(version) {
   if (!version) return true;
   let v = String(version).trim();
-  if (v.startsWith('v')) v = v.slice(1);
+  if (v.startsWith("v")) v = v.slice(1);
   // Go pseudo-version v0.0.0-yyyymmdd...
   if (/^\d+\.\d+\.\d+-\d{14}-[0-9a-f]{12}$/i.test(v)) return true;
-  if (v.includes('+')) v = v.split('+')[0];
+  if (v.includes("+")) v = v.split("+")[0];
   // Maven / Ivy stable qualifiers
   if (/\.(RELEASE|Final|GA)$/i.test(v)) return false;
   if (/\.(M\d+|RC\d*|Alpha\d*|Beta\d*|SNAPSHOT|SP\d+)$/i.test(v)) return true;
   // semver prerelease after -
-  const dash = v.indexOf('-');
+  const dash = v.indexOf("-");
   if (dash !== -1) {
     const pre = v.slice(dash + 1);
     if (/^(RELEASE|Final|GA)(\W|$)/i.test(pre)) return false;
-    if (PRE_RE.test(pre) || PRE_RE.test('-' + pre)) return true;
+    if (PRE_RE.test(pre) || PRE_RE.test("-" + pre)) return true;
     // any other -tag is prerelease in semver
     return true;
   }
@@ -79,12 +88,12 @@ function isPrerelease(version) {
 
 /** Normalize Maven-ish versions for semver compare (strip .RELEASE/.Final). */
 function mavenCore(version) {
-  return stripV(version).replace(/\.(RELEASE|Final|GA)$/i, '');
+  return stripV(version).replace(/\.(RELEASE|Final|GA)$/i, "");
 }
 
 function stripV(v) {
-  const s = String(v || '').trim();
-  return s.startsWith('v') ? s.slice(1) : s;
+  const s = String(v || "").trim();
+  return s.startsWith("v") ? s.slice(1) : s;
 }
 
 function parseSemver(version) {
@@ -131,30 +140,30 @@ function maxStable(versions) {
 function bumpType(current, latest) {
   const c = parseSemver(current);
   const l = parseSemver(latest);
-  if (!c || !l) return 'unknown';
-  if (l.major > c.major) return 'major';
-  if (l.minor > c.minor) return 'minor';
-  if (l.patch > c.patch) return 'patch';
-  return 'none';
+  if (!c || !l) return "unknown";
+  if (l.major > c.major) return "major";
+  if (l.minor > c.minor) return "minor";
+  if (l.patch > c.patch) return "patch";
+  return "none";
 }
 
 function normalizeDeclared(range) {
-  if (range == null) return '';
+  if (range == null) return "";
   let s = String(range).trim();
-  if (s.startsWith('npm:')) {
-    const at = s.lastIndexOf('@');
+  if (s.startsWith("npm:")) {
+    const at = s.lastIndexOf("@");
     if (at > 4) s = s.slice(at + 1);
   }
   // workspace:/file:/link:/portal:
   if (/^(workspace|file|link|portal|http|git)/i.test(s)) return { special: s };
   // strip common range operators → lower bound-ish current pin
-  s = s.replace(/^[\^~>=<\s]+/, '');
-  s = s.replace(/\s.*$/, '');
-  s = s.replace(/\|.*$/, '');
-  if (s.includes(' - ')) s = s.split(' - ')[0].trim();
-  if (s.startsWith('v')) s = s.slice(1);
+  s = s.replace(/^[\^~>=<\s]+/, "");
+  s = s.replace(/\s.*$/, "");
+  s = s.replace(/\|.*$/, "");
+  if (s.includes(" - ")) s = s.split(" - ")[0].trim();
+  if (s.startsWith("v")) s = s.slice(1);
   // 1.x / 1.2.x
-  s = s.replace(/\.x$/i, '.0');
+  s = s.replace(/\.x$/i, ".0");
   if (/^\d+$/.test(s)) s = `${s}.0.0`;
   if (/^\d+\.\d+$/.test(s)) s = `${s}.0`;
   return s;
@@ -162,28 +171,35 @@ function normalizeDeclared(range) {
 
 function fetchJson(url, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
-    const lib = url.startsWith('https') ? https : http;
+    const lib = url.startsWith("https") ? https : http;
     const req = lib.get(
       url,
       {
         headers: {
-          Accept: 'application/json',
-          'User-Agent': 'ultra-deep-audit-check-deps-latest/1.0',
+          Accept: "application/json",
+          "User-Agent": "ultra-deep-audit-check-deps-latest/1.0",
         },
         timeout: timeoutMs,
       },
       (res) => {
-        if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          res.headers.location
+        ) {
           res.resume();
           fetchJson(res.headers.location, timeoutMs).then(resolve, reject);
           return;
         }
         const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => {
-          const body = Buffer.concat(chunks).toString('utf8');
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          const body = Buffer.concat(chunks).toString("utf8");
           if (res.statusCode && res.statusCode >= 400) {
-            reject(new Error(`HTTP ${res.statusCode} ${url}: ${body.slice(0, 200)}`));
+            reject(
+              new Error(`HTTP ${res.statusCode} ${url}: ${body.slice(0, 200)}`),
+            );
             return;
           }
           try {
@@ -194,8 +210,8 @@ function fetchJson(url, timeoutMs = 20000) {
         });
       },
     );
-    req.on('error', reject);
-    req.on('timeout', () => {
+    req.on("error", reject);
+    req.on("timeout", () => {
       req.destroy();
       reject(new Error(`timeout ${url}`));
     });
@@ -204,23 +220,28 @@ function fetchJson(url, timeoutMs = 20000) {
 
 function fetchText(url, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
-    const lib = url.startsWith('https') ? https : http;
+    const lib = url.startsWith("https") ? https : http;
     const req = lib.get(
       url,
       {
-        headers: { 'User-Agent': 'ultra-deep-audit-check-deps-latest/1.0' },
+        headers: { "User-Agent": "ultra-deep-audit-check-deps-latest/1.0" },
         timeout: timeoutMs,
       },
       (res) => {
-        if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          res.headers.location
+        ) {
           res.resume();
           fetchText(res.headers.location, timeoutMs).then(resolve, reject);
           return;
         }
         const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => {
-          const body = Buffer.concat(chunks).toString('utf8');
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          const body = Buffer.concat(chunks).toString("utf8");
           if (res.statusCode && res.statusCode >= 400) {
             reject(new Error(`HTTP ${res.statusCode} ${url}`));
             return;
@@ -229,8 +250,8 @@ function fetchText(url, timeoutMs = 20000) {
         });
       },
     );
-    req.on('error', reject);
-    req.on('timeout', () => {
+    req.on("error", reject);
+    req.on("timeout", () => {
       req.destroy();
       reject(new Error(`timeout ${url}`));
     });
@@ -262,15 +283,15 @@ function walkFiles(dir, pred, acc = [], depth = 0) {
   for (const ent of entries) {
     const name = ent.name;
     if (
-      name === 'node_modules' ||
-      name === '.git' ||
-      name === 'vendor' ||
-      name === 'dist' ||
-      name === 'build' ||
-      name === 'target' ||
-      name === '.build' ||
-      name === 'coverage' ||
-      name === '__pycache__'
+      name === "node_modules" ||
+      name === ".git" ||
+      name === "vendor" ||
+      name === "dist" ||
+      name === "build" ||
+      name === "target" ||
+      name === ".build" ||
+      name === "coverage" ||
+      name === "__pycache__"
     ) {
       continue;
     }
@@ -285,9 +306,9 @@ function walkFiles(dir, pred, acc = [], depth = 0) {
 
 /** Strip trailing commas / comments so bun.lock / JSONC parse. */
 function parseJsonLoose(text) {
-  const noBlock = text.replace(/\/\*[\s\S]*?\*\//g, '');
-  const noLine = noBlock.replace(/^\s*\/\/.*$/gm, '');
-  const noTrail = noLine.replace(/,\s*([\]}])/g, '$1');
+  const noBlock = text.replace(/\/\*[\s\S]*?\*\//g, "");
+  const noLine = noBlock.replace(/^\s*\/\/.*$/gm, "");
+  const noTrail = noLine.replace(/,\s*([\]}])/g, "$1");
   return JSON.parse(noTrail);
 }
 
@@ -296,11 +317,13 @@ function loadNpmLockMaps(dir) {
   const map = new Map();
 
   // 1) node_modules/<pkg>/package.json (most accurate installed)
-  const nm = path.join(dir, 'node_modules');
+  const nm = path.join(dir, "node_modules");
   if (fs.existsSync(nm)) {
     const readPkg = (pkgDir, name) => {
       try {
-        const v = JSON.parse(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8')).version;
+        const v = JSON.parse(
+          fs.readFileSync(path.join(pkgDir, "package.json"), "utf8"),
+        ).version;
         if (v) map.set(name, stripV(v));
       } catch {
         /* ignore */
@@ -313,8 +336,8 @@ function loadNpmLockMaps(dir) {
       ents = [];
     }
     for (const ent of ents) {
-      if (!ent.isDirectory() || ent.name === '.bin') continue;
-      if (ent.name.startsWith('@')) {
+      if (!ent.isDirectory() || ent.name === ".bin") continue;
+      if (ent.name.startsWith("@")) {
         const scopeDir = path.join(nm, ent.name);
         let scoped = [];
         try {
@@ -334,21 +357,24 @@ function loadNpmLockMaps(dir) {
   }
 
   // 2) package-lock.json (npm)
-  const lockNpm = path.join(dir, 'package-lock.json');
+  const lockNpm = path.join(dir, "package-lock.json");
   if (fs.existsSync(lockNpm)) {
     try {
-      const lock = JSON.parse(fs.readFileSync(lockNpm, 'utf8'));
+      const lock = JSON.parse(fs.readFileSync(lockNpm, "utf8"));
       if (lock.packages) {
         for (const [k, meta] of Object.entries(lock.packages)) {
-          if (!k.startsWith('node_modules/') || !meta?.version) continue;
-          const name = k.replace(/^node_modules\//, '').replace(/\/node_modules\//g, '>');
+          if (!k.startsWith("node_modules/") || !meta?.version) continue;
+          const name = k
+            .replace(/^node_modules\//, "")
+            .replace(/\/node_modules\//g, ">");
           // top-level only
-          if (name.includes('>')) continue;
+          if (name.includes(">")) continue;
           if (!map.has(name)) map.set(name, stripV(meta.version));
         }
       } else if (lock.dependencies) {
         for (const [name, meta] of Object.entries(lock.dependencies)) {
-          if (meta?.version && !map.has(name)) map.set(name, stripV(meta.version));
+          if (meta?.version && !map.has(name))
+            map.set(name, stripV(meta.version));
         }
       }
     } catch {
@@ -357,18 +383,18 @@ function loadNpmLockMaps(dir) {
   }
 
   // 3) bun.lock — packages["name"] = ["name@version", ...]
-  const bunLock = path.join(dir, 'bun.lock');
+  const bunLock = path.join(dir, "bun.lock");
   if (fs.existsSync(bunLock)) {
     try {
-      const lock = parseJsonLoose(fs.readFileSync(bunLock, 'utf8'));
+      const lock = parseJsonLoose(fs.readFileSync(bunLock, "utf8"));
       const pkgs = lock.packages || {};
       for (const [key, val] of Object.entries(pkgs)) {
         const id = Array.isArray(val) ? val[0] : null;
-        if (typeof id !== 'string') continue;
+        if (typeof id !== "string") continue;
         // "@scope/pkg@version" or "pkg@version"
         let name = key;
         let ver = null;
-        const at = id.lastIndexOf('@');
+        const at = id.lastIndexOf("@");
         if (at > 0) {
           name = id.slice(0, at);
           ver = id.slice(at + 1);
@@ -381,16 +407,17 @@ function loadNpmLockMaps(dir) {
   }
 
   // 4) pnpm-lock.yaml — importers + packages keys
-  const pnpmLock = path.join(dir, 'pnpm-lock.yaml');
+  const pnpmLock = path.join(dir, "pnpm-lock.yaml");
   if (fs.existsSync(pnpmLock)) {
     try {
-      const text = fs.readFileSync(pnpmLock, 'utf8');
+      const text = fs.readFileSync(pnpmLock, "utf8");
       const re = /['"]?((?:@[^'\/\s]+\/)?[^'@\s/]+)@([^'":\s,]+)/g;
       let m;
       while ((m = re.exec(text))) {
         const name = m[1];
         const ver = m[2];
-        if (name && ver && !isPrerelease(ver) && !map.has(name)) map.set(name, stripV(ver));
+        if (name && ver && !isPrerelease(ver) && !map.has(name))
+          map.set(name, stripV(ver));
       }
     } catch {
       /* ignore */
@@ -401,57 +428,67 @@ function loadNpmLockMaps(dir) {
 }
 
 async function latestNpmStable(name, minReleaseAgeDays = 0) {
-  const url = name.startsWith('@')
-    ? `https://registry.npmjs.org/${name.replace('/', '%2F')}`
+  const url = name.startsWith("@")
+    ? `https://registry.npmjs.org/${name.replace("/", "%2F")}`
     : `https://registry.npmjs.org/${encodeURIComponent(name)}`;
   const meta = await fetchJson(url);
   return selectNpmVersionForPolicy(meta, minReleaseAgeDays);
 }
 
-function selectNpmVersionForPolicy(meta, minReleaseAgeDays = 0, nowMillis = Date.now()) {
-  const tags = meta['dist-tags'] || {};
+function selectNpmVersionForPolicy(
+  meta,
+  minReleaseAgeDays = 0,
+  nowMillis = Date.now(),
+) {
+  const tags = meta["dist-tags"] || {};
   const latestTag = tags.latest ? stripV(tags.latest) : null;
   const versions = Object.keys(meta.versions || {});
-  const registryLatest = latestTag && !isPrerelease(latestTag)
-    ? latestTag
-    : maxStable(versions);
+  const registryLatest =
+    latestTag && !isPrerelease(latestTag) ? latestTag : maxStable(versions);
   if (!registryLatest || minReleaseAgeDays <= 0) return registryLatest;
 
   const cutoff = nowMillis - minReleaseAgeDays * 24 * 60 * 60 * 1000;
   const eligibleVersions = versions.filter((version) => {
     if (isPrerelease(version)) return false;
     if (cmpSemver(version, registryLatest) > 0) return false;
-    const publishedAt = Date.parse(meta.time?.[version] || '');
+    const publishedAt = Date.parse(meta.time?.[version] || "");
     return Number.isFinite(publishedAt) && publishedAt <= cutoff;
   });
   const eligibleLatest = maxStable(eligibleVersions);
   const registryLatestPublishedAt = meta.time?.[registryLatest] || null;
-  const publishedAtMillis = Date.parse(registryLatestPublishedAt || '');
+  const publishedAtMillis = Date.parse(registryLatestPublishedAt || "");
   return {
     version: eligibleLatest,
     registry_latest: registryLatest,
     registry_latest_published_at: registryLatestPublishedAt,
     min_release_age_days: minReleaseAgeDays,
-    deferred_until: eligibleLatest !== registryLatest && Number.isFinite(publishedAtMillis)
-      ? new Date(publishedAtMillis + minReleaseAgeDays * 24 * 60 * 60 * 1000).toISOString()
-      : null,
+    deferred_until:
+      eligibleLatest !== registryLatest && Number.isFinite(publishedAtMillis)
+        ? new Date(
+            publishedAtMillis + minReleaseAgeDays * 24 * 60 * 60 * 1000,
+          ).toISOString()
+        : null,
   };
 }
 
 function readNpmMinReleaseAgeDays(startDir) {
-  const rootWithSeparator = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  const rootWithSeparator = root.endsWith(path.sep)
+    ? root
+    : `${root}${path.sep}`;
   let current = path.resolve(startDir);
-  const insideScanRoot = current === root || current.startsWith(rootWithSeparator);
+  const insideScanRoot =
+    current === root || current.startsWith(rootWithSeparator);
   const boundary = insideScanRoot ? root : current;
   while (true) {
-    const npmrc = path.join(current, '.npmrc');
+    const npmrc = path.join(current, ".npmrc");
     if (fs.existsSync(npmrc)) {
-      const line = fs.readFileSync(npmrc, 'utf8')
+      const line = fs
+        .readFileSync(npmrc, "utf8")
         .split(/\r?\n/)
-        .map((entry) => entry.replace(/\s*[#;].*$/, '').trim())
+        .map((entry) => entry.replace(/\s*[#;].*$/, "").trim())
         .find((entry) => /^min-release-age\s*=/.test(entry));
       if (line) {
-        const days = Number(line.slice(line.indexOf('=') + 1).trim());
+        const days = Number(line.slice(line.indexOf("=") + 1).trim());
         return Number.isFinite(days) && days > 0 ? days : 0;
       }
     }
@@ -464,7 +501,7 @@ function readNpmMinReleaseAgeDays(startDir) {
 }
 
 function collectPackageJsonDeps(pkgPath) {
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   const dir = path.dirname(pkgPath);
   const installed = loadNpmLockMaps(dir);
   const minReleaseAgeDays = readNpmMinReleaseAgeDays(dir);
@@ -473,20 +510,22 @@ function collectPackageJsonDeps(pkgPath) {
     if (!obj) return;
     for (const [name, range] of Object.entries(obj)) {
       const declared = String(range);
-      const alias = declared.match(/^npm:((?:@[^/@\s]+\/)?[^/@\s]+)(?:@(.+))?$/);
+      const alias = declared.match(
+        /^npm:((?:@[^/@\s]+\/)?[^/@\s]+)(?:@(.+))?$/,
+      );
       const norm = normalizeDeclared(declared);
-      if (norm && typeof norm === 'object' && norm.special) continue;
+      if (norm && typeof norm === "object" && norm.special) continue;
       const fromLock = installed.get(name);
-      const current = fromLock || (typeof norm === 'string' ? norm : '');
+      const current = fromLock || (typeof norm === "string" ? norm : "");
       if (!current) continue;
       rows.push({
-        ecosystem: 'npm',
+        ecosystem: "npm",
         name,
         registry_name: alias ? alias[1] : name,
         manifest: path.relative(root, pkgPath) || path.basename(pkgPath),
         declared,
         current: stripV(current),
-        current_source: fromLock ? 'lock_or_installed' : 'manifest_range',
+        current_source: fromLock ? "lock_or_installed" : "manifest_range",
         min_release_age_days: minReleaseAgeDays,
         dev,
       });
@@ -500,30 +539,40 @@ function collectPackageJsonDeps(pkgPath) {
   return rows;
 }
 
-async function checkNpm(files = walkFiles(root, (n) => n === 'package.json'), lookup = latestNpmStable) {
+async function checkNpm(
+  files = walkFiles(root, (n) => n === "package.json"),
+  lookup = latestNpmStable,
+) {
   const all = [];
   for (const f of files) {
     all.push(...collectPackageJsonDeps(f));
   }
   return mapPool(all, concurrency, async (row) => {
     try {
-      const lookupResult = await lookup(row.registry_name, row.min_release_age_days || 0);
-      const latest = typeof lookupResult === 'string' ? lookupResult : lookupResult?.version;
+      const lookupResult = await lookup(
+        row.registry_name,
+        row.min_release_age_days || 0,
+      );
+      const latest =
+        typeof lookupResult === "string" ? lookupResult : lookupResult?.version;
       if (!latest) {
-        return { ...row, error: 'no stable version found', outdated: false };
+        return { ...row, error: "no stable version found", outdated: false };
       }
       const cur = stripV(row.current);
       const outdated = cmpSemver(latest, cur) > 0;
-      const lookupMetadata = typeof lookupResult === 'object' && lookupResult
-        ? Object.fromEntries(Object.entries(lookupResult).filter(([key]) => key !== 'version'))
-        : {};
+      const lookupMetadata =
+        typeof lookupResult === "object" && lookupResult
+          ? Object.fromEntries(
+              Object.entries(lookupResult).filter(([key]) => key !== "version"),
+            )
+          : {};
       return {
         ...row,
         ...lookupMetadata,
         current: cur,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(cur, latest) : 'none',
+        bump: outdated ? bumpType(cur, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -534,26 +583,26 @@ async function checkNpm(files = walkFiles(root, (n) => n === 'package.json'), lo
 // ── Go ──────────────────────────────────────────────────────────────
 
 function findGoMods() {
-  return walkFiles(root, (n) => n === 'go.mod');
+  return walkFiles(root, (n) => n === "go.mod");
 }
 
 function parseGoModDirect(modPath) {
-  const text = fs.readFileSync(modPath, 'utf8');
+  const text = fs.readFileSync(modPath, "utf8");
   const directs = new Set();
   let inRequire = false;
   let inExclude = false;
   for (const lineRaw of text.split(/\r?\n/)) {
-    const line = lineRaw.replace(/\/\/.*$/, '').trim();
+    const line = lineRaw.replace(/\/\/.*$/, "").trim();
     if (!line) continue;
-    if (line.startsWith('require (')) {
+    if (line.startsWith("require (")) {
       inRequire = true;
       continue;
     }
-    if (line.startsWith('exclude (')) {
+    if (line.startsWith("exclude (")) {
       inExclude = true;
       continue;
     }
-    if (line === ')') {
+    if (line === ")") {
       inRequire = false;
       inExclude = false;
       continue;
@@ -573,11 +622,11 @@ function parseGoModDirect(modPath) {
 }
 
 function runGoList(modDir) {
-  const r = spawnSync('go', ['list', '-m', '-u', '-json', 'all'], {
+  const r = spawnSync("go", ["list", "-m", "-u", "-json", "all"], {
     cwd: modDir,
-    encoding: 'utf8',
+    encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
-    env: { ...process.env, GOTOOLCHAIN: process.env.GOTOOLCHAIN || 'local' },
+    env: { ...process.env, GOTOOLCHAIN: process.env.GOTOOLCHAIN || "local" },
   });
   if (r.error) throw r.error;
   if (r.status !== 0) {
@@ -588,11 +637,11 @@ function runGoList(modDir) {
   const raw = r.stdout.trim();
   if (!raw) return items;
   let depth = 0;
-  let buf = '';
+  let buf = "";
   for (const ch of raw) {
     buf += ch;
-    if (ch === '{') depth++;
-    else if (ch === '}') {
+    if (ch === "{") depth++;
+    else if (ch === "}") {
       depth--;
       if (depth === 0) {
         try {
@@ -600,7 +649,7 @@ function runGoList(modDir) {
         } catch {
           /* skip */
         }
-        buf = '';
+        buf = "";
       }
     }
   }
@@ -611,9 +660,9 @@ async function latestGoStable(modulePath, hintVersions = []) {
   const candidates = [...hintVersions];
   try {
     const enc = modulePath
-      .split('/')
+      .split("/")
       .map((p) => encodeURIComponent(p))
-      .join('/');
+      .join("/");
     const list = await fetchText(`https://proxy.golang.org/${enc}/@v/list`);
     for (const line of list.split(/\r?\n/)) {
       const v = line.trim();
@@ -622,9 +671,11 @@ async function latestGoStable(modulePath, hintVersions = []) {
   } catch {
     /* proxy optional if go list had Update */
   }
-  const best = maxStable(candidates.map(stripV).map((v) => (v.startsWith('v') ? v : `v${v}`)));
+  const best = maxStable(
+    candidates.map(stripV).map((v) => (v.startsWith("v") ? v : `v${v}`)),
+  );
   if (!best) return null;
-  return best.startsWith('v') ? best : `v${best}`;
+  return best.startsWith("v") ? best : `v${best}`;
 }
 
 async function checkGo() {
@@ -638,7 +689,7 @@ async function checkGo() {
       items = runGoList(modDir);
     } catch (e) {
       rows.push({
-        ecosystem: 'go',
+        ecosystem: "go",
         name: path.relative(root, modPath),
         manifest: path.relative(root, modPath),
         error: String(e.message || e),
@@ -651,14 +702,14 @@ async function checkGo() {
       if (it.Main) continue;
       if (it.Indirect && !includeIndirect) continue;
       if (!includeIndirect && direct.size && !direct.has(it.Path)) continue;
-      const current = it.Version || '';
+      const current = it.Version || "";
       const hints = [];
       if (it.Version) hints.push(it.Version);
       if (it.Update?.Version) hints.push(it.Update.Version);
       rows.push({
-        ecosystem: 'go',
+        ecosystem: "go",
         name: it.Path,
-        manifest: path.relative(root, modPath) || 'go.mod',
+        manifest: path.relative(root, modPath) || "go.mod",
         current,
         declared: current,
         dev: false,
@@ -676,7 +727,7 @@ async function checkGo() {
       delete row._hints;
       delete row._main;
       if (!latest) {
-        return { ...row, error: 'no stable version found', outdated: false };
+        return { ...row, error: "no stable version found", outdated: false };
       }
       const cur = row.current;
       const outdated = cmpSemver(latest, cur) > 0;
@@ -684,7 +735,7 @@ async function checkGo() {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(cur, latest) : 'none',
+        bump: outdated ? bumpType(cur, latest) : "none",
       };
     } catch (e) {
       delete row._hints;
@@ -701,7 +752,7 @@ function parseCargoTomlDeps(text) {
   const rows = [];
   let section = null;
   for (const lineRaw of text.split(/\r?\n/)) {
-    const line = lineRaw.replace(/#.*$/, '').trim();
+    const line = lineRaw.replace(/#.*$/, "").trim();
     if (!line) continue;
     const sec = line.match(/^\[([^\]]+)\]$/);
     if (sec) {
@@ -709,16 +760,21 @@ function parseCargoTomlDeps(text) {
       continue;
     }
     const isDep =
-      section === 'dependencies' ||
-      section === 'dev-dependencies' ||
-      /\.dependencies$/.test(section || '') ||
-      /\.dev-dependencies$/.test(section || '');
+      section === "dependencies" ||
+      section === "dev-dependencies" ||
+      /\.dependencies$/.test(section || "") ||
+      /\.dev-dependencies$/.test(section || "");
     if (!isDep) continue;
-    const dev = (section || '').includes('dev-dependencies');
+    const dev = (section || "").includes("dev-dependencies");
     // name = "1.2.3"
     let m = line.match(/^([A-Za-z0-9_-]+)\s*=\s*"([^"]+)"/);
     if (m) {
-      rows.push({ name: m[1], declared: m[2], current: normalizeDeclared(m[2]), dev });
+      rows.push({
+        name: m[1],
+        declared: m[2],
+        current: normalizeDeclared(m[2]),
+        dev,
+      });
       continue;
     }
     // name = { version = "1.2", ... }
@@ -726,7 +782,12 @@ function parseCargoTomlDeps(text) {
     if (m) {
       const vm = m[2].match(/version\s*=\s*"([^"]+)"/);
       if (vm) {
-        rows.push({ name: m[1], declared: vm[1], current: normalizeDeclared(vm[1]), dev });
+        rows.push({
+          name: m[1],
+          declared: vm[1],
+          current: normalizeDeclared(vm[1]),
+          dev,
+        });
       }
     }
   }
@@ -734,25 +795,29 @@ function parseCargoTomlDeps(text) {
 }
 
 async function latestCrateStable(name) {
-  const meta = await fetchJson(`https://crates.io/api/v1/crates/${encodeURIComponent(name)}`);
+  const meta = await fetchJson(
+    `https://crates.io/api/v1/crates/${encodeURIComponent(name)}`,
+  );
   const versions = (meta.versions || []).map((v) => v.num);
   // crates.io marks yanked; prefer non-yanked
-  const nonYanked = (meta.versions || []).filter((v) => !v.yanked).map((v) => v.num);
+  const nonYanked = (meta.versions || [])
+    .filter((v) => !v.yanked)
+    .map((v) => v.num);
   return maxStable(nonYanked.length ? nonYanked : versions);
 }
 
 async function checkCargo() {
-  const files = walkFiles(root, (n) => n === 'Cargo.toml');
+  const files = walkFiles(root, (n) => n === "Cargo.toml");
   const all = [];
   for (const f of files) {
-    const deps = parseCargoTomlDeps(fs.readFileSync(f, 'utf8'));
+    const deps = parseCargoTomlDeps(fs.readFileSync(f, "utf8"));
     for (const d of deps) {
       if (!includeDev && d.dev) continue;
-      if (!d.current || typeof d.current !== 'string') continue;
+      if (!d.current || typeof d.current !== "string") continue;
       all.push({
-        ecosystem: 'cargo',
+        ecosystem: "cargo",
         name: d.name,
-        manifest: path.relative(root, f) || 'Cargo.toml',
+        manifest: path.relative(root, f) || "Cargo.toml",
         declared: d.declared,
         current: stripV(d.current),
         dev: d.dev,
@@ -762,13 +827,14 @@ async function checkCargo() {
   return mapPool(all, concurrency, async (row) => {
     try {
       const latest = await latestCrateStable(row.name);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -781,17 +847,27 @@ async function checkCargo() {
 function parseRequirements(text) {
   const rows = [];
   for (const lineRaw of text.split(/\r?\n/)) {
-    let line = lineRaw.replace(/#.*$/, '').trim();
-    if (!line || line.startsWith('-')) continue;
-    const m = line.match(/^([A-Za-z0-9_.-]+)\s*(?:\[.*?\])?\s*(==|>=|~=|!=|<=)?\s*([^,;]+)?/);
+    let line = lineRaw.replace(/#.*$/, "").trim();
+    if (!line || line.startsWith("-")) continue;
+    const m = line.match(
+      /^([A-Za-z0-9_.-]+)\s*(?:\[.*?\])?\s*(==|>=|~=|!=|<=)?\s*([^,;]+)?/,
+    );
     if (!m) continue;
     const name = m[1];
-    const op = m[2] || '';
-    const ver = (m[3] || '').trim();
-    if (op === '==' && ver) {
-      rows.push({ name, declared: `${op}${ver}`, current: normalizeDeclared(ver) });
+    const op = m[2] || "";
+    const ver = (m[3] || "").trim();
+    if (op === "==" && ver) {
+      rows.push({
+        name,
+        declared: `${op}${ver}`,
+        current: normalizeDeclared(ver),
+      });
     } else if (ver) {
-      rows.push({ name, declared: `${op}${ver}`, current: normalizeDeclared(ver) });
+      rows.push({
+        name,
+        declared: `${op}${ver}`,
+        current: normalizeDeclared(ver),
+      });
     }
   }
   return rows;
@@ -814,7 +890,9 @@ function parsePyprojectDeps(text) {
 }
 
 async function latestPypiStable(name) {
-  const meta = await fetchJson(`https://pypi.org/pypi/${encodeURIComponent(name)}/json`);
+  const meta = await fetchJson(
+    `https://pypi.org/pypi/${encodeURIComponent(name)}/json`,
+  );
   const versions = Object.keys(meta.releases || {});
   return maxStable(versions);
 }
@@ -822,16 +900,18 @@ async function latestPypiStable(name) {
 async function checkPypi() {
   const files = [
     ...walkFiles(root, (n) => /^requirements.*\.txt$/i.test(n)),
-    ...walkFiles(root, (n) => n === 'pyproject.toml'),
+    ...walkFiles(root, (n) => n === "pyproject.toml"),
   ];
   const all = [];
   for (const f of files) {
-    const text = fs.readFileSync(f, 'utf8');
-    const deps = f.endsWith('.toml') ? parsePyprojectDeps(text) : parseRequirements(text);
+    const text = fs.readFileSync(f, "utf8");
+    const deps = f.endsWith(".toml")
+      ? parsePyprojectDeps(text)
+      : parseRequirements(text);
     for (const d of deps) {
-      if (!d.current || typeof d.current !== 'string') continue;
+      if (!d.current || typeof d.current !== "string") continue;
       all.push({
-        ecosystem: 'pypi',
+        ecosystem: "pypi",
         name: d.name,
         manifest: path.relative(root, f),
         declared: d.declared,
@@ -843,13 +923,14 @@ async function checkPypi() {
   return mapPool(all, concurrency, async (row) => {
     try {
       const latest = await latestPypiStable(row.name);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -861,29 +942,31 @@ async function checkPypi() {
 
 /** Resolve a literal or a single `${prop}` against this pom's own <properties>. */
 function resolveMavenProp(text, raw) {
-  let version = (raw || '').trim();
-  if (!version.includes('${')) return version;
+  let version = (raw || "").trim();
+  if (!version.includes("${")) return version;
   const prop = version.match(/^\$\{([^}]+)\}$/);
-  if (!prop) return '';
+  if (!prop) return "";
   // Semgrep 965108828: Maven property name is escaped before interpolation; regex operators are not user-controlled.
   // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const pref = new RegExp(
-    `<${prop[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}>\\s*([^<]+)\\s*</`,
+    `<${prop[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}>\\s*([^<]+)\\s*</`,
   );
   const pv = text.match(pref);
-  return pv ? pv[1].trim() : '';
+  return pv ? pv[1].trim() : "";
 }
 
 function parseMavenCoordsFromPom(text, manifestRel) {
   const rows = [];
   // parent
-  const parent = text.match(/<parent>[\s\S]*?<groupId>([^<]+)<\/groupId>[\s\S]*?<artifactId>([^<]+)<\/artifactId>[\s\S]*?<version>([^<]+)<\/version>[\s\S]*?<\/parent>/);
+  const parent = text.match(
+    /<parent>[\s\S]*?<groupId>([^<]+)<\/groupId>[\s\S]*?<artifactId>([^<]+)<\/artifactId>[\s\S]*?<version>([^<]+)<\/version>[\s\S]*?<\/parent>/,
+  );
   if (parent) {
     rows.push({
       groupId: parent[1].trim(),
       artifactId: parent[2].trim(),
       version: parent[3].trim(),
-      scope: 'parent',
+      scope: "parent",
     });
   }
   // dependencyManagement + dependencies blocks
@@ -895,7 +978,7 @@ function parseMavenCoordsFromPom(text, manifestRel) {
     const artifactId = m[2].trim();
     const version = resolveMavenProp(text, m[3]);
     if (!version) continue;
-    rows.push({ groupId, artifactId, version, scope: 'dependency' });
+    rows.push({ groupId, artifactId, version, scope: "dependency" });
   }
   // spring-boot plugin version etc.
   const pluginRe =
@@ -909,19 +992,24 @@ function parseMavenCoordsFromPom(text, manifestRel) {
       // A ${prop} defined in the parent BOM cannot be resolved from this file. Keep the
       // row visible but skipped — comparing the literal "${x.version}" produced garbage.
       version: version || raw,
-      scope: 'plugin',
-      ...(version ? {} : { skipped: true, reason: `unresolved property ${raw} (defined outside this pom)` }),
+      scope: "plugin",
+      ...(version
+        ? {}
+        : {
+            skipped: true,
+            reason: `unresolved property ${raw} (defined outside this pom)`,
+          }),
     });
   }
   return rows.map((r) => ({
-    ecosystem: 'maven',
+    ecosystem: "maven",
     name: `${r.groupId}:${r.artifactId}`,
     groupId: r.groupId,
     artifactId: r.artifactId,
     manifest: manifestRel,
     declared: r.version,
     current: r.version,
-    dev: r.scope === 'plugin',
+    dev: r.scope === "plugin",
     scope: r.scope,
     ...(r.skipped ? { skipped: true, reason: r.reason, outdated: false } : {}),
   }));
@@ -941,24 +1029,25 @@ function parseMavenCoordsFromPom(text, manifestRel) {
  * in tests/check-deps-latest.test.mjs fails when an unmapped pin shows up).
  */
 const MAVEN_BOM_PROPERTY_COORDS = {
-  'rabbit-amqp-client.version': 'com.rabbitmq:amqp-client',
-  'jackson-bom.version': 'tools.jackson:jackson-bom',
-  'netty.version': 'io.netty:netty-bom',
-  'httpcore5.version': 'org.apache.httpcomponents.core5:httpcore5',
-  'httpclient5.version': 'org.apache.httpcomponents.client5:httpclient5',
-  'tomcat.version': 'org.apache.tomcat.embed:tomcat-embed-core',
-  'hibernate.version': 'org.hibernate.orm:hibernate-core',
-  'logback.version': 'ch.qos.logback:logback-classic',
-  'micrometer.version': 'io.micrometer:micrometer-bom',
-  'snakeyaml.version': 'org.yaml:snakeyaml',
-  'commons-pool2.version': 'org.apache.commons:commons-pool2',
-  'lettuce.version': 'io.lettuce:lettuce-core',
-  'mysql.version': 'com.mysql:mysql-connector-j',
-  'postgresql.version': 'org.postgresql:postgresql',
-  'bouncycastle.version': 'org.bouncycastle:bcpkix-jdk18on',
-  'spring-framework.version': 'org.springframework:spring-core',
-  'spring-security.version': 'org.springframework.security:spring-security-core',
-  'spring-boot.version': 'org.springframework.boot:spring-boot-dependencies',
+  "rabbit-amqp-client.version": "com.rabbitmq:amqp-client",
+  "jackson-bom.version": "tools.jackson:jackson-bom",
+  "netty.version": "io.netty:netty-bom",
+  "httpcore5.version": "org.apache.httpcomponents.core5:httpcore5",
+  "httpclient5.version": "org.apache.httpcomponents.client5:httpclient5",
+  "tomcat.version": "org.apache.tomcat.embed:tomcat-embed-core",
+  "hibernate.version": "org.hibernate.orm:hibernate-core",
+  "logback.version": "ch.qos.logback:logback-classic",
+  "micrometer.version": "io.micrometer:micrometer-bom",
+  "snakeyaml.version": "org.yaml:snakeyaml",
+  "commons-pool2.version": "org.apache.commons:commons-pool2",
+  "lettuce.version": "io.lettuce:lettuce-core",
+  "mysql.version": "com.mysql:mysql-connector-j",
+  "postgresql.version": "org.postgresql:postgresql",
+  "bouncycastle.version": "org.bouncycastle:bcpkix-jdk18on",
+  "spring-framework.version": "org.springframework:spring-core",
+  "spring-security.version":
+    "org.springframework.security:spring-security-core",
+  "spring-boot.version": "org.springframework.boot:spring-boot-dependencies",
 };
 
 /** Properties that name a toolchain/build knob, not an artifact version. */
@@ -967,14 +1056,14 @@ const NON_ARTIFACT_VERSION_PROPS = /^(java\.|maven\.|project\.|sonar\.)/;
 /** The XML comment sitting immediately above `index`, i.e. why this pin exists. */
 function rationaleAbove(text, index) {
   const m = text.slice(0, index).match(/<!--([\s\S]*?)-->\s*$/);
-  if (!m) return '';
-  return m[1].replace(/\s+/g, ' ').trim().slice(0, 600);
+  if (!m) return "";
+  return m[1].replace(/\s+/g, " ").trim().slice(0, 600);
 }
 
 function parseMavenPropertyPins(text, manifestRel) {
   const propsBlock = text.match(/<properties>([\s\S]*?)<\/properties>/);
   if (!propsBlock) return [];
-  const blockStart = propsBlock.index + '<properties>'.length;
+  const blockStart = propsBlock.index + "<properties>".length;
   const block = propsBlock[1];
 
   const rows = [];
@@ -984,24 +1073,24 @@ function parseMavenPropertyPins(text, manifestRel) {
     const property = m[1];
     const value = m[2].trim();
     if (NON_ARTIFACT_VERSION_PROPS.test(property)) continue;
-    if (value.includes('${')) continue;
+    if (value.includes("${")) continue;
     // Already visible through an explicit <dependency>/<plugin> in the same pom.
-    if (text.includes('${' + property + '}')) continue;
+    if (text.includes("${" + property + "}")) continue;
 
     const rationale = rationaleAbove(text, blockStart + m.index);
     const coord = MAVEN_BOM_PROPERTY_COORDS[property];
     const base = {
-      ecosystem: 'maven',
+      ecosystem: "maven",
       manifest: manifestRel,
       declared: value,
       current: value,
       dev: false,
-      scope: 'bom-property-override',
+      scope: "bom-property-override",
       property,
       rationale,
     };
     if (coord) {
-      const [groupId, artifactId] = coord.split(':');
+      const [groupId, artifactId] = coord.split(":");
       rows.push({ ...base, name: coord, groupId, artifactId });
     } else {
       rows.push({
@@ -1027,12 +1116,12 @@ function parseGradleDeps(text, manifestRel) {
   let m;
   while ((m = re.exec(text))) {
     const coord = m[1];
-    const parts = coord.split(':');
+    const parts = coord.split(":");
     if (parts.length < 3) continue;
     const [groupId, artifactId, version] = parts;
-    if (!version || version.startsWith('$')) continue;
+    if (!version || version.startsWith("$")) continue;
     rows.push({
-      ecosystem: 'gradle',
+      ecosystem: "gradle",
       name: `${groupId}:${artifactId}`,
       groupId,
       artifactId,
@@ -1051,40 +1140,42 @@ function parseVersionCatalog(text, manifestRel) {
   const versions = {};
   let section = null;
   for (const lineRaw of text.split(/\r?\n/)) {
-    const line = lineRaw.replace(/#.*$/, '').trim();
+    const line = lineRaw.replace(/#.*$/, "").trim();
     if (!line) continue;
     const sec = line.match(/^\[([^\]]+)\]$/);
     if (sec) {
       section = sec[1];
       continue;
     }
-    if (section === 'versions') {
+    if (section === "versions") {
       const m = line.match(/^([A-Za-z0-9_.-]+)\s*=\s*"([^"]+)"/);
       if (m) versions[m[1]] = m[2];
     }
   }
   section = null;
   for (const lineRaw of text.split(/\r?\n/)) {
-    const line = lineRaw.replace(/#.*$/, '').trim();
+    const line = lineRaw.replace(/#.*$/, "").trim();
     if (!line) continue;
     const sec = line.match(/^\[([^\]]+)\]$/);
     if (sec) {
       section = sec[1];
       continue;
     }
-    if (section !== 'libraries' && section !== 'plugins') continue;
+    if (section !== "libraries" && section !== "plugins") continue;
     // foo = { module = "g:a", version.ref = "x" } | version = "1.2"
     const nameM = line.match(/^([A-Za-z0-9_.-]+)\s*=\s*\{(.+)\}\s*$/);
     if (!nameM) continue;
     const body = nameM[2];
-    const mod = body.match(/module\s*=\s*"([^"]+)"/) || body.match(/group\s*=\s*"([^"]+)"\s*,\s*name\s*=\s*"([^"]+)"/);
+    const mod =
+      body.match(/module\s*=\s*"([^"]+)"/) ||
+      body.match(/group\s*=\s*"([^"]+)"\s*,\s*name\s*=\s*"([^"]+)"/);
     let groupId;
     let artifactId;
     if (mod && mod[2]) {
       groupId = mod[1];
       artifactId = mod[2];
     } else if (mod) {
-      const parts = mod[1].split(':');
+      const parts = mod[1].split(":");
       if (parts.length !== 2) continue;
       groupId = parts[0];
       artifactId = parts[1];
@@ -1096,24 +1187,26 @@ function parseVersionCatalog(text, manifestRel) {
     else if (vv) version = vv[1];
     if (!version) continue;
     rows.push({
-      ecosystem: 'gradle',
+      ecosystem: "gradle",
       name: `${groupId}:${artifactId}`,
       groupId,
       artifactId,
       manifest: manifestRel,
       declared: version,
       current: version,
-      dev: section === 'plugins',
+      dev: section === "plugins",
     });
   }
   return rows;
 }
 
 async function latestMavenStable(groupId, artifactId) {
-  const gPath = groupId.replace(/\./g, '/');
+  const gPath = groupId.replace(/\./g, "/");
   const url = `https://repo1.maven.org/maven2/${gPath}/${artifactId}/maven-metadata.xml`;
   const xml = await fetchText(url);
-  const versions = [...xml.matchAll(/<version>([^<]+)<\/version>/g)].map((m) => m[1].trim());
+  const versions = [...xml.matchAll(/<version>([^<]+)<\/version>/g)].map((m) =>
+    m[1].trim(),
+  );
   const release = (xml.match(/<release>([^<]+)<\/release>/) || [])[1];
   if (release && !isPrerelease(release)) return release.trim();
   return maxStable(versions);
@@ -1121,17 +1214,27 @@ async function latestMavenStable(groupId, artifactId) {
 
 async function checkMavenGradle() {
   const rows = [];
-  for (const f of walkFiles(root, (n) => n === 'pom.xml')) {
-    const text = fs.readFileSync(f, 'utf8');
-    const manifestRel = path.relative(root, f) || 'pom.xml';
+  for (const f of walkFiles(root, (n) => n === "pom.xml")) {
+    const text = fs.readFileSync(f, "utf8");
+    const manifestRel = path.relative(root, f) || "pom.xml";
     rows.push(...parseMavenCoordsFromPom(text, manifestRel));
     rows.push(...parseMavenPropertyPins(text, manifestRel));
   }
-  for (const f of walkFiles(root, (n) => n === 'build.gradle' || n === 'build.gradle.kts')) {
-    rows.push(...parseGradleDeps(fs.readFileSync(f, 'utf8'), path.relative(root, f)));
+  for (const f of walkFiles(
+    root,
+    (n) => n === "build.gradle" || n === "build.gradle.kts",
+  )) {
+    rows.push(
+      ...parseGradleDeps(fs.readFileSync(f, "utf8"), path.relative(root, f)),
+    );
   }
-  for (const f of walkFiles(root, (n) => n === 'libs.versions.toml')) {
-    rows.push(...parseVersionCatalog(fs.readFileSync(f, 'utf8'), path.relative(root, f)));
+  for (const f of walkFiles(root, (n) => n === "libs.versions.toml")) {
+    rows.push(
+      ...parseVersionCatalog(
+        fs.readFileSync(f, "utf8"),
+        path.relative(root, f),
+      ),
+    );
   }
   // de-dupe by name+manifest before network
   const seen = new Set();
@@ -1146,13 +1249,14 @@ async function checkMavenGradle() {
     if (row.skipped) return row;
     try {
       const latest = await latestMavenStable(row.groupId, row.artifactId);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -1175,13 +1279,13 @@ function parsePackageSwift(text, manifestRel) {
     const ver = m[2] || m[3] || m[4] || m[5] || m[6];
     if (!ver) continue;
     const name = url
-      .replace(/\.git$/, '')
-      .replace(/\/$/, '')
-      .split('/')
+      .replace(/\.git$/, "")
+      .replace(/\/$/, "")
+      .split("/")
       .slice(-2)
-      .join('/');
+      .join("/");
     rows.push({
-      ecosystem: 'spm',
+      ecosystem: "spm",
       name,
       repo_url: url,
       manifest: manifestRel,
@@ -1200,18 +1304,18 @@ function parsePackageResolved(text) {
     const j = JSON.parse(text);
     const pins = j.pins || j.object?.pins || [];
     for (const pin of pins) {
-      const loc = pin.location || pin.repositoryURL || '';
+      const loc = pin.location || pin.repositoryURL || "";
       const ver = pin.state?.version || pin.version;
       if (!loc || !ver) continue;
       const name = loc
-        .replace(/\.git$/, '')
-        .replace(/\/$/, '')
-        .split('/')
+        .replace(/\.git$/, "")
+        .replace(/\/$/, "")
+        .split("/")
         .slice(-2)
-        .join('/');
+        .join("/");
       map.set(name, stripV(ver));
       // also by full url key variants
-      map.set(loc.replace(/\.git$/, ''), stripV(ver));
+      map.set(loc.replace(/\.git$/, ""), stripV(ver));
     }
   } catch {
     /* ignore */
@@ -1228,7 +1332,9 @@ function githubRepoFromUrl(url) {
 async function latestGithubStableRelease(owner, repo) {
   // releases (non-prerelease first via API)
   try {
-    const rel = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/releases/latest`);
+    const rel = await fetchJson(
+      `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
+    );
     if (rel?.tag_name && !rel.prerelease && !isPrerelease(rel.tag_name)) {
       return stripV(rel.tag_name);
     }
@@ -1236,7 +1342,9 @@ async function latestGithubStableRelease(owner, repo) {
     /* fall through */
   }
   try {
-    const tags = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=30`);
+    const tags = await fetchJson(
+      `https://api.github.com/repos/${owner}/${repo}/tags?per_page=30`,
+    );
     const vers = (Array.isArray(tags) ? tags : []).map((t) => t.name);
     return maxStable(vers);
   } catch {
@@ -1246,17 +1354,20 @@ async function latestGithubStableRelease(owner, repo) {
 
 async function checkSpm() {
   const resolvedMaps = [];
-  for (const f of walkFiles(root, (n) => n === 'Package.resolved')) {
-    resolvedMaps.push(parsePackageResolved(fs.readFileSync(f, 'utf8')));
+  for (const f of walkFiles(root, (n) => n === "Package.resolved")) {
+    resolvedMaps.push(parsePackageResolved(fs.readFileSync(f, "utf8")));
   }
   const rows = [];
-  for (const f of walkFiles(root, (n) => n === 'Package.swift')) {
-    const parsed = parsePackageSwift(fs.readFileSync(f, 'utf8'), path.relative(root, f) || 'Package.swift');
+  for (const f of walkFiles(root, (n) => n === "Package.swift")) {
+    const parsed = parsePackageSwift(
+      fs.readFileSync(f, "utf8"),
+      path.relative(root, f) || "Package.swift",
+    );
     for (const r of parsed) {
       for (const map of resolvedMaps) {
         if (map.has(r.name)) {
           r.current = map.get(r.name);
-          r.current_source = 'Package.resolved';
+          r.current_source = "Package.resolved";
           break;
         }
       }
@@ -1266,15 +1377,22 @@ async function checkSpm() {
   return mapPool(rows, Math.min(concurrency, 4), async (row) => {
     try {
       const gh = githubRepoFromUrl(row.repo_url);
-      if (!gh) return { ...row, error: 'non-github package (skipped latest lookup)', outdated: false, skipped: true };
+      if (!gh)
+        return {
+          ...row,
+          error: "non-github package (skipped latest lookup)",
+          outdated: false,
+          skipped: true,
+        };
       const latest = await latestGithubStableRelease(gh.owner, gh.repo);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -1292,25 +1410,25 @@ async function latestComposerStable(name) {
 }
 
 async function checkComposer() {
-  const files = walkFiles(root, (n) => n === 'composer.json');
+  const files = walkFiles(root, (n) => n === "composer.json");
   const all = [];
   for (const f of files) {
     let pkg;
     try {
-      pkg = JSON.parse(fs.readFileSync(f, 'utf8'));
+      pkg = JSON.parse(fs.readFileSync(f, "utf8"));
     } catch {
       continue;
     }
     const add = (obj, dev) => {
       if (!obj) return;
       for (const [name, range] of Object.entries(obj)) {
-        if (name === 'php' || name.startsWith('ext-')) continue;
-        const current = normalizeDeclared(String(range).replace(/^v/, ''));
-        if (!current || typeof current !== 'string') continue;
+        if (name === "php" || name.startsWith("ext-")) continue;
+        const current = normalizeDeclared(String(range).replace(/^v/, ""));
+        if (!current || typeof current !== "string") continue;
         all.push({
-          ecosystem: 'composer',
+          ecosystem: "composer",
           name,
-          manifest: path.relative(root, f) || 'composer.json',
+          manifest: path.relative(root, f) || "composer.json",
           declared: String(range),
           current: stripV(current),
           dev,
@@ -1318,18 +1436,19 @@ async function checkComposer() {
       }
     };
     add(pkg.require, false);
-    if (includeDev) add(pkg['require-dev'], true);
+    if (includeDev) add(pkg["require-dev"], true);
   }
   return mapPool(all, concurrency, async (row) => {
     try {
       const latest = await latestComposerStable(row.name);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -1348,10 +1467,12 @@ function parseGemfile(text, manifestRel) {
     const name = m[1];
     const ver = m[2];
     if (!ver) continue;
-    const current = normalizeDeclared(ver.replace(/^~>?\s*/, '').replace(/,\s*.*$/, ''));
-    if (!current || typeof current !== 'string') continue;
+    const current = normalizeDeclared(
+      ver.replace(/^~>?\s*/, "").replace(/,\s*.*$/, ""),
+    );
+    if (!current || typeof current !== "string") continue;
     rows.push({
-      ecosystem: 'rubygems',
+      ecosystem: "rubygems",
       name,
       manifest: manifestRel,
       declared: ver,
@@ -1363,27 +1484,37 @@ function parseGemfile(text, manifestRel) {
 }
 
 async function latestRubygemStable(name) {
-  const vers = await fetchJson(`https://rubygems.org/api/v1/versions/${encodeURIComponent(name)}.json`);
-  const list = (Array.isArray(vers) ? vers : []).filter((v) => !v.prerelease).map((v) => v.number);
+  const vers = await fetchJson(
+    `https://rubygems.org/api/v1/versions/${encodeURIComponent(name)}.json`,
+  );
+  const list = (Array.isArray(vers) ? vers : [])
+    .filter((v) => !v.prerelease)
+    .map((v) => v.number);
   return maxStable(list);
 }
 
 async function checkRubygems() {
-  const files = walkFiles(root, (n) => n === 'Gemfile');
+  const files = walkFiles(root, (n) => n === "Gemfile");
   const all = [];
   for (const f of files) {
-    all.push(...parseGemfile(fs.readFileSync(f, 'utf8'), path.relative(root, f) || 'Gemfile'));
+    all.push(
+      ...parseGemfile(
+        fs.readFileSync(f, "utf8"),
+        path.relative(root, f) || "Gemfile",
+      ),
+    );
   }
   return mapPool(all, concurrency, async (row) => {
     try {
       const latest = await latestRubygemStable(row.name);
-      if (!latest) return { ...row, error: 'no stable version found', outdated: false };
+      if (!latest)
+        return { ...row, error: "no stable version found", outdated: false };
       const outdated = cmpSemver(latest, row.current) > 0;
       return {
         ...row,
         latest_stable: latest,
         outdated,
-        bump: outdated ? bumpType(row.current, latest) : 'none',
+        bump: outdated ? bumpType(row.current, latest) : "none",
       };
     } catch (e) {
       return { ...row, error: String(e.message || e), outdated: false };
@@ -1394,136 +1525,156 @@ async function checkRubygems() {
 // ── Docker Compose images ───────────────────────────────────────────
 
 const COMPOSE_NAMES = new Set([
-  'docker-compose.yml',
-  'docker-compose.yaml',
-  'compose.yml',
-  'compose.yaml',
-  'docker-compose.db.yml',
-  'docker-compose.db.yaml',
-  'docker-compose.services.yml',
-  'docker-compose.services.yaml',
-  'docker-compose.override.yml',
-  'docker-compose.override.yaml',
-  'docker-compose.prod.yml',
-  'docker-compose.prod.yaml',
-  'docker-compose.dev.yml',
-  'docker-compose.dev.yaml',
+  "docker-compose.yml",
+  "docker-compose.yaml",
+  "compose.yml",
+  "compose.yaml",
+  "docker-compose.db.yml",
+  "docker-compose.db.yaml",
+  "docker-compose.services.yml",
+  "docker-compose.services.yaml",
+  "docker-compose.override.yml",
+  "docker-compose.override.yaml",
+  "docker-compose.prod.yml",
+  "docker-compose.prod.yaml",
+  "docker-compose.dev.yml",
+  "docker-compose.dev.yaml",
 ]);
 
 const FLOATING_TAGS = new Set([
-  'latest',
-  'stable',
-  'edge',
-  'current',
-  'nightly',
-  'master',
-  'main',
-  'develop',
-  'dev',
-  'rolling',
+  "latest",
+  "stable",
+  "edge",
+  "current",
+  "nightly",
+  "master",
+  "main",
+  "develop",
+  "dev",
+  "rolling",
 ]);
 
 function expandComposeEnv(value) {
   // ${VAR:-default} | ${VAR-default} | $VAR | ${VAR}
-  return String(value).replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_, braced, bare) => {
-    if (bare) return process.env[bare] ?? '';
-    const body = braced;
-    let name = body;
-    let def = '';
-    let hasDefault = false;
-    const m = body.match(/^([A-Za-z_][A-Za-z0-9_]*)(:-|-)([\s\S]*)$/);
-    if (m) {
-      name = m[1];
-      hasDefault = true;
-      def = m[3];
-    }
-    const env = process.env[name];
-    if (env != null && env !== '') return env;
-    if (hasDefault) return def;
-    return '';
-  });
-}
-
-function isReleaseManagedComposeImage(value) {
-  const raw = String(value || '');
-  if (/\$\{APP_VERSION(?::?-)?[^}]*}/.test(raw)) return true;
-  return dependencyPolicy.release_managed_images.some(
-    (entry) => {
-      const image = typeof entry === 'string' ? entry : entry.image;
-      return raw === image || raw.startsWith(`${image}:`) || raw.startsWith(`${image}@`);
+  return String(value).replace(
+    /\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g,
+    (_, braced, bare) => {
+      if (bare) return process.env[bare] ?? "";
+      const body = braced;
+      let name = body;
+      let def = "";
+      let hasDefault = false;
+      const m = body.match(/^([A-Za-z_][A-Za-z0-9_]*)(:-|-)([\s\S]*)$/);
+      if (m) {
+        name = m[1];
+        hasDefault = true;
+        def = m[3];
+      }
+      const env = process.env[name];
+      if (env != null && env !== "") return env;
+      if (hasDefault) return def;
+      return "";
     },
   );
 }
 
+function isReleaseManagedComposeImage(value, policy = dependencyPolicy) {
+  const raw = String(value || "");
+  return (policy.release_managed_images || []).some((entry) => {
+    const image = typeof entry === "string" ? entry : entry.image;
+    return (
+      raw === image ||
+      raw.startsWith(`${image}:`) ||
+      raw.startsWith(`${image}@`)
+    );
+  });
+}
+
 function parseImageRef(raw) {
-  let s = String(raw || '').trim();
+  let s = String(raw || "").trim();
   if (!s) return null;
   // strip digest for version compare; keep tag if both (rare)
   let digest = null;
-  if (s.includes('@')) {
-    const separator = s.indexOf('@');
+  if (s.includes("@")) {
+    const separator = s.indexOf("@");
     digest = s.slice(separator + 1);
     s = s.slice(0, separator);
   }
   // registry/repo:tag — tag is after last : that is not part of port
   let name = s;
-  let tag = 'latest';
-  const lastSlash = s.lastIndexOf('/');
-  const lastColon = s.lastIndexOf(':');
+  let tag = "latest";
+  const lastSlash = s.lastIndexOf("/");
+  const lastColon = s.lastIndexOf(":");
   if (lastColon > lastSlash) {
     name = s.slice(0, lastColon);
     tag = s.slice(lastColon + 1);
   }
   // split registry
-  const parts = name.split('/');
-  let registry = 'docker.io';
+  const parts = name.split("/");
+  let registry = "docker.io";
   let path = name;
-  if (parts[0].includes('.') || parts[0].includes(':') || parts[0] === 'localhost') {
+  if (
+    parts[0].includes(".") ||
+    parts[0].includes(":") ||
+    parts[0] === "localhost"
+  ) {
     registry = parts[0];
-    path = parts.slice(1).join('/');
+    path = parts.slice(1).join("/");
   }
   // docker hub official
   let namespace;
   let repo;
-  if (registry === 'docker.io' || registry === 'index.docker.io' || registry === 'registry-1.docker.io') {
-    registry = 'docker.io';
-    if (!path.includes('/')) {
-      namespace = 'library';
+  if (
+    registry === "docker.io" ||
+    registry === "index.docker.io" ||
+    registry === "registry-1.docker.io"
+  ) {
+    registry = "docker.io";
+    if (!path.includes("/")) {
+      namespace = "library";
       repo = path;
     } else {
-      const [ns, ...rest] = path.split('/');
+      const [ns, ...rest] = path.split("/");
       namespace = ns;
-      repo = rest.join('/');
+      repo = rest.join("/");
     }
   } else {
-    const [ns, ...rest] = path.split('/');
-    namespace = ns || '';
-    repo = rest.join('/') || ns;
+    const [ns, ...rest] = path.split("/");
+    namespace = ns || "";
+    repo = rest.join("/") || ns;
   }
   return {
     raw,
     registry,
     namespace,
     repo,
-    path: registry === 'docker.io' ? `${namespace}/${repo}` : `${registry}/${path}`,
-    name: registry === 'docker.io' && namespace === 'library' ? repo : path.includes('/') ? path : `${namespace}/${repo}`,
+    path:
+      registry === "docker.io" ? `${namespace}/${repo}` : `${registry}/${path}`,
+    name:
+      registry === "docker.io" && namespace === "library"
+        ? repo
+        : path.includes("/")
+          ? path
+          : `${namespace}/${repo}`,
     tag,
     digest,
-    display: `${registry === 'docker.io' && namespace === 'library' ? repo : path}:${tag}`,
+    display: `${registry === "docker.io" && namespace === "library" ? repo : path}:${tag}`,
   };
 }
 
 function splitTagVariant(tag) {
-  const t = String(tag || '');
+  const t = String(tag || "");
   // MinIO / date releases — no variant
-  if (/^RELEASE[.-]/i.test(t)) return { base: t, variant: '', kind: 'release_date' };
+  if (/^RELEASE[.-]/i.test(t))
+    return { base: t, variant: "", kind: "release_date" };
   // sha- / git short
-  if (/^(sha-|g)?[0-9a-f]{7,40}$/i.test(t)) return { base: t, variant: '', kind: 'git' };
+  if (/^(sha-|g)?[0-9a-f]{7,40}$/i.test(t))
+    return { base: t, variant: "", kind: "git" };
   // 18.2-alpine | 16-bookworm | 7.2-alpine3.19
   const m = t.match(/^v?(\d+(?:\.\d+)*)(?:-([A-Za-z][A-Za-z0-9._-]*))?$/);
-  if (m) return { base: m[1], variant: m[2] || '', kind: 'semver' };
+  if (m) return { base: m[1], variant: m[2] || "", kind: "semver" };
   // alpine3.19 alone etc.
-  return { base: t, variant: '', kind: 'opaque' };
+  return { base: t, variant: "", kind: "opaque" };
 }
 
 /** Known image OS/variant suffixes — NOT prereleases. */
@@ -1531,39 +1682,47 @@ const DOCKER_VARIANT_OK =
   /^(alpine|alpine\d+(\.\d+)?|slim|bookworm|bullseye|buster|jammy|focal|noble|ubi\d*|distroless|scratch|static|debian|ubuntu|oci|busybox)([-.]|$)/i;
 
 function isDockerPrereleaseTag(tag) {
-  const t = String(tag || '');
+  const t = String(tag || "");
   if (!t || FLOATING_TAGS.has(t.toLowerCase())) return true;
   // MinIO / calendar RELEASE tags are stable product builds
   if (/^RELEASE[.-]\d{4}-\d{2}-\d{2}T/i.test(t)) return false;
   // architecture-only junk
   if (/^(arm|arm64|amd64|386|ppc|s390x)(-|$)/i.test(t)) return true;
   // explicit prerelease tokens anywhere in tag
-  if (/(^|[-.])(windowsservercore|nanoserver|preview|nightly|snapshot|experimental|canary|beta\d*|alpha\d*|rc\d*|pre\d*|dev)([-.]|$)/i.test(t)) {
+  if (
+    /(^|[-.])(windowsservercore|nanoserver|preview|nightly|snapshot|experimental|canary|beta\d*|alpha\d*|rc\d*|pre\d*|dev)([-.]|$)/i.test(
+      t,
+    )
+  ) {
     return true;
   }
   // semver + variant: 18.2-alpine → only check prerelease on non-variant suffix
   const sp = splitTagVariant(t);
-  if (sp.kind === 'semver') {
+  if (sp.kind === "semver") {
     if (!sp.variant) return false;
     if (DOCKER_VARIANT_OK.test(sp.variant)) return false;
     // unknown variant: treat as prerelease only if it looks like one
     return /beta|alpha|rc|pre|dev|snapshot|nightly|canary/i.test(sp.variant);
   }
-  if (sp.kind === 'release_date') return false;
+  if (sp.kind === "release_date") return false;
   // opaque tags with classic pre tokens already caught
   return false;
 }
 
 function cmpReleaseDateTag(a, b) {
-  const pa = a.match(/RELEASE[.-](\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z/i);
-  const pb = b.match(/RELEASE[.-](\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z/i);
+  const pa = a.match(
+    /RELEASE[.-](\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z/i,
+  );
+  const pb = b.match(
+    /RELEASE[.-](\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z/i,
+  );
   if (!pa && !pb) return 0;
   if (!pa) return -1;
   if (!pb) return 1;
-  return pa.slice(1).join('').localeCompare(pb.slice(1).join(''));
+  return pa.slice(1).join("").localeCompare(pb.slice(1).join(""));
 }
 
-function maxDockerStableTag(tags, preferVariant = '', currentTag = '') {
+function maxDockerStableTag(tags, preferVariant = "", currentTag = "") {
   const all = new Set(tags.filter((t) => !isDockerPrereleaseTag(t)));
   // always consider current pin as candidate (avoids "older latest" false display)
   if (currentTag && !isDockerPrereleaseTag(currentTag)) all.add(currentTag);
@@ -1579,11 +1738,14 @@ function maxDockerStableTag(tags, preferVariant = '', currentTag = '') {
     : [];
 
   const pool = withVar.length ? withVar : stable;
-  const curKind = currentTag ? splitTagVariant(currentTag).kind : '';
+  const curKind = currentTag ? splitTagVariant(currentTag).kind : "";
 
   // RELEASE.date tags (minio) — when current is calendar release OR pool is mostly RELEASE
   const releaseTags = pool.filter((t) => /^RELEASE[.-]/i.test(t));
-  if (curKind === 'release_date' || (releaseTags.length && releaseTags.length >= pool.length * 0.3)) {
+  if (
+    curKind === "release_date" ||
+    (releaseTags.length && releaseTags.length >= pool.length * 0.3)
+  ) {
     let best = null;
     for (const t of releaseTags) {
       if (!best || cmpReleaseDateTag(t, best) > 0) best = t;
@@ -1597,7 +1759,7 @@ function maxDockerStableTag(tags, preferVariant = '', currentTag = '') {
   for (const t of pool) {
     if (/^RELEASE[.-]/i.test(t)) continue;
     const sp = splitTagVariant(t);
-    if (sp.kind !== 'semver' && sp.kind !== 'opaque') continue;
+    if (sp.kind !== "semver" && sp.kind !== "opaque") continue;
     if (!parseSemver(sp.base) && !/^\d+(\.\d+)*$/.test(sp.base)) continue;
     if (!bestBase || cmpSemver(sp.base, bestBase) > 0) {
       bestBase = sp.base;
@@ -1614,11 +1776,11 @@ function maxDockerStableTag(tags, preferVariant = '', currentTag = '') {
 }
 
 function validateDockerReleasePolicy(policy, now = new Date()) {
-  if (!/^\d+(?:\.\d+)*$/.test(String(policy.series || ''))) {
-    throw new Error('Docker release policy requires a numeric series');
+  if (!/^\d+(?:\.\d+)*$/.test(String(policy.series || ""))) {
+    throw new Error("Docker release policy requires a numeric series");
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(policy.review_after || ''))) {
-    throw new Error('Docker release policy requires review_after=YYYY-MM-DD');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(policy.review_after || ""))) {
+    throw new Error("Docker release policy requires review_after=YYYY-MM-DD");
   }
   const today = now.toISOString().slice(0, 10);
   if (today > policy.review_after) {
@@ -1628,8 +1790,8 @@ function validateDockerReleasePolicy(policy, now = new Date()) {
 
 function selectDockerLatestForPolicy(
   tags,
-  preferVariant = '',
-  currentTag = '',
+  preferVariant = "",
+  currentTag = "",
   policy = null,
   now = new Date(),
 ) {
@@ -1647,17 +1809,23 @@ function selectDockerLatestForPolicy(
     return base === policy.series || base.startsWith(seriesPrefix);
   });
   if (!sameTrack.length) {
-    throw new Error(`Docker release policy series ${policy.series} has no registry tags`);
+    throw new Error(
+      `Docker release policy series ${policy.series} has no registry tags`,
+    );
   }
   const crossTrack = tags
     .filter((tag) => !sameTrack.includes(tag) && !isDockerPrereleaseTag(tag))
     .filter((tag) => {
       const parsed = splitTagVariant(tag);
-      return parsed.kind === 'semver'
-        && !parsed.variant
-        && cmpSemver(parsed.base, splitTagVariant(currentTag).base) > 0;
+      return (
+        parsed.kind === "semver" &&
+        !parsed.variant &&
+        cmpSemver(parsed.base, splitTagVariant(currentTag).base) > 0
+      );
     })
-    .sort((a, b) => cmpSemver(splitTagVariant(a).base, splitTagVariant(b).base));
+    .sort((a, b) =>
+      cmpSemver(splitTagVariant(a).base, splitTagVariant(b).base),
+    );
   return {
     latest: maxDockerStableTag(sameTrack, preferVariant, currentTag),
     policy_applied: true,
@@ -1671,17 +1839,22 @@ function selectDockerLatestForPolicy(
 function dockerBump(currentTag, latestTag) {
   const c = splitTagVariant(currentTag);
   const l = splitTagVariant(latestTag);
-  if (c.kind === 'release_date' || l.kind === 'release_date') {
+  if (c.kind === "release_date" || l.kind === "release_date") {
     const cmp = cmpReleaseDateTag(latestTag, currentTag);
-    if (cmp > 0) return 'minor'; // treat calendar bumps as minor
-    return 'none';
+    if (cmp > 0) return "minor"; // treat calendar bumps as minor
+    return "none";
   }
-  if (c.kind === 'semver' && l.kind === 'semver') return bumpType(c.base, l.base);
-  if (currentTag !== latestTag) return 'unknown';
-  return 'none';
+  if (c.kind === "semver" && l.kind === "semver")
+    return bumpType(c.base, l.base);
+  if (currentTag !== latestTag) return "unknown";
+  return "none";
 }
 
-async function listDockerHubTags(namespace, repo, { preferVariant = '', currentBase = '' } = {}) {
+async function listDockerHubTags(
+  namespace,
+  repo,
+  { preferVariant = "", currentBase = "" } = {},
+) {
   const tags = new Set();
   const base = `https://hub.docker.com/v2/repositories/${encodeURIComponent(namespace)}/${encodeURIComponent(repo)}/tags`;
 
@@ -1699,20 +1872,28 @@ async function listDockerHubTags(namespace, repo, { preferVariant = '', currentB
   // Prefer filtered pulls so alpine/RELEASE tags are not drowned by arch/os noise
   const queries = [];
   if (preferVariant) {
-    queries.push(`${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(preferVariant)}`);
+    queries.push(
+      `${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(preferVariant)}`,
+    );
   }
   if (currentBase) {
-    const major = String(currentBase).split('.')[0];
+    const major = String(currentBase).split(".")[0];
     if (major && /^\d+$/.test(major)) {
-      queries.push(`${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(major)}`);
+      queries.push(
+        `${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(major)}`,
+      );
     }
   }
   // MinIO-style calendar tags: probe recent years explicitly
   if (/^RELEASE/i.test(currentBase) || !preferVariant) {
     const year = new Date().getFullYear();
     for (let y = year + 1; y >= year - 4; y--) {
-      queries.push(`${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(`RELEASE.${y}`)}`);
-      queries.push(`${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(`RELEASE-${y}`)}`);
+      queries.push(
+        `${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(`RELEASE.${y}`)}`,
+      );
+      queries.push(
+        `${base}?page_size=100&ordering=-last_updated&name=${encodeURIComponent(`RELEASE-${y}`)}`,
+      );
     }
     queries.push(`${base}?page_size=100&ordering=-last_updated&name=RELEASE`);
   }
@@ -1770,19 +1951,20 @@ async function latestDockerStable(ref) {
   const releasePolicy = dependencyPolicy.docker[policyKey] || null;
   if (releasePolicy) validateDockerReleasePolicy(releasePolicy);
   let tags = [];
-  if (ref.registry === 'docker.io') {
+  if (ref.registry === "docker.io") {
     tags = await listDockerHubTags(ref.namespace, ref.repo, {
       preferVariant: prefer,
       currentBase: sp.base || ref.tag,
     });
-  } else if (ref.registry === 'quay.io') {
+  } else if (ref.registry === "quay.io") {
     tags = await listQuayTags(ref.namespace, ref.repo);
-  } else if (ref.registry === 'ghcr.io') {
+  } else if (ref.registry === "ghcr.io") {
     tags = await listGhcrTags(ref.namespace, ref.repo);
   } else {
     return { error: `unsupported registry ${ref.registry}`, latest: null };
   }
-  if (!tags.length) return { error: 'no tags found (private or unsupported)', latest: null };
+  if (!tags.length)
+    return { error: "no tags found (private or unsupported)", latest: null };
   const selection = selectDockerLatestForPolicy(
     tags,
     prefer,
@@ -1800,11 +1982,14 @@ function collectComposeImageRows() {
   const files = walkFiles(root, (n) => {
     if (COMPOSE_NAMES.has(n)) return true;
     // any *compose*.yml in tree
-    return /compose.*\.(yml|yaml)$/i.test(n) || /docker-compose.*\.(yml|yaml)$/i.test(n);
+    return (
+      /compose.*\.(yml|yaml)$/i.test(n) ||
+      /docker-compose.*\.(yml|yaml)$/i.test(n)
+    );
   });
   const rows = [];
   for (const f of files) {
-    const text = fs.readFileSync(f, 'utf8');
+    const text = fs.readFileSync(f, "utf8");
     const rel = path.relative(root, f) || path.basename(f);
     // image: value  (ignore comments)
     const lines = text.split(/\r?\n/);
@@ -1813,35 +1998,36 @@ function collectComposeImageRows() {
       if (/^\s*#/.test(line)) continue;
       const m = line.match(/^\s*image:\s*(?:["']([^"']+)["']|([^\s#]+))\s*$/);
       if (!m) continue;
-      const rawExpr = (m[1] || m[2] || '').trim();
+      const rawExpr = (m[1] || m[2] || "").trim();
       if (!rawExpr) continue;
       const expanded = expandComposeEnv(rawExpr);
       if (isReleaseManagedComposeImage(rawExpr)) {
         const ref = parseImageRef(expanded);
         rows.push({
-          ecosystem: 'docker',
-          name: ref?.display?.split(':')[0] || rawExpr,
+          ecosystem: "docker",
+          name: ref?.display?.split(":")[0] || rawExpr,
           manifest: rel,
           declared: rawExpr,
           current: ref?.tag || expanded || rawExpr,
           service_line: i + 1,
           skipped: true,
           release_managed: true,
-          reason: 'First-party image version is governed by the checked-in runtime build or release workflow',
+          reason:
+            "First-party image version is governed by the checked-in runtime build or release workflow",
           outdated: false,
         });
         continue;
       }
-      if (!expanded || expanded.includes('${')) {
+      if (!expanded || expanded.includes("${")) {
         rows.push({
-          ecosystem: 'docker',
+          ecosystem: "docker",
           name: rawExpr,
           manifest: rel,
           declared: rawExpr,
           current: expanded || rawExpr,
           service_line: i + 1,
           skipped: true,
-          reason: 'unresolved env in image tag',
+          reason: "unresolved env in image tag",
           outdated: false,
         });
         continue;
@@ -1849,8 +2035,8 @@ function collectComposeImageRows() {
       const ref = parseImageRef(expanded);
       if (!ref) continue;
       rows.push({
-        ecosystem: 'docker',
-        name: ref.display.split(':')[0],
+        ecosystem: "docker",
+        name: ref.display.split(":")[0],
         image: ref.display,
         registry: ref.registry,
         manifest: rel,
@@ -1863,11 +2049,12 @@ function collectComposeImageRows() {
     }
   }
   for (const entry of dependencyPolicy.release_managed_images) {
-    if (typeof entry === 'string' || !entry.dockerfile || !entry.source_image) continue;
+    if (typeof entry === "string" || !entry.dockerfile || !entry.source_image)
+      continue;
     const dockerfile = path.join(root, entry.dockerfile);
     if (!fs.existsSync(dockerfile)) {
       rows.push({
-        ecosystem: 'docker',
+        ecosystem: "docker",
         name: entry.source_image,
         manifest: entry.dockerfile,
         skipped: true,
@@ -1876,7 +2063,7 @@ function collectComposeImageRows() {
       });
       continue;
     }
-    const text = fs.readFileSync(dockerfile, 'utf8');
+    const text = fs.readFileSync(dockerfile, "utf8");
     const sourceLine = text.split(/\r?\n/).find((line) => {
       const match = line.match(/^FROM\s+(\S+)/i);
       return match && parseImageRef(match[1])?.name === entry.source_image;
@@ -1885,7 +2072,7 @@ function collectComposeImageRows() {
     const ref = parseImageRef(raw);
     if (!ref) {
       rows.push({
-        ecosystem: 'docker',
+        ecosystem: "docker",
         name: entry.source_image,
         manifest: entry.dockerfile,
         skipped: true,
@@ -1895,8 +2082,8 @@ function collectComposeImageRows() {
       continue;
     }
     rows.push({
-      ecosystem: 'docker',
-      name: ref.display.split(':')[0],
+      ecosystem: "docker",
+      name: ref.display.split(":")[0],
       image: ref.display,
       registry: ref.registry,
       manifest: entry.dockerfile,
@@ -1918,25 +2105,26 @@ async function checkDockerCompose() {
     try {
       const tag = row.current;
       if (FLOATING_TAGS.has(String(tag).toLowerCase())) {
-        if (/^sha256:[a-f0-9]{64}$/.test(row.ref?.digest || '')) {
+        if (/^sha256:[a-f0-9]{64}$/.test(row.ref?.digest || "")) {
           return {
             ...row,
             skipped: true,
-            reason: 'Immutable SHA-256 digest pin; release freshness not verified from the tag',
+            reason:
+              "Immutable SHA-256 digest pin; release freshness not verified from the tag",
             outdated: false,
             floating_tag: false,
           };
         }
         return {
           ...row,
-          name: row.ref?.display?.split(':')[0] || row.name,
+          name: row.ref?.display?.split(":")[0] || row.name,
           latest_stable: null,
           outdated: true,
-          bump: 'major',
+          bump: "major",
           floating_tag: true,
-          category_hint: 'docker_floating_tag',
+          category_hint: "docker_floating_tag",
           error: undefined,
-          note: 'Floating tag (latest/edge/…) — pin a stable version tag',
+          note: "Floating tag (latest/edge/…) — pin a stable version tag",
         };
       }
       const {
@@ -1951,45 +2139,65 @@ async function checkDockerCompose() {
         cross_track_versions,
       } = await latestDockerStable(row.ref);
       if (error && !latest) {
-        return { ...row, name: row.ref.display.split(':')[0], error, outdated: false };
+        return {
+          ...row,
+          name: row.ref.display.split(":")[0],
+          error,
+          outdated: false,
+        };
       }
       if (!latest) {
-        return { ...row, name: row.ref.display.split(':')[0], error: 'no stable tag found', outdated: false };
+        return {
+          ...row,
+          name: row.ref.display.split(":")[0],
+          error: "no stable tag found",
+          outdated: false,
+        };
       }
-      const outdated = latest !== tag && (dockerBump(tag, latest) !== 'none' || cmpSemver(splitTagVariant(latest).base, splitTagVariant(tag).base) > 0 || cmpReleaseDateTag(latest, tag) > 0 || latest !== tag);
+      const outdated =
+        latest !== tag &&
+        (dockerBump(tag, latest) !== "none" ||
+          cmpSemver(splitTagVariant(latest).base, splitTagVariant(tag).base) >
+            0 ||
+          cmpReleaseDateTag(latest, tag) > 0 ||
+          latest !== tag);
       // refine outdated
       let isOut = false;
-      let bump = 'none';
+      let bump = "none";
       if (latest !== tag) {
         bump = dockerBump(tag, latest);
-        if (bump === 'none') {
+        if (bump === "none") {
           // variant-only change or opaque
           isOut = true;
-          bump = 'patch';
+          bump = "patch";
         } else {
           isOut = true;
         }
         // if latest is "older" by semver, not outdated
         const cb = splitTagVariant(tag);
         const lb = splitTagVariant(latest);
-        if (cb.kind === 'semver' && lb.kind === 'semver' && cmpSemver(lb.base, cb.base) < 0) {
+        if (
+          cb.kind === "semver" &&
+          lb.kind === "semver" &&
+          cmpSemver(lb.base, cb.base) < 0
+        ) {
           isOut = false;
-          bump = 'none';
+          bump = "none";
         }
-        if (cb.kind === 'release_date' && cmpReleaseDateTag(latest, tag) < 0) {
+        if (cb.kind === "release_date" && cmpReleaseDateTag(latest, tag) < 0) {
           isOut = false;
-          bump = 'none';
+          bump = "none";
         }
       }
       const { ref: _r, ...rest } = row;
       return {
         ...rest,
-        name: row.ref.display.split(':')[0],
-        image: `${row.ref.display.split(':')[0]}:${tag}`,
+        name: row.ref.display.split(":")[0],
+        image: `${row.ref.display.split(":")[0]}:${tag}`,
         current: tag,
         latest_stable: latest,
         outdated: isOut,
-        bump: isOut ? bump : 'none',
+        bump: isOut ? bump : "none",
         tags_sampled,
         prefer_variant,
         policy_applied,
@@ -2002,7 +2210,7 @@ async function checkDockerCompose() {
       const { ref: _r, ...rest } = row;
       return {
         ...rest,
-        name: row.ref?.display?.split(':')[0] || row.name,
+        name: row.ref?.display?.split(":")[0] || row.name,
         error: String(e.message || e),
         outdated: false,
       };
@@ -2013,9 +2221,9 @@ async function checkDockerCompose() {
 // ── stack snapshot (delegates to detect-stack.mjs) ──────────────────
 
 function detectStackInline() {
-  const script = path.join(__dirname, 'detect-stack.mjs');
-  const r = spawnSync(process.execPath, [script, '--root', root], {
-    encoding: 'utf8',
+  const script = path.join(__dirname, "detect-stack.mjs");
+  const r = spawnSync(process.execPath, [script, "--root", root], {
+    encoding: "utf8",
     maxBuffer: 4 * 1024 * 1024,
   });
   if (r.status === 0 && r.stdout) {
@@ -2031,84 +2239,88 @@ function detectStackInline() {
 // ── findings + update map ───────────────────────────────────────────
 
 function severityFor(bump) {
-  if (bump === 'major') return 'MEDIUM';
-  if (bump === 'minor') return 'LOW';
-  if (bump === 'patch') return 'LOW';
-  return 'LOW';
+  if (bump === "major") return "MEDIUM";
+  if (bump === "minor") return "LOW";
+  if (bump === "patch") return "LOW";
+  return "LOW";
 }
 
 function suggestionFor(p) {
-  if (p.floating_tag || p.category_hint === 'docker_floating_tag') {
+  if (p.floating_tag || p.category_hint === "docker_floating_tag") {
     return {
-      action: 'pin_docker_tag',
-      command_hint: upgradeHint(p),
-      notes: 'Replace latest/edge with an immutable version tag (semver or RELEASE.date). Rebuilds become reproducible.',
-      priority: 'P2',
-    };
-  }
-  if (p.ecosystem === 'docker' && p.bump === 'major') {
-    return {
-      action: 'plan_major_upgrade',
-      command_hint: upgradeHint(p),
-      notes: 'Major image bump — review release notes, backup volumes, rolling restart.',
-      priority: 'P2',
-    };
-  }
-  if (p.bump === 'major') {
-    return {
-      action: 'plan_major_upgrade',
-      command_hint: upgradeHint(p),
-      notes: 'Breaking changes likely — read changelog, run full suite, upgrade related framework stack together (e.g. Spring Boot BOM / React major).',
-      priority: 'P2',
-    };
-  }
-  if (p.bump === 'minor') {
-    return {
-      action: 'bump_minor',
+      action: "pin_docker_tag",
       command_hint: upgradeHint(p),
       notes:
-        p.ecosystem === 'docker'
-          ? 'Minor image update — prefer same variant (-alpine/-slim). Smoke healthchecks after pull.'
-          : 'Safe to batch with other minors in the same ecosystem; re-run tests.',
-      priority: 'P3',
+        "Replace latest/edge with an immutable version tag (semver or RELEASE.date). Rebuilds become reproducible.",
+      priority: "P2",
+    };
+  }
+  if (p.ecosystem === "docker" && p.bump === "major") {
+    return {
+      action: "plan_major_upgrade",
+      command_hint: upgradeHint(p),
+      notes:
+        "Major image bump — review release notes, backup volumes, rolling restart.",
+      priority: "P2",
+    };
+  }
+  if (p.bump === "major") {
+    return {
+      action: "plan_major_upgrade",
+      command_hint: upgradeHint(p),
+      notes:
+        "Breaking changes likely — read changelog, run full suite, upgrade related framework stack together (e.g. Spring Boot BOM / React major).",
+      priority: "P2",
+    };
+  }
+  if (p.bump === "minor") {
+    return {
+      action: "bump_minor",
+      command_hint: upgradeHint(p),
+      notes:
+        p.ecosystem === "docker"
+          ? "Minor image update — prefer same variant (-alpine/-slim). Smoke healthchecks after pull."
+          : "Safe to batch with other minors in the same ecosystem; re-run tests.",
+      priority: "P3",
     };
   }
   return {
-    action: 'bump_patch',
+    action: "bump_patch",
     command_hint: upgradeHint(p),
     notes:
-      p.ecosystem === 'docker'
-        ? 'Patch image tag — low risk; pull + recreate service.'
-        : 'Patch/bugfix — prefer soon; low risk.',
-    priority: 'P3',
+      p.ecosystem === "docker"
+        ? "Patch image tag — low risk; pull + recreate service."
+        : "Patch/bugfix — prefer soon; low risk.",
+    priority: "P3",
   };
 }
 
 function upgradeHint(p) {
   switch (p.ecosystem) {
-    case 'npm': {
-      const target = p.registry_name && p.registry_name !== p.name
-        ? `${p.name}@npm:${p.registry_name}@${p.latest_stable}`
-        : `${p.name}@${p.latest_stable}`;
-      return `cd ${path.dirname(p.manifest) || '.'} && (bun add ${target} || npm install ${target})`;
+    case "npm": {
+      const target =
+        p.registry_name && p.registry_name !== p.name
+          ? `${p.name}@npm:${p.registry_name}@${p.latest_stable}`
+          : `${p.name}@${p.latest_stable}`;
+      return `cd ${path.dirname(p.manifest) || "."} && (bun add ${target} || npm install ${target})`;
     }
-    case 'go':
-      return `cd ${path.dirname(p.manifest) || '.'} && go get ${p.name}@${p.latest_stable} && go mod tidy`;
-    case 'maven':
+    case "go":
+      return `cd ${path.dirname(p.manifest) || "."} && go get ${p.name}@${p.latest_stable} && go mod tidy`;
+    case "maven":
       return `Set <version>${p.latest_stable}</version> for ${p.name} in ${p.manifest} (or BOM property)`;
-    case 'gradle':
+    case "gradle":
       return `Set ${p.name} to ${p.latest_stable} in ${p.manifest} / libs.versions.toml`;
-    case 'cargo':
+    case "cargo":
       return `cargo update -p ${p.name} --precise ${p.latest_stable}`;
-    case 'pypi':
+    case "pypi":
       return `pip install '${p.name}==${p.latest_stable}'  # pin in requirements/pyproject`;
-    case 'spm':
+    case "spm":
       return `Update ${p.name} to ${p.latest_stable} in Package.swift (from:) and resolve`;
-    case 'composer':
+    case "composer":
       return `composer require ${p.name}:${p.latest_stable}`;
-    case 'rubygems':
+    case "rubygems":
       return `bundle update ${p.name}  # gem '${p.name}', '${p.latest_stable}'`;
-    case 'docker':
+    case "docker":
       if (p.floating_tag) {
         return `Pin image tag in ${p.manifest}: image: ${p.name}:<stable-version> (avoid latest/edge)`;
       }
@@ -2123,7 +2335,7 @@ function toFindings(packages) {
   for (const p of packages) {
     if (!p.outdated || p.error || p.skipped) continue;
     const sug = suggestionFor(p);
-    const isDocker = p.ecosystem === 'docker';
+    const isDocker = p.ecosystem === "docker";
     const floating = Boolean(p.floating_tag);
     const title = floating
       ? `Docker floating tag: ${p.name}:${p.current} — pin a stable tag`
@@ -2131,22 +2343,26 @@ function toFindings(packages) {
         ? `Docker image outdated: ${p.name}:${p.current} → ${p.latest_stable} (${p.bump})`
         : `Outdated stable: ${p.name} ${p.current} → ${p.latest_stable} (${p.bump})`;
     findings.push({
-      agent: 'Prism',
-      domain: 'deps',
-      category: floating ? 'docker_floating_tag' : isDocker ? 'docker_image_outdated' : 'outdated_stable',
-      severity: floating ? 'MEDIUM' : severityFor(p.bump),
-      confidence: 'high',
+      agent: "Prism",
+      domain: "deps",
+      category: floating
+        ? "docker_floating_tag"
+        : isDocker
+          ? "docker_image_outdated"
+          : "outdated_stable",
+      severity: floating ? "MEDIUM" : severityFor(p.bump),
+      confidence: "high",
       title,
       path: p.manifest,
       line: p.line || 0,
       evidence: isDocker
-        ? `docker:${p.name} tag=${p.current} latest_stable=${p.latest_stable || 'n/a'} bump=${p.bump}${p.note ? ' · ' + p.note : ''}`
-        : `${p.ecosystem}:${p.name} current=${p.current} latest_stable=${p.latest_stable} bump=${p.bump}${p.dev ? ' (dev)' : ''}${p.indirect ? ' (indirect)' : ''}`,
+        ? `docker:${p.name} tag=${p.current} latest_stable=${p.latest_stable || "n/a"} bump=${p.bump}${p.note ? " · " + p.note : ""}`
+        : `${p.ecosystem}:${p.name} current=${p.current} latest_stable=${p.latest_stable} bump=${p.bump}${p.dev ? " (dev)" : ""}${p.indirect ? " (indirect)" : ""}`,
       impact: floating
-        ? 'Floating tags (latest/edge) are mutable — rebuilds are non-reproducible and may pull breaking changes unexpectedly.'
-        : p.bump === 'major'
-          ? 'Missing stable major release — may include breaking changes; plan upgrade.'
-          : 'Not on latest stable release — missing fixes and improvements.',
+        ? "Floating tags (latest/edge) are mutable — rebuilds are non-reproducible and may pull breaking changes unexpectedly."
+        : p.bump === "major"
+          ? "Missing stable major release — may include breaking changes; plan upgrade."
+          : "Not on latest stable release — missing fixes and improvements.",
       fix: sug.command_hint,
       suggestion: sug,
       package: p.name,
@@ -2154,17 +2370,17 @@ function toFindings(packages) {
       current_version: p.current,
       latest_stable: p.latest_stable,
       bump: p.bump,
-      status: 'open',
+      status: "open",
       blocks_pr: false,
       test_red_green: {
         name: isDocker
-          ? `docker/${p.name}:${p.latest_stable || 'pinned'}`
+          ? `docker/${p.name}:${p.latest_stable || "pinned"}`
           : `deps/${p.ecosystem}/${p.name}@${p.latest_stable}`,
         assert_before: floating
-          ? 'image uses latest/edge/floating tag'
+          ? "image uses latest/edge/floating tag"
           : `image/tag < ${p.latest_stable}`,
         assert_after: floating
-          ? 'compose pins immutable stable tag; compose config validates'
+          ? "compose pins immutable stable tag; compose config validates"
           : `compose/image pins ${p.latest_stable}; stack healthy`,
       },
     });
@@ -2176,7 +2392,7 @@ function buildUpdateMap(packages, stack) {
   const outdated = packages.filter((p) => p.outdated && !p.error);
   const by_ecosystem = {};
   for (const p of packages) {
-    const eco = p.ecosystem || 'unknown';
+    const eco = p.ecosystem || "unknown";
     if (!by_ecosystem[eco]) {
       by_ecosystem[eco] = { total: 0, outdated: 0, up_to_date: 0, updates: [] };
     }
@@ -2200,8 +2416,9 @@ function buildUpdateMap(packages, stack) {
   for (const eco of Object.keys(by_ecosystem)) {
     by_ecosystem[eco].updates.sort(
       (a, b) =>
-        ({ major: 0, minor: 1, patch: 2, unknown: 3 }[a.bump] ?? 9) -
-          ({ major: 0, minor: 1, patch: 2, unknown: 3 }[b.bump] ?? 9) || a.name.localeCompare(b.name),
+        (({ major: 0, minor: 1, patch: 2, unknown: 3 })[a.bump] ?? 9) -
+          ({ major: 0, minor: 1, patch: 2, unknown: 3 }[b.bump] ?? 9) ||
+        a.name.localeCompare(b.name),
     );
   }
 
@@ -2218,7 +2435,8 @@ function buildUpdateMap(packages, stack) {
     }))
     .sort(
       (a, b) =>
-        ({ major: 0, minor: 1, patch: 2 }[a.bump] ?? 9) - ({ major: 0, minor: 1, patch: 2 }[b.bump] ?? 9) ||
+        (({ major: 0, minor: 1, patch: 2 })[a.bump] ?? 9) -
+          ({ major: 0, minor: 1, patch: 2 }[b.bump] ?? 9) ||
         a.package.localeCompare(b.package),
     );
 
@@ -2238,95 +2456,115 @@ function buildUpdateMap(packages, stack) {
 
 function inferPackageFrameworks(p, stack) {
   const fw = [];
-  const n = `${p.name} ${p.groupId || ''}`.toLowerCase();
-  if (/react|@mui|@emotion/.test(n)) fw.push('react');
-  if (/vite|@vitejs/.test(n)) fw.push('vite');
-  if (/next/.test(n)) fw.push('next');
-  if (/springframework|spring-boot/.test(n)) fw.push('spring-boot');
-  if (/jetbrains\.kotlin|kotlin-/.test(n)) fw.push('kotlin');
-  if (/swift|apple\//.test(n)) fw.push('swift');
-  if (/vue/.test(n)) fw.push('vue');
+  const n = `${p.name} ${p.groupId || ""}`.toLowerCase();
+  if (/react|@mui|@emotion/.test(n)) fw.push("react");
+  if (/vite|@vitejs/.test(n)) fw.push("vite");
+  if (/next/.test(n)) fw.push("next");
+  if (/springframework|spring-boot/.test(n)) fw.push("spring-boot");
+  if (/jetbrains\.kotlin|kotlin-/.test(n)) fw.push("kotlin");
+  if (/swift|apple\//.test(n)) fw.push("swift");
+  if (/vue/.test(n)) fw.push("vue");
   // attach stack frameworks that share ecosystem
-  if (p.ecosystem === 'npm' && (stack.frameworks || []).includes('react')) {
-    if (!fw.includes('react') && /react/.test(n)) fw.push('react');
+  if (p.ecosystem === "npm" && (stack.frameworks || []).includes("react")) {
+    if (!fw.includes("react") && /react/.test(n)) fw.push("react");
   }
   return [...new Set(fw)];
 }
 
 function buildBatches(suggestions, stack) {
   const batches = [];
-  const docker = suggestions.filter((s) => s.ecosystem === 'docker');
-  const majors = suggestions.filter((s) => s.bump === 'major' && s.ecosystem !== 'docker');
-  const minors = suggestions.filter((s) => s.bump === 'minor' && s.ecosystem !== 'docker');
-  const patches = suggestions.filter((s) => s.bump === 'patch' && s.ecosystem !== 'docker');
+  const docker = suggestions.filter((s) => s.ecosystem === "docker");
+  const majors = suggestions.filter(
+    (s) => s.bump === "major" && s.ecosystem !== "docker",
+  );
+  const minors = suggestions.filter(
+    (s) => s.bump === "minor" && s.ecosystem !== "docker",
+  );
+  const patches = suggestions.filter(
+    (s) => s.bump === "patch" && s.ecosystem !== "docker",
+  );
 
   if (docker.length) {
     batches.push({
-      id: 'batch-docker',
-      title: 'Docker Compose image tags',
-      priority: 'P2',
+      id: "batch-docker",
+      title: "Docker Compose image tags",
+      priority: "P2",
       packages: docker.map((s) => s.package),
-      rationale: 'Pin floating tags; bump versioned images keeping variant (-alpine). Smoke compose up + healthchecks.',
+      rationale:
+        "Pin floating tags; bump versioned images keeping variant (-alpine). Smoke compose up + healthchecks.",
     });
   }
 
   if (patches.length) {
     batches.push({
-      id: 'batch-patches',
-      title: 'Patch updates (low risk)',
-      priority: 'P3',
+      id: "batch-patches",
+      title: "Patch updates (low risk)",
+      priority: "P3",
       packages: patches.map((s) => s.package),
-      rationale: 'Bugfix releases only — batch per ecosystem and run unit tests.',
+      rationale:
+        "Bugfix releases only — batch per ecosystem and run unit tests.",
     });
   }
   if (minors.length) {
     batches.push({
-      id: 'batch-minors',
-      title: 'Minor updates',
-      priority: 'P3',
+      id: "batch-minors",
+      title: "Minor updates",
+      priority: "P3",
       packages: minors.map((s) => s.package),
-      rationale: 'Backward-compatible features — group by ecosystem (npm / go / maven).',
+      rationale:
+        "Backward-compatible features — group by ecosystem (npm / go / maven).",
     });
   }
   if (majors.length) {
-    const spring = majors.filter((s) => /spring/i.test(s.package) || (s.frameworks || []).includes('spring-boot'));
-    const react = majors.filter((s) => (s.frameworks || []).includes('react') || /react|@mui/i.test(s.package));
+    const spring = majors.filter(
+      (s) =>
+        /spring/i.test(s.package) ||
+        (s.frameworks || []).includes("spring-boot"),
+    );
+    const react = majors.filter(
+      (s) =>
+        (s.frameworks || []).includes("react") || /react|@mui/i.test(s.package),
+    );
     if (spring.length) {
       batches.push({
-        id: 'batch-spring-major',
-        title: 'Spring / Java major stack',
-        priority: 'P2',
+        id: "batch-spring-major",
+        title: "Spring / Java major stack",
+        priority: "P2",
         packages: spring.map((s) => s.package),
-        rationale: 'Upgrade BOM / spring-boot-starter-parent first, then align plugins.',
+        rationale:
+          "Upgrade BOM / spring-boot-starter-parent first, then align plugins.",
       });
     }
     if (react.length) {
       batches.push({
-        id: 'batch-react-major',
-        title: 'React / frontend major',
-        priority: 'P2',
+        id: "batch-react-major",
+        title: "React / frontend major",
+        priority: "P2",
         packages: react.map((s) => s.package),
-        rationale: 'Align react, react-dom, types, and meta-framework (vite/next) together.',
+        rationale:
+          "Align react, react-dom, types, and meta-framework (vite/next) together.",
       });
     }
-    const rest = majors.filter((s) => !spring.includes(s) && !react.includes(s));
+    const rest = majors.filter(
+      (s) => !spring.includes(s) && !react.includes(s),
+    );
     if (rest.length) {
       batches.push({
-        id: 'batch-other-majors',
-        title: 'Other major upgrades (one PR each)',
-        priority: 'P2',
+        id: "batch-other-majors",
+        title: "Other major upgrades (one PR each)",
+        priority: "P2",
         packages: rest.map((s) => s.package),
-        rationale: 'Isolate majors with dedicated changelog review.',
+        rationale: "Isolate majors with dedicated changelog review.",
       });
     }
   }
   if ((stack.frameworks || []).length) {
     batches.push({
-      id: 'stack-detected',
-      title: `Detected stack: ${(stack.frameworks || []).join(', ') || 'n/a'}`,
-      priority: 'info',
+      id: "stack-detected",
+      title: `Detected stack: ${(stack.frameworks || []).join(", ") || "n/a"}`,
+      priority: "info",
       packages: [],
-      rationale: `Languages: ${(stack.languages || []).join(', ') || '—'} · Ecosystems: ${(stack.ecosystems || []).join(', ') || '—'}`,
+      rationale: `Languages: ${(stack.languages || []).join(", ") || "—"} · Ecosystems: ${(stack.ecosystems || []).join(", ") || "—"}`,
     });
   }
   return batches;
@@ -2340,15 +2578,15 @@ async function main() {
   const stack = detectStackInline();
 
   const runners = [
-    ['npm', checkNpm],
-    ['go', checkGo],
-    ['cargo', checkCargo],
-    ['pypi', checkPypi],
-    ['maven+gradle', checkMavenGradle],
-    ['spm', checkSpm],
-    ['composer', checkComposer],
-    ['rubygems', checkRubygems],
-    ['docker-compose', checkDockerCompose],
+    ["npm", checkNpm],
+    ["go", checkGo],
+    ["cargo", checkCargo],
+    ["pypi", checkPypi],
+    ["maven+gradle", checkMavenGradle],
+    ["spm", checkSpm],
+    ["composer", checkComposer],
+    ["rubygems", checkRubygems],
+    ["docker-compose", checkDockerCompose],
   ];
 
   for (const [eco, fn] of runners) {
@@ -2379,8 +2617,18 @@ async function main() {
     root,
     stack,
     policy: {
+      source: fs.existsSync(DEPENDENCY_POLICY_FILE)
+        ? DEPENDENCY_POLICY_FILE
+        : null,
+      sha256: fs.existsSync(DEPENDENCY_POLICY_FILE)
+        ? crypto
+            .createHash("sha256")
+            .update(fs.readFileSync(DEPENDENCY_POLICY_FILE))
+            .digest("hex")
+        : null,
       stable_only: true,
-      exclude: 'alpha|beta|rc|pre|preview|dev|canary|snapshot|experimental|nightly|unstable|next|pseudo-versions|maven-milestones',
+      exclude:
+        "alpha|beta|rc|pre|preview|dev|canary|snapshot|experimental|nightly|unstable|next|pseudo-versions|maven-milestones",
       include_dev: includeDev,
       include_indirect: includeIndirect,
     },
@@ -2390,9 +2638,9 @@ async function main() {
       up_to_date: checked.length - outdated.length,
       errors: uniq.filter((p) => p.error).length + errors.length,
       by_bump: {
-        major: outdated.filter((p) => p.bump === 'major').length,
-        minor: outdated.filter((p) => p.bump === 'minor').length,
-        patch: outdated.filter((p) => p.bump === 'patch').length,
+        major: outdated.filter((p) => p.bump === "major").length,
+        minor: outdated.filter((p) => p.bump === "minor").length,
+        patch: outdated.filter((p) => p.bump === "patch").length,
       },
       by_ecosystem: {},
       languages: stack.languages || [],
@@ -2404,7 +2652,7 @@ async function main() {
   };
 
   for (const p of uniq) {
-    const eco = p.ecosystem || 'unknown';
+    const eco = p.ecosystem || "unknown";
     if (!report.summary.by_ecosystem[eco]) {
       report.summary.by_ecosystem[eco] = { checked: 0, outdated: 0 };
     }
@@ -2415,7 +2663,7 @@ async function main() {
   const findings = toFindings(uniq);
   report.findings_count = findings.length;
 
-  const json = JSON.stringify(report, null, 2) + '\n';
+  const json = JSON.stringify(report, null, 2) + "\n";
   if (outPath) {
     fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
     fs.writeFileSync(outPath, json);
@@ -2425,16 +2673,16 @@ async function main() {
 
   if (findingsPath) {
     fs.mkdirSync(path.dirname(path.resolve(findingsPath)), { recursive: true });
-    fs.writeFileSync(findingsPath, JSON.stringify(findings, null, 2) + '\n');
+    fs.writeFileSync(findingsPath, JSON.stringify(findings, null, 2) + "\n");
   }
 
   console.error(
-    `check-deps-latest: stack=[${(stack.frameworks || []).join(',') || (stack.languages || []).join(',')}] ` +
+    `check-deps-latest: stack=[${(stack.frameworks || []).join(",") || (stack.languages || []).join(",")}] ` +
       `checked=${report.summary.checked} outdated=${report.summary.outdated} ` +
       `(major=${report.summary.by_bump.major} minor=${report.summary.by_bump.minor} patch=${report.summary.by_bump.patch})` +
       ` errors=${report.summary.errors}` +
-      (outPath ? ` → ${outPath}` : '') +
-      (findingsPath ? ` findings→ ${findingsPath}` : ''),
+      (outPath ? ` → ${outPath}` : "") +
+      (findingsPath ? ` findings→ ${findingsPath}` : ""),
   );
   if (report.summary.errors > 0) {
     process.exitCode = 1;
@@ -2454,7 +2702,8 @@ export {
 
 // Only run the scan when invoked as a CLI — the parsers above are unit-tested by import.
 const invokedDirectly =
-  process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) {
   main().catch((e) => {
     console.error(e);

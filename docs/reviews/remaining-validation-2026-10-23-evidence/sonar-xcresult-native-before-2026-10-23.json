@@ -1,0 +1,23 @@
+{
+  "status": "failed",
+  "error": "Relat\u00f3rio de cobertura enviado, mas medi\u00e7\u00e3o v\u00e1lida n\u00e3o confirmada pela an\u00e1lise atual.",
+  "steps": [
+    {
+      "step": "bootstrap-db",
+      "exit": 0
+    },
+    {
+      "step": "start",
+      "exit": 0
+    },
+    {
+      "step": "bootstrap-project",
+      "exit": 0
+    },
+    {
+      "step": "scanner",
+      "exit": 0
+    }
+  ],
+  "logs": "~/tmp/0z/c5nklh457hbfkp524n88czhc0000gn/T/sonar-xcresult-smoke-v7eop9ip"
+}
