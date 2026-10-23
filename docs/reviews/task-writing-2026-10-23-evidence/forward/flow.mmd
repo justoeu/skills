@@ -1,0 +1,12 @@
+flowchart TD
+  actor["Solicitante"] --> post["POST /exports"]
+  actor --> get["GET /exports/{id}"]
+  post --> t1["T-001: criar job CSV em QUEUED ou rejeitar outro formato"]
+  get --> t2["T-002: consultar estado do job"]
+  t1 --> controller["controller existente"]
+  t2 --> controller
+  controller --> service["service existente"]
+  service --> repository["repository existente"]
+  repository --> resource["Job: armazenamento não detalhado na fixture"]
+  t1 -.-> t3["T-003: negar outros tenants sem revelar existência; escopo pendente"]
+  t2 -.-> t3

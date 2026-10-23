@@ -21,6 +21,11 @@ You turn a validated spec/SDD into a sliceable task list. Read-only on product c
 
 Full schemas: `references/pack-schemas.md`. `build-report.mjs` prints a `WARN` for every drift.
 
+Before drafting tasks, read [task-writing.md](../references/task-writing.md). Apply its
+practical ASD-STE100 principles in the project's language. Preserve SDD meaning and
+technical identifiers. Review action, scope, conditions, observable acceptance and
+requirement references before dispatch; do not treat “80%” as a computed language gate.
+
 ## payloads.json shape
 
 ```json
@@ -50,8 +55,10 @@ Copy bodies from the spec. If the spec describes an outcome in prose only, put t
   "tasks": [
     {
       "id": "T-001",
-      "title": "short",
-      "slice": "what this worktree owns",
+      "title": "Rejeite quantidades negativas",
+      "slice": "Validação da quantidade no serviço de carrinho existente.",
+      "description": "Se a quantidade for negativa, retorne o erro definido em RF-02. Preserve o carrinho após a recusa.",
+      "acceptance": ["Com quantidade negativa, a operação retorna o erro de RF-02.", "Após a recusa, os itens e quantidades do carrinho permanecem inalterados."],
       "worktree": 1,
       "status": "OPEN",
       "version": 0,
@@ -67,6 +74,10 @@ Copy bodies from the spec. If the spec describes an outcome in prose only, put t
 ```
 
 Split so each worktree has a coherent slice (few overlapping files). `worktree` is 1..N. If tasks < N, use fewer worktrees — never empty ones.
+The example assumes RF-02 defines that rejection; derive real criteria from the supplied
+SDD. Keep `description`, `acceptance` and `refs` in JSON. Generate TASKS.md using
+`run-meta.mjs sync --dir "$OUT"` after writing the initial TASKS.json, so status updates
+preserve the same readable task details. Do not add requirements only to Markdown.
 
 Status values: `OPEN` | `IN_PROGRESS` | `DONE` | `BLOCKED`. You only emit `OPEN`. The implementer adds `red`, `green`, `reversal`, `tests`, `files` and `commits` to each row. Leave them out.
 

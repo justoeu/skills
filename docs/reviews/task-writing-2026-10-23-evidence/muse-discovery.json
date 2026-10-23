@@ -1,0 +1,44 @@
+[
+  {
+    "id": "abuse-audit",
+    "name": "abuse-audit",
+    "path": "$HOME/.agents/skills/abuse-audit/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  },
+  {
+    "id": "atlas-docs",
+    "name": "atlas-docs",
+    "path": "$HOME/.agents/skills/atlas-docs/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  },
+  {
+    "id": "deep-audit",
+    "name": "deep-audit",
+    "path": "$HOME/.agents/skills/deep-audit/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  },
+  {
+    "id": "make-me-happy",
+    "name": "make-me-happy",
+    "path": "$HOME/.agents/skills/make-me-happy/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  },
+  {
+    "id": "sonar-swift-local",
+    "name": "sonar-swift-local",
+    "path": "$HOME/.agents/skills/sonar-swift-local/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  },
+  {
+    "id": "ultra-deep-audit",
+    "name": "ultra-deep-audit",
+    "path": "$HOME/.agents/skills/ultra-deep-audit/SKILL.md",
+    "activation": "on",
+    "diagnostics": []
+  }
+]

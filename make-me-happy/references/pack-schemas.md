@@ -42,13 +42,23 @@ started_at, finished_at quando aplicável e note opcional. Use `run-meta step`.
 
 ```json
 {"kind":"feature","spec":"/abs/repo/docs/cart.md","tasks":[
- {"id":"T-001","title":"Reject invalid quantity","worktree":1,"version":0,
+ {"id":"T-001","title":"Rejeite quantidades negativas","worktree":1,"version":0,
+  "slice":"Validação da quantidade no serviço de carrinho existente.",
+  "description":"Se a quantidade for negativa, retorne o erro definido em RF-1.",
+  "acceptance":["Com quantidade negativa, a operação retorna o erro de RF-1.",
+                "Após a recusa, o carrinho permanece inalterado."],
   "status":"OPEN","validation":"red-green","depends_on":[],"refs":["RF-1"],
   "tests_added":0,"red_green":false,"immutability":false}]}
 ```
 
 IDs únicos, dependências existentes e acíclicas. Estados: OPEN|IN_PROGRESS|DONE|BLOCKED.
 Peça estrutural leva structural:true e refs do requisito correspondente.
+Tasks novas incluem `slice`, `description` e `acceptance` (lista de strings).
+O exemplo pressupõe esse contrato em RF-1; siga o SDD real e a
+[orientação de escrita](task-writing.md). O schema permanece 2: campos descritivos
+já suportados continuam opcionais para leitura de packs antigos. O espelho Markdown
+preserva esses detalhes. Alterar a descrição, responsabilidade, justificativa ou aceite
+invalida evidências anteriores do plano, como alterações nos demais inputs.
 
 Modos de validação e campos de conclusão:
 

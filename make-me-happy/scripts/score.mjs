@@ -353,6 +353,20 @@ function renderTasksMd(doc) {
     lines.push(
       `- ${box} **${t.id}** ${t.title}  | tests: ${t.tests_added || 0} | validation: ${t.validation || 'red-green'} (${taskValidation(t) ? 'verified' : 'pending'}) | immutability: ${t.immutability ? 'yes' : 'no'} | wt: ${t.worktree ?? '-'} | ${t.status}`,
     );
+    for (const [field, label] of [['slice', 'Escopo'], ['description', 'Descrição'], ['why', 'Motivo']]) {
+      if (typeof t[field] === 'string' && t[field].trim())
+        lines.push('', ...`${label}: ${t[field]}`.split('\n').map(line => `  ${line}`));
+    }
+    const acceptance = Array.isArray(t.acceptance) ? t.acceptance.filter(item => typeof item === 'string' && item.trim()) : [];
+    if (acceptance.length) {
+      lines.push('', '  Aceite:');
+      for (const item of acceptance)
+        lines.push(...item.split('\n').map((line, i) => `${i === 0 ? '  - ' : '    '}${line}`));
+    }
+    for (const [field, label] of [['refs', 'Referências'], ['depends_on', 'Dependências']]) {
+      if (Array.isArray(t[field]) && t[field].length)
+        lines.push('', `  ${label}: ${t[field].join(', ')}`);
+    }
   }
   lines.push('');
   return lines.join('\n');

@@ -1,0 +1,22 @@
+✔ TL-01: divergent bytes survive --fix in a retained backup (7.092541ms)
+✔ TL-01: failed symlink creation restores original copy (4.361667ms)
+✔ TL-01: symlink content in a copied skill is preserved without following it (4.942709ms)
+✔ TL-02: another skill inside the same harness is rejected (2.694ms)
+✔ TL-02: aliases must point to the exact canonical skill (2.940625ms)
+✔ TL-03: dangling symlink diagnosed and ensure refuses safely (2.634708ms)
+✔ TL-03: legacy markdown does not crash or get overwritten by ensure (2.29925ms)
+✔ harnessSkills lista pastas com SKILL.md (ignora scripts/) (2.050333ms)
+✔ skillVersion lê metadata.version; null sem frontmatter/versão (1.178209ms)
+✔ auditRoot: symlink ok · cópia velha = DRIFT · ausente = INFO (2.805375ms)
+✔ cópia com arquivo exclusivo nunca é trocada pelo --fix (1.973625ms)
+✔ fixDrift troca cópia subconjunto por symlink; ensureSkill cria link faltante (3.2655ms)
+✔ runCheck agrega por root e denuncia symlink para fora do harness (2.354708ms)
+✔ CLI: exit 1 com drift; --fix resolve e exit 0 (181.476917ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 289.718709

@@ -8,7 +8,7 @@ description: >
   Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
   não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.4.0
+  version: 1.5.0
   aliases: mmh
 ---
 
@@ -118,6 +118,9 @@ Protocolo de evidência e recuperação: [references/lifecycle.md](references/li
 `agents/planner.md` produz TASKS.json, TASKS.md, flow.mmd, payloads.json e spec-summary.md.
 Toda task tem id estável, responsabilidade, critério de aceite, referências, worktree,
 dependências e modo de validação. Toda tela tem contrato `kind:"ui"` com jornada e estados.
+Após confirmar o SDD, aplique [escrita de tasks](references/task-writing.md): adaptação
+prática do ASD-STE100 (~80%), no idioma do projeto, com ações diretas, termos consistentes
+e aceite observável. O percentual não é um score nem uma exigência de inglês controlado.
 
 - Separe slices por responsabilidade; evite arquivos compartilhados.
 - Dependências na mesma slice são sequenciais. Entre slices, use **ondas**: primeiro

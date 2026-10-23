@@ -1,0 +1,190 @@
+[
+  {
+    "path": "make-me-happy/README.md",
+    "sha256": "f02d674ee5d054baa7839d6cd9c2e1472a7d23558a86f0b98d07cdb6495d3bd1"
+  },
+  {
+    "path": "make-me-happy/SKILL.md",
+    "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+  },
+  {
+    "path": "make-me-happy/agents/correctness-reviewer.md",
+    "sha256": "093d404392b77e9bd402874bca4185280e2c094bf1b1bfe3ad6971bf27efe954"
+  },
+  {
+    "path": "make-me-happy/agents/explorer.md",
+    "sha256": "a08a64113c3d711ef6a80996c146b5aabef044da783b9f8b299e3a663e121430"
+  },
+  {
+    "path": "make-me-happy/agents/hook-arch-alignment.md",
+    "sha256": "96ee620ef7648cebd7beeb371febdc56f82e69fbfa59fa5884d0bf17c2e1908c"
+  },
+  {
+    "path": "make-me-happy/agents/hook-overengineering.md",
+    "sha256": "ff39fbf489eb89eccc3d4fafbd870b1bfc2a41303672d425c2cceec766ab484f"
+  },
+  {
+    "path": "make-me-happy/agents/hook-performance.md",
+    "sha256": "066458d6e66d144ce7b47452a08b4b080b32cc03c2eca53e90af061c1d093efe"
+  },
+  {
+    "path": "make-me-happy/agents/hook-reinvention.md",
+    "sha256": "4a35a60a58bab47945886ed3d7d3cda8e5994cb86bb0e3f4bd3382494c546732"
+  },
+  {
+    "path": "make-me-happy/agents/hook-security.md",
+    "sha256": "b116407b1e017426e3878a64d0873ec265b54f384e1853a8401be6be7cf67cbf"
+  },
+  {
+    "path": "make-me-happy/agents/immutability.md",
+    "sha256": "cdf9e783c799b2c5232ab651e8baf87f7c6ff01d8cdf26cc5e617173678186ee"
+  },
+  {
+    "path": "make-me-happy/agents/implementer.md",
+    "sha256": "bd12a5afebf840b6d40d4868b9175eec7442a6f5b377f2805ec0837e498e081d"
+  },
+  {
+    "path": "make-me-happy/agents/planner.md",
+    "sha256": "36bd95b35fa288bf57eb5dddb74eff7041478b90e451e1a9fcbf7a78253ab782"
+  },
+  {
+    "path": "make-me-happy/agents/spec-reviewer.md",
+    "sha256": "9e78778034ca75e4d7181a26c6c668524882af590325f33bd2e2f21680e5079d"
+  },
+  {
+    "path": "make-me-happy/agents/standards-reviewer.md",
+    "sha256": "0050668e481bdfc9d883ade3c1ba8ccee4bb6c36a16e79c21532b36a56db75f1"
+  },
+  {
+    "path": "make-me-happy/agents/ui-acceptance.md",
+    "sha256": "c5520fb8861b247681b3349fc3c56830871bc955797f7e82f403408e80338e39"
+  },
+  {
+    "path": "make-me-happy/catalogs/fowler-smells.md",
+    "sha256": "0c63acedce5a0cb2175e9919ea4abdf9b0ee5c18b05f97bfc66778f87aaedeb5"
+  },
+  {
+    "path": "make-me-happy/catalogs/overengineering.md",
+    "sha256": "880eecdf0bbde2cf04fc0266367dfa4ff6f3b6c0244e848e45491d3a164c8aa7"
+  },
+  {
+    "path": "make-me-happy/catalogs/reinvention-checklist.md",
+    "sha256": "f5b177f64a8086ee60db2845baac1b3a345768efbe558683039afa1e7bf797ba"
+  },
+  {
+    "path": "make-me-happy/references/lifecycle.md",
+    "sha256": "d2537d9be5950c5097bdc767a625b4f0e8a5410b146aa316fb58c216dcf8c888"
+  },
+  {
+    "path": "make-me-happy/references/pack-schemas.md",
+    "sha256": "0afcaba7f71b6becddb3faf5cc26d2dc1909c2b357c303b94fc22560571a9633"
+  },
+  {
+    "path": "make-me-happy/references/task-writing.md",
+    "sha256": "9724caac95fc748d21a2efb7e8f353507538ac163b69fcbc7c9b72c2bb909b7d"
+  },
+  {
+    "path": "make-me-happy/scripts/build-report.mjs",
+    "sha256": "17a3c0bcf1c6ef0afc4242b4339d76a9a52c9edc864c418b6faa230b0a01ed64"
+  },
+  {
+    "path": "make-me-happy/scripts/hooks.mjs",
+    "sha256": "42c94d326d74e84272f10c75f0a10e10b46a988c42d977e2d14acf8d26f17794"
+  },
+  {
+    "path": "make-me-happy/scripts/report/load-pack.mjs",
+    "sha256": "2ac779380be668a23f966d2095f07dbbed8cb55b7d22a5e5016579829adf559e"
+  },
+  {
+    "path": "make-me-happy/scripts/report/markdown.mjs",
+    "sha256": "bff3e155fd35d84016814ba08651f948d9cbda4932e5a41f18b047eaaac2ce50"
+  },
+  {
+    "path": "make-me-happy/scripts/report/render.mjs",
+    "sha256": "4b4125ff7153202fa885f4c4220095915693c747d10ec4c357d11771312a3d2b"
+  },
+  {
+    "path": "make-me-happy/scripts/resume.mjs",
+    "sha256": "5008c4d0413aec9e04c914f53023c2ecb95ef59bcdcc536591729ff1cfc3bb44"
+  },
+  {
+    "path": "make-me-happy/scripts/run-meta.mjs",
+    "sha256": "e1c1147145786b1317d06836eab53b4e48cb05e2382768c0ba58a8d4f368b35f"
+  },
+  {
+    "path": "make-me-happy/scripts/score.mjs",
+    "sha256": "2383b8d21fa956d85650099befefd307713f764ef1f8e02cb15d666024b31145"
+  },
+  {
+    "path": "make-me-happy/scripts/state-io.mjs",
+    "sha256": "2de0731bd4994e461151564a11659c73527f18d7399c92c21a29a425bb7c9209"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/browser-runtime.test.mjs",
+    "sha256": "10bd9545b242d3e08189d398f44bbf6b3a5d2c8edffd23f37ccfb2cd8bd8b9d7"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/build-report.test.mjs",
+    "sha256": "80bbe777ed8187798fd179c8733774db3dd0c3951d8a1c1f116187b94c3b65b7"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/closure-regression.test.mjs",
+    "sha256": "d9d64c155f7ca3d995a5dba7f6f34d1cf26df2b9a5ec18edc555f6a05c60b4d3"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/forward-workflow.test.mjs",
+    "sha256": "b250367897041afcde9a41dd27657faa371f5725841bc531b93b97e0bc755b3b"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/helpers/complete-pack.mjs",
+    "sha256": "d50a5b90200930f409224a51400197522961cf516e147c6dc4b6f2a5509702fd"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/hooks-ui-regression.test.mjs",
+    "sha256": "27f0c6f87770abd5770156959e5457bdb9ed02db638a283b3d3018de2b6c53d6"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/hooks.test.mjs",
+    "sha256": "3290289ca35934dbe06c73321f9bb97576ab558f864137ed1dc647f112403f56"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/lifecycle-regression.test.mjs",
+    "sha256": "36634b9c4963f5f2b58faebb518e145d9048368a83a8e2ff088c670e23feb064"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/resume.test.mjs",
+    "sha256": "635846f619bea091ada04ad17a06f00a3f4ac1d4d53ec9364f6837bb8fc82f1d"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/score.test.mjs",
+    "sha256": "399eb1203689b3f6b7c76f6f3e8f44ba1ec1908a8c71c0184ee3f36974c11aed"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/state-evidence.test.mjs",
+    "sha256": "14592c47174674fae4d30f656e45a55f86be3459cab93885c9dba3c3ac5a2c09"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/task-writing.test.mjs",
+    "sha256": "a700361e34384bf486006a52edd5d49344644009b4391fb268df24ffa541f400"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/ui-acceptance.test.mjs",
+    "sha256": "5c2af0f725b6ee836143050031a14790cefe939534fd0dd296ec4a438f6eb945"
+  },
+  {
+    "path": "make-me-happy/scripts/tests/worktrees.test.mjs",
+    "sha256": "3ebc4a6fd8cfc508265c537cc9720c8011d38e88ba58f675f691795b7fdb9059"
+  },
+  {
+    "path": "make-me-happy/scripts/ui-acceptance.mjs",
+    "sha256": "7eea22d2a7ff8df987451d8b7887d51a535826cefec21ebc9f55c6e58f69e8ed"
+  },
+  {
+    "path": "make-me-happy/scripts/worktrees.mjs",
+    "sha256": "84f10ebb93717b79e04185848c63c155c2c4b0dcc4e61dc90e53424a0b40dcd6"
+  },
+  {
+    "path": "scripts/check-links.mjs",
+    "sha256": "151e3c43585b64eec5cc3da5139b3c0e0b346f790d26ff1d37743cbba25b7e68"
+  }
+]

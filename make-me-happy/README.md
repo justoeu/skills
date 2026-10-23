@@ -12,6 +12,9 @@ e [protocolo de estado/evidência](references/lifecycle.md) para os artefatos.
 - Reviews e hooks independentes, UI quando aplicável, gates e acompanhamento do projeto.
 - Resultados vinculados à revisão do código; HTML recalculado e fechamento selado.
 - `--fresh` preserva a run anterior em vez de apagar trabalho.
+- Tasks após o SDD usam uma [adaptação prática do ASD-STE100](references/task-writing.md):
+  ações diretas, termos consistentes e aceite observável. Descrição e aceite permanecem
+  no JSON, no Markdown regenerado e no HTML. Versão 1.5.0; schema 2 preservado.
 
 ```bash
 node --test make-me-happy/scripts/tests/*.test.mjs

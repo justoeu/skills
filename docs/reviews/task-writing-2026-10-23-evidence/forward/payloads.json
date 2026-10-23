@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Criar job CSV",
+    "kind": "http",
+    "method": "POST",
+    "path": "/exports",
+    "request": "Formato CSV; representação do pedido não definida.",
+    "responses": [
+      {
+        "status": 202,
+        "body": "Retorna id do job criado.",
+        "note": "Formato e representação do corpo pendentes em D-01; job criado em QUEUED."
+      }
+    ],
+    "notes": [
+      "Descrição em prosa; não é um exemplo de JSON executável."
+    ],
+    "tasks": [
+      "T-001"
+    ],
+    "spec_ref": "RF-1"
+  },
+  {
+    "name": "Consultar estado do job",
+    "kind": "http",
+    "method": "GET",
+    "path": "/exports/{id}",
+    "request": null,
+    "responses": [
+      {
+        "status": null,
+        "body": "Retorna estado do job.",
+        "note": "Código HTTP e representação pendentes em D-02."
+      }
+    ],
+    "notes": [
+      "null indica informação não definida; não é um valor do contrato."
+    ],
+    "tasks": [
+      "T-002"
+    ],
+    "spec_ref": "RF-2"
+  },
+  {
+    "name": "Rejeitar formato diferente de CSV",
+    "kind": "http",
+    "method": "POST",
+    "path": "/exports",
+    "request": "Formato diferente de CSV; representação não definida.",
+    "responses": [
+      {
+        "status": null,
+        "body": "Pedido rejeitado.",
+        "note": "Código HTTP e representação pendentes em D-03."
+      }
+    ],
+    "notes": [
+      "Nenhum código HTTP de erro foi escolhido."
+    ],
+    "tasks": [
+      "T-001"
+    ],
+    "spec_ref": "RF-3"
+  },
+  {
+    "name": "Negar pedidos de outros tenants",
+    "kind": "http",
+    "method": null,
+    "path": null,
+    "request": "Pedido de outro tenant; escopo de aplicação pendente.",
+    "responses": [
+      {
+        "status": null,
+        "body": "Pedido negado sem revelar existência.",
+        "note": "Escopo, código HTTP e representação pendentes em D-04."
+      }
+    ],
+    "notes": [
+      "Não atribui RF-4 a uma rota específica sem confirmar seu escopo."
+    ],
+    "tasks": [
+      "T-003"
+    ],
+    "spec_ref": "RF-4"
+  }
+]

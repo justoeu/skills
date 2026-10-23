@@ -1,0 +1,76 @@
+{
+  "kind": "feature",
+  "spec": "/tmp/mmh-task-writing-forward-2026-10-23/SDD.md",
+  "tasks": [
+    {
+      "worktree": 1,
+      "status": "OPEN",
+      "version": 0,
+      "validation": "red-green",
+      "tests_added": 0,
+      "red_green": false,
+      "immutability": false,
+      "id": "T-001",
+      "title": "Crie jobs de exportação CSV e rejeite outros formatos",
+      "slice": "Contrato de POST /exports nas camadas controller, service e repository existentes.",
+      "description": "Antes da implementação, resolva D-01 e D-03.\nSe o formato for CSV, crie o job no estado QUEUED.\nSe o formato for CSV, retorne HTTP 202 com id.\nSe o formato não for CSV, rejeite o pedido.",
+      "acceptance": [
+        "Com formato CSV, POST /exports cria um job no estado QUEUED.",
+        "Com formato CSV, POST /exports retorna HTTP 202 com o id do job criado.",
+        "Com formato diferente de CSV, POST /exports rejeita o pedido conforme o contrato a definir em D-03."
+      ],
+      "depends_on": [],
+      "refs": [
+        "RF-1",
+        "RF-3"
+      ]
+    },
+    {
+      "worktree": 1,
+      "status": "OPEN",
+      "version": 0,
+      "validation": "red-green",
+      "tests_added": 0,
+      "red_green": false,
+      "immutability": false,
+      "id": "T-002",
+      "title": "Retorne o estado do job consultado",
+      "slice": "Contrato de GET /exports/{id} nas camadas controller, service e repository existentes.",
+      "description": "Antes da implementação, resolva D-02.\nConsulte o job identificado por id.\nRetorne o estado do job.",
+      "acceptance": [
+        "Para o id de um job criado por POST /exports, GET /exports/{id} retorna o estado desse job."
+      ],
+      "depends_on": [
+        "T-001"
+      ],
+      "refs": [
+        "RF-2",
+        "RF-1"
+      ]
+    },
+    {
+      "worktree": 1,
+      "status": "OPEN",
+      "version": 0,
+      "validation": "red-green",
+      "tests_added": 0,
+      "red_green": false,
+      "immutability": false,
+      "id": "T-003",
+      "title": "Negue pedidos de outros tenants sem revelar existência",
+      "slice": "Autorização dos pedidos de exportação nas camadas existentes, no escopo a confirmar em D-04.",
+      "description": "Antes da implementação, resolva D-04.\nSe o pedido for de outro tenant, negue o pedido.\nNão revele a existência do recurso na resposta.",
+      "acceptance": [
+        "Pedidos de outros tenants são negados conforme o contrato a definir em D-04.",
+        "A resposta de negação não revela a existência do recurso, conforme o critério observável a definir em D-04."
+      ],
+      "depends_on": [
+        "T-001",
+        "T-002"
+      ],
+      "refs": [
+        "RF-4"
+      ]
+    }
+  ]
+}

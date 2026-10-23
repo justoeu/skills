@@ -1,0 +1,357 @@
+{
+  "verified_at": "2026-10-23T15:29:50.524Z",
+  "roots": [
+    "~/.claude/skills",
+    "~/.codex/skills",
+    "~/.agents/skills",
+    "~/.grok/skills",
+    "~/.config/opencode/skills",
+    "~/.gemini/antigravity-cli/skills",
+    "~/.gemini/config/skills"
+  ],
+  "links": [
+    {
+      "root": "~/.claude/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.claude/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.codex/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.agents/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.grok/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.config/opencode/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.gemini/antigravity-cli/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "abuse-audit",
+      "canonical": "abuse-audit",
+      "version": "1.0.1",
+      "sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "atlas-docs",
+      "canonical": "atlas-docs",
+      "version": "2.0.0",
+      "sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "deep-audit",
+      "canonical": "deep-audit",
+      "version": "2.0.0",
+      "sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "make-me-happy",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "sonar-swift-local",
+      "canonical": "sonar-swift-local",
+      "version": "2.1.0",
+      "sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "ultra-deep-audit",
+      "canonical": "ultra-deep-audit",
+      "version": "2.0.1",
+      "sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "root": "~/.gemini/config/skills",
+      "name": "mmh",
+      "canonical": "make-me-happy",
+      "version": "1.5.0",
+      "sha256": "a476341192fd6b68335c14a3e81508aef1d7b0d34ae3724c297bcc8ad0db70e4"
+    }
+  ]
+}

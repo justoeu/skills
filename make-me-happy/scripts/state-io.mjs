@@ -164,6 +164,9 @@ export function captureEvidence(dir) {
         [
           'id',
           'title',
+          'slice',
+          'description',
+          'why',
           'kind',
           'validation',
           'validation_reason',

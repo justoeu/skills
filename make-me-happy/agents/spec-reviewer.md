@@ -19,6 +19,12 @@ Quote the spec line for each finding. **Under 400 words.**
 
 - Diff command + commit list
 - Path or fetched contents of the spec
+- TASKS.json, including descriptions, acceptance criteria and requirement references
+
+Read [task-writing.md](../references/task-writing.md) when checking task meaning.
+Compare acceptance criteria with the cited SDD and the implemented behavior. Report
+invented or weakened requirements and ambiguities that affect implementation or verification.
+Sentence length and editorial preferences alone do not justify REJECT.
 
 If the spec is missing or draft, return REJECT with the missing decision. The flow must resolve the spec before implementation; SKIP is not a successful spec review.
 
