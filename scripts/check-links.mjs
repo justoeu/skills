@@ -5,7 +5,8 @@
  *   node scripts/check-links.mjs [--fix] [--ensure <skill>] [--roots dir,dir,...]
  *
  * Hosts default (roots de skills): ~/.claude/skills, ~/.codex/skills,
- * ~/.agents/skills (muse/opencode/agy), ~/.grok/skills.
+ * ~/.agents/skills (muse), ~/.grok/skills, ~/.config/opencode/skills,
+ * ~/.gemini/antigravity-cli/skills e ~/.gemini/config/skills (agy).
  *
  * Regras (fonte única da verdade = este repo; skill se expõe por symlink):
  * - DRIFT  entrada é pasta física onde deveria ser symlink (cópia velha).
@@ -34,6 +35,9 @@ export const DEFAULT_ROOTS = [
   '~/.codex/skills',
   '~/.agents/skills',
   '~/.grok/skills',
+  '~/.config/opencode/skills',
+  '~/.gemini/antigravity-cli/skills',
+  '~/.gemini/config/skills',
 ];
 
 /** alias de invocação → skill canônica no harness */

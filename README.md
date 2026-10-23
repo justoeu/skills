@@ -33,8 +33,16 @@ verdade; mudança aqui aparece na hora em todos os hosts — não existe
 |---|---|
 | Claude Code | `~/.claude/skills` |
 | Codex | `~/.codex/skills` |
-| muse · opencode · agy | `~/.agents/skills` (root compartilhado) |
+| muse | `~/.agents/skills` |
+| OpenCode | `~/.config/opencode/skills` (também lê `~/.agents/skills` e `~/.claude/skills`) |
+| Agy CLI | `~/.gemini/antigravity-cli/skills` |
+| Antigravity App/IDE | `~/.gemini/config/skills` |
 | grok | `~/.grok/skills` |
+
+Roots conferidos na documentação de [OpenCode](https://dev.opencode.ai/v2/docs/skills/)
+e [Antigravity](https://www.antigravity.google/docs/skills). O CLI do Muse lista as
+skills de usuário em `~/.agents/skills`. Reinicie a sessão do agente se ela conservar
+um catálogo ou instruções carregadas antes da atualização.
 
 Implantar / auditar a exposição:
 
@@ -221,7 +229,9 @@ ln -s $CANON/make-me-happy      ~/.claude/skills/mmh            # alias → a me
 ln -s $CANON/atlas-docs         ~/.claude/skills/atlas-docs
 ln -s $CANON/sonar-swift-local  ~/.claude/skills/sonar-swift-local
 
-# repetir para ~/.agents/skills, ~/.grok/skills, ~/.codex/skills, ~/.config/opencode/skills
+# Para todos os roots da tabela, prefira o checker:
+node scripts/check-links.mjs --ensure make-me-happy
+# O alias mmh é um segundo symlink para make-me-happy em cada root.
 ```
 
 ## Por que o `AGENTS.md` está no `.gitignore`
