@@ -1,0 +1,13 @@
+{
+  "root": "/tmp/mmh-stop-restart-race-K2uT7s",
+  "dir": "/private/tmp/mmh-stop-restart-race-K2uT7s/docs/impl/make-me-happy/2026-10-23-no-git-cdf99fbd-edf3-4f43-9f14-aac71126e9d0",
+  "first_token": "449ad916-2404-4035-8476-7280b213c250",
+  "replacement_token": "700f99ac-7145-4911-b774-30c2f8d98c5f",
+  "old_completed": true,
+  "replacement_started_before_stop_returned": true,
+  "elapsed_ms": 15101,
+  "stop": {
+    "ok": false,
+    "error": "stop requested; watcher has not confirmed its final refresh yet"
+  }
+}

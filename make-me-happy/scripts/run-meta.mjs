@@ -15,20 +15,9 @@ import {
 } from './state-io.mjs';
 import { scorePack, renderTasksMd } from './score.mjs';
 import { buildArchMapFromAtlas } from './hooks.mjs';
-
-export const STEPS = [
-  'explore',
-  'planner',
-  'worktrees',
-  'implement',
-  'immutability',
-  'ui-acceptance',
-  'review',
-  'score',
-  'clean',
-  'project-gates',
-];
-export const STEP_STATUS = ['in_progress', 'done', 'failed', 'skipped'];
+import { STEPS, STEP_STATUS } from './steps.mjs';
+import { refreshAfterMutation } from './build-report.mjs';
+export { STEPS, STEP_STATUS } from './steps.mjs';
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
   return i < 0 ? fallback : (process.argv[i + 1] ?? fallback);
@@ -50,7 +39,7 @@ function syncTasks(dir) {
 export function recordStep(dir, step, status, { note, now = new Date() } = {}) {
   if (!STEPS.includes(step)) throw new Error(`unknown step ${step}`);
   if (!STEP_STATUS.includes(status)) throw new Error(`unknown status ${status}`);
-  return withPackLock(dir, () => {
+  const result = withPackLock(dir, () => {
     const meta = readJson(metaFile(dir), {}),
       at = now.toISOString();
     meta.steps ||= {};
@@ -67,6 +56,8 @@ export function recordStep(dir, step, status, { note, now = new Date() } = {}) {
     writeJson(metaFile(dir), meta);
     return meta;
   });
+  refreshAfterMutation(dir);
+  return result;
 }
 export function initRun(
   root,
@@ -140,10 +131,11 @@ export function initRun(
           }),
   );
   writeJson(path.join(dir, 'tracking.json'), { files: [], reason: null });
+  refreshAfterMutation(dir);
   return { dir, meta };
 }
 export function updateTask(dir, result) {
-  return withPackLock(dir, () => {
+  const applied = withPackLock(dir, () => {
     const doc = readJson(path.join(dir, 'TASKS.json'));
     if (!Array.isArray(doc?.tasks)) throw new Error('TASKS.json missing');
     const row = doc.tasks.find((t) => t.id === result.id);
@@ -169,6 +161,8 @@ export function updateTask(dir, result) {
     writeJson(metaFile(dir), meta);
     return row;
   });
+  refreshAfterMutation(dir);
+  return applied;
 }
 export function stampFile(dir, file, snapshot) {
   return withPackLock(dir, () => {
@@ -182,7 +176,7 @@ export function stampFile(dir, file, snapshot) {
   });
 }
 export function closeRun(dir) {
-  return withPackLock(dir, () => {
+  const closed = withPackLock(dir, () => {
     const result = scorePack(dir);
     writeJson(path.join(dir, 'score.json'), result);
     if (!result.closable) throw new Error(result.blockers.map((b) => b.reason).join('\n'));
@@ -202,6 +196,8 @@ export function closeRun(dir) {
     });
     return result;
   });
+  refreshAfterMutation(dir);
+  return closed;
 }
 if (path.basename(process.argv[1] || '') === 'run-meta.mjs') {
   try {
@@ -243,7 +239,10 @@ if (path.basename(process.argv[1] || '') === 'run-meta.mjs') {
       );
     else if (cmd === 'task')
       console.log(JSON.stringify(updateTask(dir, readJson(path.resolve(arg('result', '')))), null, 2));
-    else if (cmd === 'sync') withPackLock(dir, () => syncTasks(dir));
+    else if (cmd === 'sync') {
+      withPackLock(dir, () => syncTasks(dir));
+      refreshAfterMutation(dir);
+    }
     else if (cmd === 'snapshot') {
       const snapshot = captureEvidence(dir);
       writeJson(within(dir, arg('file', 'validation-start.json')), snapshot);

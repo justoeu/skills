@@ -1,0 +1,26 @@
+{
+  "root": "/tmp/mmh-stop-restart-failure-VLqBBu",
+  "dir": "/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878",
+  "originalFailure": "EISDIR: illegal operation on a directory, rename '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html.41497.1fbd7870-a39d-475b-a0aa-17cad680fa84.tmp' -> '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html'",
+  "first_token": "9bb0c337-cddd-42b5-9879-22c81348ca00",
+  "replacement_token": "3c53b34b-967a-4b2e-aaef-e7bdf1f1ef90",
+  "replacement_still_running": true,
+  "elapsed_ms": 102,
+  "archive": {
+    "run_id": "7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878",
+    "token": "9bb0c337-cddd-42b5-9879-22c81348ca00",
+    "pid": 41497,
+    "status": "failed",
+    "interval_ms": 600000,
+    "started_at": "2026-10-23T16:32:01.450Z",
+    "last_success_at": "2026-10-23T16:32:01.453Z",
+    "last_error": "EISDIR: illegal operation on a directory, rename '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html.41497.1fbd7870-a39d-475b-a0aa-17cad680fa84.tmp' -> '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html'",
+    "stop_requested": true,
+    "reason": "stopped",
+    "running": false
+  },
+  "stop": {
+    "ok": false,
+    "error": "EISDIR: illegal operation on a directory, rename '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html.41497.1fbd7870-a39d-475b-a0aa-17cad680fa84.tmp' -> '/private/tmp/mmh-stop-restart-failure-VLqBBu/docs/impl/make-me-happy/2026-10-23-no-git-7a477bc3-d7fa-4d0d-bc41-8fb13cbf2878/report.html'"
+  }
+}

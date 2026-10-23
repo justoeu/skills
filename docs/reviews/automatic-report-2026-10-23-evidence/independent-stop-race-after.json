@@ -1,0 +1,26 @@
+{
+  "root": "/tmp/mmh-stop-restart-race-v5m6iG",
+  "dir": "/private/tmp/mmh-stop-restart-race-v5m6iG/docs/impl/make-me-happy/2026-10-23-no-git-5452966c-d060-4a4d-9e4d-fe0ae8dc6506",
+  "first_token": "474be17a-f703-48d0-9353-5c3b2ec3bb85",
+  "replacement_token": "913e2ccd-f43b-4af7-8aec-425977fcea7f",
+  "old_completed": true,
+  "replacement_started_before_stop_returned": true,
+  "elapsed_ms": 105,
+  "stop": {
+    "ok": true,
+    "value": {
+      "run_id": "5452966c-d060-4a4d-9e4d-fe0ae8dc6506",
+      "token": "474be17a-f703-48d0-9353-5c3b2ec3bb85",
+      "pid": 40289,
+      "status": "stopped",
+      "interval_ms": 600000,
+      "started_at": "2026-10-23T16:31:36.830Z",
+      "last_success_at": "2026-10-23T16:31:36.849Z",
+      "last_error": null,
+      "stop_requested": true,
+      "reason": "stopped",
+      "stopped_at": "2026-10-23T16:31:36.849Z",
+      "running": false
+    }
+  }
+}

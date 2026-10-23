@@ -9,7 +9,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { scorePack, verdictOf, immutabilityTests, taskValidation } from '../score.mjs';
-import { STEPS } from '../run-meta.mjs';
+import { STEPS } from '../steps.mjs';
+import { reportWatchStatus } from '../report-watch-state.mjs';
 
 export const AXES = ['standards', 'spec', 'correctness'];
 export const HOOKS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness', 'ui-acceptance'];
@@ -64,6 +65,22 @@ export function loadPack(dir, { now = new Date() } = {}) {
 
   const results = Array.isArray(tasksDoc) ? loadResults(dir, readJson) : new Map();
   const tasks = normalizeTasks(tasksDoc, results, warn);
+  const taskRows = Array.isArray(tasksDoc?.tasks) ? tasksDoc.tasks : [];
+  for (const task of tasks) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(task.id)) continue;
+    const progress = readJson(`progress/${task.id}.json`);
+    if (!progress) continue;
+    const row = taskRows.find(t => t.id === task.id);
+    if (!['IN_PROGRESS', 'BLOCKED'].includes(task.status) || meta.status === 'closed') continue;
+    if (progress.run_id !== meta.run_id || progress.id !== task.id || progress.task_version !== (row?.version || 0)
+      || typeof progress.summary !== 'string' || !Number.isFinite(Date.parse(progress.at))) {
+      warn(`progress/${task.id}.json`, 'andamento de outra execução/versão ou formato inválido; ignorado');
+      continue;
+    }
+    task.progress = { ...progress };
+    for (const key of ['completed', 'next', 'blockers', 'files'])
+      task.progress[key] = Array.isArray(progress[key]) ? progress[key].filter(v => typeof v === 'string') : [];
+  }
   const immutRaw = readJson('immutability.json');
   const immutability = normalizeImmutability(immutRaw, warn);
   const worktrees = readJson('worktrees.json');
@@ -119,6 +136,7 @@ export function loadPack(dir, { now = new Date() } = {}) {
     times,
     warnings,
     generatedAt: now.toISOString(),
+    reportWatch: reportWatchStatus(dir),
   };
 }
 

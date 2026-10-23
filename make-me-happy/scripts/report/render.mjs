@@ -250,6 +250,18 @@ function nav() {
   ).join('')}</nav>`;
 }
 
+function reportFreshness(p) {
+  const watch = p.reportWatch;
+  const active = watch?.running && watch?.run_id === p.meta.run_id && watch?.status === 'running' && p.meta.status !== 'closed';
+  const interval = Number.isFinite(watch?.interval_ms) ? watch.interval_ms : 600000;
+  return `<div class="card" id="report-refresh" data-generated-at="${esc(p.generatedAt)}" data-interval-ms="${interval}"
+    data-auto-refresh="${active}" data-storage-key="${esc('mmh-report:' + (p.meta.run_id || p.dir))}">
+    <span id="report-age">Captura gerada em ${esc(fmtDate(p.generatedAt))}.</span>
+    <span class="muted">${active ? `Atualização periódica a cada ${esc(interval / 60000)} min; a página verifica o arquivo a cada minuto.` : 'Captura estática; atualização periódica inativa nesta captura.'}</span>
+    <button type="button" id="report-reload">Atualizar agora</button>
+  </div>`;
+}
+
 function panel(id, inner, first = false) {
   return `<section class="panel" role="tabpanel" id="panel-${id}" aria-labelledby="tab-${id}" tabindex="0"${first ? '' : ' hidden'} data-panel="${id}">${inner}</section>`;
 }
@@ -410,6 +422,12 @@ function taskCard(t) {
     </summary>
     <div class="task-body">
       ${t.description ? md(t.description) : ''}
+      ${t.progress ? `<aside class="evi warn"><strong>Andamento informado pelo executor — ainda não validado</strong>
+        <div class="small">${esc(fmtDate(t.progress.at))}</div><p>${inline(t.progress.summary)}</p>
+        ${[['completed', 'Feito'], ['next', 'Próximos passos'], ['blockers', 'Impedimentos'], ['files', 'Arquivos']]
+          .filter(([key]) => t.progress[key].length)
+          .map(([key, label]) => `<strong>${label}</strong><ul>${t.progress[key].map(item => `<li>${inline(item)}</li>`).join('')}</ul>`).join('')}
+      </aside>` : ''}
       ${t.refs.length ? `<div class="kv"><span class="k">Refs</span> ${t.refs.map((r) => `<code>${esc(r)}</code>`).join(' ')}</div>` : ''}
       ${t.depends_on.length ? `<div class="kv"><span class="k">Depende de</span> ${t.depends_on.map((r) => `<code>${esc(r)}</code>`).join(' ')}</div>` : ''}
       <div class="evi-grid">
@@ -937,6 +955,38 @@ const JS = `
   var ex=document.getElementById('task-expand');
   if(ex)ex.addEventListener('click',function(){var open=ex.dataset.open!=='1';
     document.querySelectorAll('details.task:not([hidden])').forEach(function(d){d.open=open;});ex.dataset.open=open?'1':'0';ex.textContent=open?'Recolher tudo':'Expandir tudo';});
+  // Refresh the local/static report while retaining the reader's task view.
+  var refresh=document.getElementById('report-refresh');
+  if(refresh){
+    var storageKey=refresh.dataset.storageKey;
+    try{
+      var view=JSON.parse(sessionStorage.getItem(storageKey)||'null');
+      sessionStorage.removeItem(storageKey);
+      if(view){
+        [q,fs,fw].forEach(function(el){if(el&&view.filters&&typeof view.filters[el.id]==='string')el.value=view.filters[el.id];});
+        document.querySelectorAll('details.task').forEach(function(d){d.open=Array.isArray(view.open)&&view.open.indexOf(d.querySelector('.tid').textContent)>=0;});
+        filter();if(Number.isFinite(view.scroll))requestAnimationFrame(function(){window.scrollTo(0,view.scroll);});
+      }
+    }catch(e){}
+    function reloadReport(){
+      try{
+        var filters={};[q,fs,fw].forEach(function(el){if(el)filters[el.id]=el.value;});
+        sessionStorage.setItem(storageKey,JSON.stringify({filters:filters,scroll:window.scrollY,
+          open:[].map.call(document.querySelectorAll('details.task[open]'),function(d){return d.querySelector('.tid').textContent;})}));
+      }catch(e){}
+      location.reload();
+    }
+    document.getElementById('report-reload').addEventListener('click',reloadReport);
+    function refreshTick(reload){
+      var age=Date.now()-Date.parse(refresh.dataset.generatedAt), interval=Number(refresh.dataset.intervalMs);
+      var active=refresh.dataset.autoRefresh==='true';
+      if(active&&age>interval+120000){
+        document.getElementById('report-age').textContent='Captura desatualizada: não houve atualização no intervalo esperado.';
+      }
+      if(reload&&active&&!document.hidden&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='SELECT')reloadReport();
+    }
+    refreshTick(false);setInterval(function(){refreshTick(true);},60000);
+  }
   // mermaid
   var mermaidP=null;
   function loadMermaid(){
@@ -1010,6 +1060,7 @@ export function renderReport(p) {
 <body>
 <div class="wrap">
 ${header(p)}
+${reportFreshness(p)}
 ${nav()}
 <main>
 ${TABS.map(([id], i) => panel(id, panels[id], i === 0)).join('\n')}

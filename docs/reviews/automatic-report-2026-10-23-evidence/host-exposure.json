@@ -1,0 +1,300 @@
+{
+  "captured_at": "2026-10-23T16:34:30.631597+00:00",
+  "count": 49,
+  "entries": [
+    {
+      "path": "~/.claude/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.claude/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.claude/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.claude/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.claude/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.claude/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.claude/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.codex/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.codex/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.codex/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.codex/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.codex/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.codex/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.codex/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.agents/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.agents/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.agents/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.agents/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.agents/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.agents/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.agents/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.grok/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.grok/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.grok/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.grok/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.grok/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.grok/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.grok/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.config/opencode/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.config/opencode/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.config/opencode/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.config/opencode/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.config/opencode/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.config/opencode/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.config/opencode/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.gemini/antigravity-cli/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.gemini/config/skills/abuse-audit",
+      "target": "~/Developer/harness/skills/abuse-audit",
+      "version": "1.0.1",
+      "skill_md_sha256": "b04a4f46265919d13c5f57d21f1dcded0c99b9fb00b1b678ba96b41e2ab2698b"
+    },
+    {
+      "path": "~/.gemini/config/skills/atlas-docs",
+      "target": "~/Developer/harness/skills/atlas-docs",
+      "version": "2.0.0",
+      "skill_md_sha256": "9602e3359feeb896b12ad929af1ee154e1a0692c85c065c051e255c41a73dbea"
+    },
+    {
+      "path": "~/.gemini/config/skills/deep-audit",
+      "target": "~/Developer/harness/skills/deep-audit",
+      "version": "2.0.0",
+      "skill_md_sha256": "0e67d04ac5d77732c9f0ddc382fa756cd17b0f2fac7f83204a319c369469fc40"
+    },
+    {
+      "path": "~/.gemini/config/skills/make-me-happy",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    },
+    {
+      "path": "~/.gemini/config/skills/sonar-swift-local",
+      "target": "~/Developer/harness/skills/sonar-swift-local",
+      "version": "2.1.0",
+      "skill_md_sha256": "9f7df26406bbe0c07f91084a272f9179c88495eae83bb787a9b5aa67078fee64"
+    },
+    {
+      "path": "~/.gemini/config/skills/ultra-deep-audit",
+      "target": "~/Developer/harness/skills/ultra-deep-audit",
+      "version": "2.0.1",
+      "skill_md_sha256": "c14156c0e50c568dbdf830d2d7958258dc974bd22136dc9ef06bcb268c8a8295"
+    },
+    {
+      "path": "~/.gemini/config/skills/mmh",
+      "target": "~/Developer/harness/skills/make-me-happy",
+      "version": "1.6.0",
+      "skill_md_sha256": "ce8cb505d463ad846c14a42a549abacbf9446da9994a5124182022c8deeb1405"
+    }
+  ]
+}

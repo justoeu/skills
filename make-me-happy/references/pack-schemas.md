@@ -10,6 +10,10 @@ para fechamento: adote a run e reexecute suas verificações.
 | TASKS.json / TASKS.md | Planner inicialmente; depois Oracle via task/sync |
 | flow.mmd, payloads.json, spec-summary.md | Planner |
 | results/T-id-version.json | Implementer proprietário da task; Oracle aplica |
+| progress/T-id.json | Implementer via task-progress; relato parcial identificado/versionado |
+| report-watch.json | Monitor local; ciclo, propriedade, último sucesso/erro |
+| report-watch-history/token.json | Monitor local; confirmação terminal preservada ao reiniciar |
+| report.html | Gerador atômico, por evento e pelo monitor de dez minutos |
 | worktrees.json | worktrees.mjs; nunca reconstruir sem conciliar Git |
 | tests.json, coverage.json, immutability.json | Oracle a partir da execução final |
 | reviews/axis.json + .md | Reviewer do eixo; Oracle carimba |
@@ -72,6 +76,16 @@ Modos de validação e campos de conclusão:
 Resultados individuais usam `{id, expected_version, patch}`. O helper não permite
 alterar id/worktree/depends_on via resultado; aplica somente a task e incrementa a
 versão, sem sobrescrever outras. Documentação completa em [lifecycle.md](lifecycle.md).
+
+## Andamento e monitoramento
+
+`progress/T-id.json` contém `run_id`, `id`, `task_version`, `at`, `summary` e listas
+opcionais `completed`, `next`, `blockers`, `files`. É informativo; não entra no selo
+nem nos gates. O HTML só mostra progresso da versão corrente de uma task ativa.
+`report-watch.json` e `report-watch-history/` também são operacionais, fora do selo.
+O histórico conserva o resultado terminal por token para confirmar paradas durante
+uma retomada concorrente. Comandos, pausa e tratamento
+de falhas estão em [automatic-report.md](automatic-report.md).
 
 ## Evidência obrigatória para resultados de verificação
 

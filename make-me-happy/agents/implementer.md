@@ -16,6 +16,11 @@ do projeto e comando de teste. OUT fica no checkout principal, não na slice.
    Oracle executar sync depois da integração do produtor; ordem declarada não basta.
 3. Envie resultado IN_PROGRESS para o Oracle aplicar. No loop task, execute uma task
    e devolva o controle; não antecipe a seguinte sem a confirmação combinada.
+   Após obter a versão aplicada, publique o andamento com `scripts/task-progress.mjs`.
+   Leia [automatic-report.md](../references/automatic-report.md): atualize o relato
+   após marcos/impedimentos e antes de comandos longos; registre trabalho novo em
+   checkpoints de até dez minutos quando puder executar o helper. O relato é parcial,
+   não muda DONE nem substitui o resultado e as evidências enviados ao Oracle.
 4. Valide pelo tipo da mudança:
    - `red-green`: falha relevante antes, mudança mínima, verde depois. Grave command,
      output_excerpt real e timestamps; prova por reversão quando viável, justificando

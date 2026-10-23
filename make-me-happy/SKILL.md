@@ -8,7 +8,7 @@ description: >
   Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
   não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.5.0
+  version: 1.6.0
   aliases: mmh
 ---
 
@@ -61,6 +61,9 @@ node "$SKILL_ROOT/scripts/resume.mjs" --root "$ROOT" --prefix mmh
 ```
 
 Mostre pack e próximo passo. Reuse loop/spec/ui_drive e o prefixo daquela run.
+Para uma run ativa, confira e retome a subtarefa de
+[atualização periódica do HTML](references/automatic-report.md). Não inicie monitor
+para pack fechado; preserve o relatório histórico.
 `historical_pack` identifica a última execução concluída e seu relatório; `pack`
 identifica apenas a execução ativa.
 Packs com branches antigas contendo `/` também são descobertos. Se houver mais de
@@ -112,6 +115,11 @@ se a escolha fast/guided/off não estiver resolvida pelo pedido; fast é o defau
 
 Schemas e protocolo de escrita: [references/pack-schemas.md](references/pack-schemas.md).
 Protocolo de evidência e recuperação: [references/lifecycle.md](references/lifecycle.md).
+
+Após obter OUT, inicie a [subtarefa de acompanhamento](references/automatic-report.md)
+em processo local supervisionado: geração imediata e a cada **10 minutos**. Confira
+o primeiro sucesso antes de anunciar que ela está ativa. Ela lê os registros do pack;
+o Oracle continua responsável por aplicar resultados e validar conclusão das tasks.
 
 ## 1. Planejar e distribuir
 
@@ -167,6 +175,9 @@ medir novamente após a integração. Não contar testes duplicados em reexecuç
 O Oracle aplica cada resultado com `run-meta.mjs task --dir "$OUT" --result <arquivo>`:
 controle de versão por task, escrita atômica e regeneração do TASKS.md. Antes de retomar,
 `run-meta.mjs sync --dir "$OUT"` repara o espelho se houve interrupção.
+Essas mudanças também regeneram o HTML. Implementers publicam andamento parcial com
+`task-progress.mjs`, conforme [o protocolo](references/automatic-report.md); o card
+mostra o relato e seu horário sem convertê-lo em evidência aprovada.
 
 ```bash
 node "$SKILL_ROOT/scripts/worktrees.mjs" sync --root "$ROOT" --index 2 --out "$OUT" --test-cmd "$TEST_CMD"
@@ -178,7 +189,9 @@ do teste, integra o commit testado e testa o resultado. Falha preserva recursos 
 reparo; repetir merge reconcilia uma interrupção. Conflitos não são resolvidos com
 `--ours`/descarte automático. Slice com task pendente permanece aberta após merge parcial.
 No loop task, ao pausar, registre o estado; pode integrar o que está verde sem apagar
-as tasks restantes. Suite pesada roda serialmente; limpe só recursos criados pela run.
+as tasks restantes. Pare o monitor com `report-watch.mjs stop --dir "$OUT"` e confira
+a captura final antes de devolver o controle. Suite pesada roda serialmente; limpe
+só recursos criados pela run.
 
 ## 4. Validar o resultado integrado
 
@@ -264,6 +277,7 @@ node "$SKILL_ROOT/scripts/worktrees.mjs" remove --root "$ROOT" --out "$OUT"
 node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root "$ROOT" --out "$OUT"
 node "$SKILL_ROOT/scripts/score.mjs" --dir "$OUT"
 node "$SKILL_ROOT/scripts/run-meta.mjs" close --dir "$OUT"
+node "$SKILL_ROOT/scripts/report-watch.mjs" stop --dir "$OUT"
 node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 ```
 

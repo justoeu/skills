@@ -1,0 +1,38 @@
+{
+  "root": "/tmp/mmh-report-watch-forward-6rEqQW",
+  "dir": "/private/tmp/mmh-report-watch-forward-6rEqQW/docs/impl/make-me-happy/2026-10-23-main-5ce3d410-02aa-4409-9ac4-bcff8ce89575",
+  "results": [
+    {
+      "name": "progress and report leave task state and evidence identity unchanged",
+      "ok": true
+    },
+    {
+      "name": "duplicate CLI start preserves existing lease",
+      "ok": true
+    },
+    {
+      "name": "real one-second timer observes latest canonical state",
+      "ok": true
+    },
+    {
+      "name": "stop after SIGKILL flushes latest data and removes automatic refresh",
+      "ok": true
+    },
+    {
+      "name": "restart after SIGKILL and cooperative stop complete",
+      "ok": true
+    },
+    {
+      "name": "busy writer prevents replacing report",
+      "ok": true
+    },
+    {
+      "name": "failed presentation preserves versioned mutation; rebuild excludes older progress",
+      "ok": true
+    },
+    {
+      "name": "strict build preserves previous HTML on invalid canonical JSON",
+      "ok": true
+    }
+  ]
+}
