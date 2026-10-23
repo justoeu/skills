@@ -1,0 +1,15 @@
+{
+  "root": "/tmp/mmh-native-late-WCvCth",
+  "dir": "/private/tmp/mmh-native-late-WCvCth/docs/impl/make-me-happy/2026-10-23-no-git-ce05bd4c-8909-40e4-a5ab-a3de1e0b4e4a",
+  "delayed": {
+    "code": 1,
+    "signal": null
+  },
+  "stderr": "native report ownership changed",
+  "native_token": "145d0128-f34b-4c60-8242-a54f94ed61c7",
+  "node_token": "e00049c2-2852-4a2a-a589-a2a7b83e3ec2",
+  "html_unchanged": true,
+  "state_unchanged": true,
+  "task_state_unchanged": true,
+  "evidence_unchanged": true
+}

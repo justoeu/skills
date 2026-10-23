@@ -1,0 +1,11 @@
+{
+  "root": "/tmp/mmh-native-publish-failure-qlMwpT",
+  "dir": "/private/tmp/mmh-native-publish-failure-qlMwpT/docs/impl/make-me-happy/2026-10-23-no-git-1a795138-70f0-44fc-b757-1049fc57e83f",
+  "old_success_at": "2026-10-23T19:32:55.648Z",
+  "failed_tick_preserved_heartbeat": true,
+  "failed_tick_stale": true,
+  "failed_stop_status": "failed",
+  "failed_stop_error": "fixture publication EIO",
+  "previous_html_preserved_during_both_failures": true,
+  "repaired_stop": "stopped"
+}

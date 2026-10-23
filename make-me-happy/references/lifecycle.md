@@ -18,8 +18,9 @@ Não contorne lock ativo. Após crash entre JSON e Markdown, `run-meta.mjs sync`
 TASKS.md a partir do JSON.
 
 O HTML usa o mesmo lock e escrita atômica, sem alterar agregados. A
-[subtarefa periódica](automatic-report.md) roda a cada dez minutos e termina ao
-pausar/fechar. `progress/T-id.json` pertence ao implementer da task e é apenas relato
+[subtarefa periódica](automatic-report.md) usa agendamento nativo ou subtask com espera
+nativa antes de recorrer ao timer Node. A cadência é de dez minutos; a parada inclui
+cancelar o recurso nativo e gerar a captura final. `progress/T-id.json` pertence ao implementer da task e é apenas relato
 informativo. O monitor não aplica resultados pendentes nem atualiza evidências.
 
 Resultado de task:

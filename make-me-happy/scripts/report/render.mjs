@@ -254,10 +254,13 @@ function reportFreshness(p) {
   const watch = p.reportWatch;
   const active = watch?.running && watch?.run_id === p.meta.run_id && watch?.status === 'running' && p.meta.status !== 'closed';
   const interval = Number.isFinite(watch?.interval_ms) ? watch.interval_ms : 600000;
+  const mechanism = watch?.backend === 'native'
+    ? (watch.kind === 'subtask' ? 'subtarefa nativa' : 'agendador nativo') : 'monitor local';
   return `<div class="card" id="report-refresh" data-generated-at="${esc(p.generatedAt)}" data-interval-ms="${interval}"
     data-auto-refresh="${active}" data-storage-key="${esc('mmh-report:' + (p.meta.run_id || p.dir))}">
     <span id="report-age">Captura gerada em ${esc(fmtDate(p.generatedAt))}.</span>
-    <span class="muted">${active ? `Atualização periódica a cada ${esc(interval / 60000)} min; a página verifica o arquivo a cada minuto.` : 'Captura estática; atualização periódica inativa nesta captura.'}</span>
+    <span class="muted">${active ? `Cadência de ${esc(interval / 60000)} min por ${mechanism}; a página verifica o arquivo a cada minuto.` : 'Captura estática; atualização periódica inativa nesta captura.'}</span>
+    ${watch?.backend === 'native' && watch.stale && active ? '<span class="warn">Sem ciclo nativo confirmado no intervalo esperado; confira a subtarefa.</span>' : ''}
     <button type="button" id="report-reload">Atualizar agora</button>
   </div>`;
 }

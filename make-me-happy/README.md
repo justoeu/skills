@@ -16,8 +16,9 @@ e [protocolo de estado/evidência](references/lifecycle.md) para os artefatos.
   ações diretas, termos consistentes e aceite observável. Descrição e aceite permanecem
   no JSON, no Markdown regenerado e no HTML. Schema 2 preservado.
 - [HTML automático](references/automatic-report.md): atualização por evento e a cada
-  dez minutos em processo supervisionado, andamento parcial por task e captura final
-  ao pausar/fechar. Versão 1.6.0.
+  dez minutos, com agendador/subtask nativo quando disponível e timer Node como
+  fallback. Inclui andamento parcial por task e captura final ao pausar/fechar.
+  Versão 1.7.0.
 
 ```bash
 node --test make-me-happy/scripts/tests/*.test.mjs

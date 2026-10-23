@@ -7,14 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { readJson, writeJson, withPackLock } from './state-io.mjs';
 import { buildReport } from './build-report.mjs';
-import { reportWatchFile as stateFile, reportWatchStatus } from './report-watch-state.mjs';
+import { reportWatchFile as stateFile, reportWatchStatus, reportWatchHistoryFile as historyFile, archiveReportWatch } from './report-watch-state.mjs';
 export { reportWatchStatus } from './report-watch-state.mjs';
 
 export const REPORT_INTERVAL_MS = 10 * 60 * 1000;
-function historyFile(dir, token) {
-  return /^[a-f0-9-]{36}$/.test(token || '')
-    ? path.join(dir, 'report-watch-history', `${token}.json`) : null;
-}
 function changeOwned(dir, token, patch) {
   return withPackLock(dir, () => {
     const state = readJson(stateFile(dir));
@@ -51,9 +47,8 @@ export async function watchReport(dir, {
     if (previous.running) throw new Error('report watcher already running for this pack');
     // A stop caller may still be awaiting this instance's final render. Keep its
     // outcome before publishing a new token, including final-render failures.
-    const archive = historyFile(dir, previous.token);
-    if (archive && ['stopped', 'failed'].includes(previous.status)) writeJson(archive, previous);
-    const state = { run_id: meta.run_id, token, pid: process.pid, status: 'running',
+    archiveReportWatch(dir, previous);
+    const state = { run_id: meta.run_id, token, backend: 'node', pid: process.pid, status: 'running',
       interval_ms: intervalMs, started_at: iso(), last_success_at: null, last_error: null };
     writeJson(stateFile(dir), state);
     return state;
@@ -109,6 +104,7 @@ export async function stopReportWatch(dir) {
   const requested = await retryBusy(() => withPackLock(dir, () => {
     const state = reportWatchStatus(dir);
     if (!state.running) return state;
+    if (state.backend === 'native') throw new Error('cancel the native job and use report-native.mjs stop --token before stopping its report');
     delete state.running;
     writeJson(stateFile(dir), { ...state, stop_requested: true });
     return { ...state, running: true };

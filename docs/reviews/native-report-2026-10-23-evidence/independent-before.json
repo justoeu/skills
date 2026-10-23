@@ -1,0 +1,21 @@
+{
+  "root": "/tmp/mmh-native-review-LsiKir",
+  "dir": "/private/tmp/mmh-native-review-LsiKir/docs/impl/make-me-happy/2026-10-23-no-git-a4ca63ac-9033-4704-9aa2-3c7f034aaed2",
+  "token": "5464ae2c-485f-4841-a2d9-b865cb484d19",
+  "freshness": {
+    "state_stale": false,
+    "html_warns_no_native_cycle": true,
+    "last_success_at": "2026-10-23T19:44:17.492Z"
+  },
+  "race": {
+    "second_stop": "stopped",
+    "first_stop": {
+      "code": 1,
+      "signal": null
+    },
+    "first_error": "report watcher ownership or status changed",
+    "final_status": "failed",
+    "last_error": "report watcher ownership or status changed",
+    "html_auto_refresh_false": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "run_id": "aa6cf1e9-ec4c-49b6-b9e0-87d1e666f5ef",
+  "token": "5d840bc2-6cbc-47e2-ba61-9063c09ec04c",
+  "backend": "native",
+  "kind": "subtask",
+  "provider": "collaboration.spawn_agent + clock.sleep",
+  "scheduler_id": "/root/report_native_forward",
+  "status": "stopped",
+  "interval_ms": 600000,
+  "started_at": "2026-10-23T19:42:46.514Z",
+  "last_success_at": "2026-10-23T19:44:34.200Z",
+  "last_error": null,
+  "failures": 0,
+  "stop_requested": true,
+  "stopped_at": "2026-10-23T19:44:34.200Z",
+  "running": false
+}

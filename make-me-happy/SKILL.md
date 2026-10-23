@@ -8,7 +8,7 @@ description: >
   Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
   não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.6.0
+  version: 1.7.0
   aliases: mmh
 ---
 
@@ -117,8 +117,10 @@ Schemas e protocolo de escrita: [references/pack-schemas.md](references/pack-sch
 Protocolo de evidência e recuperação: [references/lifecycle.md](references/lifecycle.md).
 
 Após obter OUT, inicie a [subtarefa de acompanhamento](references/automatic-report.md)
-em processo local supervisionado: geração imediata e a cada **10 minutos**. Confira
-o primeiro sucesso antes de anunciar que ela está ativa. Ela lê os registros do pack;
+com geração imediata e cadência de **10 minutos**. Detecte as ferramentas disponíveis:
+prefira agendador nativo ou subtask persistente com espera nativa; use o timer Node
+como fallback. Confira o identificador real e o primeiro sucesso antes de anunciar
+que ela está ativa. Ela lê os registros do pack;
 o Oracle continua responsável por aplicar resultados e validar conclusão das tasks.
 
 ## 1. Planejar e distribuir
@@ -189,8 +191,8 @@ do teste, integra o commit testado e testa o resultado. Falha preserva recursos 
 reparo; repetir merge reconcilia uma interrupção. Conflitos não são resolvidos com
 `--ours`/descarte automático. Slice com task pendente permanece aberta após merge parcial.
 No loop task, ao pausar, registre o estado; pode integrar o que está verde sem apagar
-as tasks restantes. Pare o monitor com `report-watch.mjs stop --dir "$OUT"` e confira
-a captura final antes de devolver o controle. Suite pesada roda serialmente; limpe
+as tasks restantes. Cancele o agendamento/subtask escolhido e confira a captura final
+conforme [automatic-report.md](references/automatic-report.md) antes de devolver o controle. Suite pesada roda serialmente; limpe
 só recursos criados pela run.
 
 ## 4. Validar o resultado integrado
@@ -277,9 +279,12 @@ node "$SKILL_ROOT/scripts/worktrees.mjs" remove --root "$ROOT" --out "$OUT"
 node "$SKILL_ROOT/scripts/worktrees.mjs" verify-clean --root "$ROOT" --out "$OUT"
 node "$SKILL_ROOT/scripts/score.mjs" --dir "$OUT"
 node "$SKILL_ROOT/scripts/run-meta.mjs" close --dir "$OUT"
-node "$SKILL_ROOT/scripts/report-watch.mjs" stop --dir "$OUT"
 node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 ```
+
+Cancele e confirme a parada do backend de relatório antes de versionar o pack,
+seguindo [automatic-report.md](references/automatic-report.md). O fechamento revoga
+novas capturas nativas, mas não remove um job do agendador por conta própria.
 
 No fallback sem Git, não execute os dois comandos de worktree. Remove nunca força
 exclusão de trabalho sujo/não integrado. Recursos de outras runs permanecem intactos.

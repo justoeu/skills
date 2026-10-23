@@ -1,0 +1,22 @@
+{
+  "root": "/tmp/mmh-native-revalidated-3QNt3U",
+  "dir": "/private/tmp/mmh-native-revalidated-3QNt3U/docs/impl/make-me-happy/2026-10-23-no-git-3b9487fb-a420-4b04-95c9-d34cb29e902f",
+  "token": "2e697f48-e46a-47f2-abd5-b7355be51b09",
+  "freshness": {
+    "state_stale": false,
+    "html_warns_no_native_cycle": false,
+    "last_success_at": "2026-10-23T19:47:41.930Z"
+  },
+  "race": {
+    "status_at_first_unlock": "stopped",
+    "second_stop": "stopped",
+    "first_stop": {
+      "code": 0,
+      "signal": null
+    },
+    "first_error": "",
+    "final_status": "stopped",
+    "last_error": null,
+    "html_auto_refresh_false": true
+  }
+}

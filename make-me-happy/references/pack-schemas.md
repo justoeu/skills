@@ -11,8 +11,8 @@ para fechamento: adote a run e reexecute suas verificações.
 | flow.mmd, payloads.json, spec-summary.md | Planner |
 | results/T-id-version.json | Implementer proprietário da task; Oracle aplica |
 | progress/T-id.json | Implementer via task-progress; relato parcial identificado/versionado |
-| report-watch.json | Monitor local; ciclo, propriedade, último sucesso/erro |
-| report-watch-history/token.json | Monitor local; confirmação terminal preservada ao reiniciar |
+| report-watch.json | Monitor nativo/Node; backend, propriedade, último sucesso/erro |
+| report-watch-history/token.json | Monitor; confirmação terminal preservada ao reiniciar |
 | report.html | Gerador atômico, por evento e pelo monitor de dez minutos |
 | worktrees.json | worktrees.mjs; nunca reconstruir sem conciliar Git |
 | tests.json, coverage.json, immutability.json | Oracle a partir da execução final |
@@ -84,7 +84,11 @@ opcionais `completed`, `next`, `blockers`, `files`. É informativo; não entra n
 nem nos gates. O HTML só mostra progresso da versão corrente de uma task ativa.
 `report-watch.json` e `report-watch-history/` também são operacionais, fora do selo.
 O histórico conserva o resultado terminal por token para confirmar paradas durante
-uma retomada concorrente. Comandos, pausa e tratamento
+uma retomada concorrente. O backend `node` registra PID; `native` registra `kind`
+(`schedule` ou `subtask`), ferramenta `provider` e `scheduler_id` real. O token
+reserva o pack desde `starting` e impede callbacks de instâncias encerradas. O status
+nativo é um registro local; sua atividade deve ser conferida na ferramenta do host.
+Comandos, pausa e tratamento
 de falhas estão em [automatic-report.md](automatic-report.md).
 
 ## Evidência obrigatória para resultados de verificação
