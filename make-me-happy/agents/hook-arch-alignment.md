@@ -24,7 +24,7 @@ sustenta o que ele promete?) e deixe estrutura sem requisito para o hook
 
 ## Input (Oracle pastes)
 
-- `$OUT/hooks/arch-map.json` (from atlas-docs or explorer; `{source, style, layers[], libs[{name,use}], adrs[{id,title,status}], containers[], notes}`)
+- `$OUT/hooks/arch-map.json` (from atlas-docs or explorer; `{source, style, languages[], layers[{name,group,sub}], libs[{name,ver,use}], adrs[{id,title,status}], containers[{id,name,group,tech}], notes}`)
 - SDD path/content + `spec-summary.md`
 - Diff command + commit list + `$OUT/hooks/diff-facts.json`
 

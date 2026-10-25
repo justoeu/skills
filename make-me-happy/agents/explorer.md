@@ -11,8 +11,8 @@ O SDD tem de conhecer a arquitetura que existe. Antes de perguntar qualquer cois
 node "$SKILL_ROOT/scripts/hooks.mjs" arch-map --repo-root . --dir "$OUT"
 ```
 
-- Achou `docs/atlas/app-model.json` (atlas-docs) → o script deriva `hooks/arch-map.json` (`source: "atlas"`). Leia-o: estilo, camadas, libs com uso, ADRs.
-- Atlas ausente → **você escreve** `$OUT/hooks/arch-map.json` (`source: "manual"`): estilo/padrão das camadas (olhe a árvore de dirs + entrypoints), libs do manifest **com para-quê**, ADRs (`docs/adr/`), containers do deploy (compose/k8s). Uma passada, não uma auditoria.
+- Achou `docs/atlas/app-model.json` (atlas-docs) → o script deriva `hooks/arch-map.json` (`source: "atlas"`). Leia-o: estilo, camadas, libs com uso, ADRs. Se o atlas não registrar linguagens, adicione `languages[]` (primárias do repo) ao JSON — insumo das baselines de linguagem.
+- Atlas ausente → **você escreve** `$OUT/hooks/arch-map.json` (`source: "manual"`): estilo/padrão das camadas (olhe a árvore de dirs + entrypoints), `languages[]` primárias (manifest/árvore — Java, Go, Swift, TS…), libs do manifest **com para-quê**, ADRs (`docs/adr/`), containers do deploy (compose/k8s). Uma passada, não uma auditoria.
 - Greenfield puro (repo vazio) → `{"source": "greenfield"}` e siga.
 
 Regras do arch-map no SDD daí em diante: decisão que conflita com ADR/decisão documentada → **pergunte** (não escolha); decisão estrutural nova (fila, serviço, camada) que o usuário não pediu → pergunte. O arch-map é insumo dos hooks `arch-alignment` e `overengineering` (§5).

@@ -9,6 +9,28 @@ repo: preserve alterações dos demais e respeite a propriedade dos arquivos.
 ROOT, OUT, WORKTREE_DIR e spec absolutos; WORKTREE_I; tasks com versão atual; regras
 do projeto e comando de teste. OUT fica no checkout principal, não na slice.
 
+## Ofício
+
+O código novo segue o baseline de ofício (`catalogs/craft-baseline.md`), o baseline de
+design (`catalogs/design-baseline.md`) e a seção da linguagem colada pelo Oracle
+(`references/language-baselines.md`); o padrão documentado do repo prevalece sobre
+todos. Na dúvida, cinco réguas:
+
+- **Assinatura enxuta e método curto:** poucos parâmetros (acima de ~4, agrupe em
+  objeto/record/struct de parâmetros), uma responsabilidade por método, early return,
+  um nível de abstração por corpo.
+- **Design honesto:** tipo/módulo com uma razão para mudar; dependência de regra de
+  negócio aponta para abstração e entra por construtor; interface do consumidor, não
+  gorda; padrão de projeto só quando o SDD tem a variação real.
+- **A arquitetura do app é a base.** Implemente dentro do arch-map: camada, padrão e
+  lib do repo. Uma abordagem melhor que a mapeada não é autorização para trocar o
+  desenho: devolva ao Oracle como sugestão com o impacto — a decisão é do usuário.
+- **Higiene do diff:** o diff faz só o que a task pede — sem churn cosmético misturado
+  com lógica, sem rename além do pedido, sem arquivo fora da slice sem justificativa
+  no resultado.
+- **Erro com contexto, estado imutável por padrão, teste determinístico** — a mesma
+  régua que o standards reviewer vai aplicar em §5.
+
 ## Método
 
 1. Confirme branch e estado da slice. A baseline existente deve estar verde.

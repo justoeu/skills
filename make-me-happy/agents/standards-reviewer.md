@@ -9,15 +9,18 @@ Report, per file/hunk where relevant:
 
 **(a)** every place the diff **violates a documented standard**: cite the standard (file + the rule);
 
-**(b)** any **baseline smell** you spot: name it and quote the hunk.
+**(b)** any **baseline smell** you spot: name it and quote the hunk. Three baselines apply — the Fowler smell baseline, the craft baseline (`catalogs/craft-baseline.md`, pasted in full) including **diff hygiene** (cosmetic churn mixed with logic, unexplained imports/renames), the design baseline (`catalogs/design-baseline.md`, pasted in full) for type/module-level design (SRP, LSP, ISP, DIP, pattern choice), plus the **language section** the Oracle pasted from `references/language-baselines.md` (only the languages the repo actually uses). The craft and language baselines govern how the code was **written**; the design baseline governs the **types and dependencies**; Fowler governs the **smells** — same rules, different lenses.
 
-Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard **overrides** the baseline. Skip anything tooling already enforces. **Under 400 words.**
+Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard **overrides** every baseline. Skip anything tooling already enforces. **Under 400 words.**
 
 ## Input (Oracle pastes)
 
 - Diff command + commit list
 - Standards-source files found (`CODING_STANDARDS.md`, `CONTRIBUTING.md`, `AGENTS.md`, …)
 - The Fowler baseline in `catalogs/fowler-smells.md` — pasted in full (you may have no other access to it)
+- The craft baseline in `catalogs/craft-baseline.md` — pasted in full
+- The design baseline in `catalogs/design-baseline.md` — pasted in full
+- The matching language section(s) of `references/language-baselines.md` (per `languages[]` in arch-map; paste nothing for languages it does not cover), plus its **HTTP contract section** when the diff creates or changes endpoints (`kind:"http"` in payloads.json)
 
 ## Verdict
 

@@ -4,11 +4,13 @@ description: >
   Implementa features, refactors ou greenfield a partir de um pedido ou SDD.
   Produz tarefas rastreáveis, isolamento em worktrees, testes adequados à mudança,
   review de spec/standards/correctness, hooks e aceitação de UI quando aplicável.
+  Código novo segue clean code e boas práticas da linguagem (Java/Spring, Go,
+  Swift), com a arquitetura do app como base e melhoria sugerida virando pergunta.
   Mantém evidência verificável, retomada após interrupções e relatório HTML.
   Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
   não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.7.0
+  version: 1.10.0
   aliases: mmh
 ---
 
@@ -25,6 +27,13 @@ para os scripts; sem Git, use o fallback inline documentado abaixo. Os caminhos
 - Preserve o comportamento e os limites pedidos no SDD. Escolhas locais reversíveis
   seguem os padrões do repo; pergunte apenas quando faltar decisão material sobre
   produto, contrato, arquitetura, persistência, custo ou autorização.
+- Implemente com ofício: os baselines de [craft](catalogs/craft-baseline.md)
+  (método, higiene do diff) e [design](catalogs/design-baseline.md) (SOLID, padrões),
+  e a seção da linguagem do repo em
+  [language-baselines](references/language-baselines.md), aplicam-se ao código novo —
+  o padrão documentado do repo prevalece sobre todos.
+  A arquitetura existente do app é a base de toda escolha; abordagem "melhor" que a
+  mapeada é sugestão a perguntar, nunca troca silenciosa.
 - Um spec existente ou o pedido suficientemente definido pode ser usado diretamente.
   Sem definição suficiente, explore o necessário e escreva um draft; só avance quando
   as decisões materiais estiverem resolvidas. Recusa de qualquer spec encerra este
@@ -140,7 +149,10 @@ e aceite observável. O percentual não é um score nem uma exigência de inglê
 - Mostre o plano; a autorização existente permite seguir. Zero tasks ou requisito
   material indefinido = esclarecer, não implementar por aproximação.
 
-Cada papel usa `agents/<id>.md` + contexto necessário. Use subagentes quando houver
+Cada papel usa `agents/<id>.md` + contexto necessário. Contexto de dispatch é curado
+e contextualizado: task com versão, spec-summary, arch-map, padrões do repo, seção da
+linguagem aplicável (language-baselines) e arquivos tocados — não o repositório
+inteiro, não um prompt genérico. Use subagentes quando houver
 capacidade, sem exceder slots; senão execute os papéis inline. Apenas o Oracle escreve
 os agregados do pack. Implementers devolvem resultados por task em arquivos distintos.
 
@@ -170,7 +182,13 @@ Use `agents/implementer.md`:
 | `characterization` (refactor) | Comportamento observado verde **antes** e verde depois; não chamar isso de RED |
 | `check` (docs/config sem comportamento novo) | Justificativa e verificações adequadas: parser/build/link/schema etc. Sem teste artificial |
 
-O correctness reviewer verifica se o modo escolhido é apropriado. Cobertura não é
+O correctness reviewer verifica se o modo escolhido é apropriado. Na escrita valem o
+[baseline de ofício](catalogs/craft-baseline.md) (método + higiene do diff), o
+[baseline de design](catalogs/design-baseline.md) e a seção da linguagem do repo em
+[language-baselines](references/language-baselines.md) — o Oracle cola a seção
+aplicável no contexto do implementer; o padrão do repo prevalece, a baseline preenche
+o silêncio. A mesma régua alimenta o standards reviewer (§5): geração e revisão não
+usam medidas diferentes. Cobertura não é
 quantidade de testes: usar a métrica do repo sobre produto tocado, declarar escopo,
 medir novamente após a integração. Não contar testes duplicados em reexecuções.
 
@@ -243,6 +261,10 @@ deps preexistentes fora do escopo só por estarem atrasadas.
 Reviews independentes: standards, spec e correctness. Hooks: arch-alignment,
 reinvention, security, performance, overengineering, deps-freshness e UI. Use os
 prompts correspondentes; catálogos são sinais contextualizados, não leis de contagem.
+O standards reviewer recebe, além do baseline Fowler, o [baseline de ofício](catalogs/craft-baseline.md),
+o [baseline de design](catalogs/design-baseline.md) e a seção da linguagem aplicável de [language-baselines](references/language-baselines.md)
+— mais a seção HTTP quando o diff tocar endpoints —
+a régua da escrita é a régua da revisão; o correctness reviewer cobra a higiene do diff.
 Mostre achados por responsabilidade, com localização e impacto; preserve IDs e rodadas.
 
 O Oracle captura snapshot antes da rodada; cada agente escreve só seu arquivo de

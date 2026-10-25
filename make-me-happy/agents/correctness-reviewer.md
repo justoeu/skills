@@ -12,6 +12,7 @@ Answer only:
 3. Are **immutability** tests present and green for the kind (greenfield invariants / feature neighbours / refactor characterization)?
 4. Did worktree slices stay inside their files, or is the merge a pile of overlapping rewrites?
 5. Is `$OUT/coverage.json` present with `pct >=` the floor (90, or `run-meta.coverage_floor` if `--cobertura` raised it)?
+6. Diff hygiene: is the diff free of unexplained churn — cosmetic edits (formatting/imports) mixed into logic, renames or moves beyond what the task asked, or files outside the slice without justification in the result? A refactor task with subtle behaviour drift is a defect even when the suite is green (characterization exists to prove it).
 
 **Under 400 words.** Quote test names and task ids.
 
@@ -35,7 +36,7 @@ or
 VERDICT: REJECT
 ```
 
-REJECT if a task lacks its required evidence, the final integrated suite fails, characterization is missing for refactor, a claimed DONE is absent from the diff, or consolidated coverage is below the configured floor. Check evidence against the current snapshot; stale results never approve.
+REJECT if a task lacks its required evidence, the final integrated suite fails, characterization is missing for refactor, a claimed DONE is absent from the diff, consolidated coverage is below the configured floor, or the diff carries unexplained churn (cosmetic edits mixed with logic, renames beyond the task, out-of-slice files). Check evidence against the current snapshot; stale results never approve.
 
 Write `$OUT/reviews/correctness.md` **and** `$OUT/reviews/correctness.json`.
 
