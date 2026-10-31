@@ -17,6 +17,7 @@ import { scorePack, renderTasksMd } from './score.mjs';
 import { buildArchMapFromAtlas } from './hooks.mjs';
 import { STEPS, STEP_STATUS } from './steps.mjs';
 import { refreshAfterMutation } from './build-report.mjs';
+import { redactPack, redactValue } from './redact.mjs';
 export { STEPS, STEP_STATUS } from './steps.mjs';
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -183,17 +184,26 @@ export function closeRun(dir) {
     syncTasks(dir);
     const meta = readJson(metaFile(dir)),
       at = new Date().toISOString();
-    meta.status = 'closed';
-    meta.finished_at = at;
-    meta.updated_at = at;
-    writeJson(metaFile(dir), meta);
+    // Redige paths da máquina ANTES do selo: o hash de closure cobre o estado
+    // já redigido e o pack compartilhado não expõe nada da máquina local.
+    const redactCtx = { repoRoot: meta.repo_root };
+    const redacted = redactPack(dir, redactCtx);
+    result.evidence = redactValue(result.evidence ?? [], redactCtx);
+    result.blockers = redactValue(result.blockers ?? [], redactCtx);
+    const sealed = readJson(metaFile(dir));
+    sealed.status = 'closed';
+    sealed.finished_at = at;
+    sealed.updated_at = at;
+    writeJson(metaFile(dir), sealed);
     writeJson(path.join(dir, 'closure.json'), {
-      run_id: meta.run_id,
+      run_id: sealed.run_id,
       closable: true,
       at,
-      evidence: result.evidence,
+      evidence: redactValue(result.evidence ?? [], { repoRoot: meta.repo_root }),
       artifact_hash: artifactIdentity(dir),
     });
+    result.redacted_files = redacted;
+    writeJson(path.join(dir, 'score.json'), result);
     return result;
   });
   refreshAfterMutation(dir);

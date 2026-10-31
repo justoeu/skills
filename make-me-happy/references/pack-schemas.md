@@ -38,6 +38,9 @@ para fechamento: adote a run e reexecute suas verificações.
 ```
 
 spec_status: draft|confirmed. Status: in_progress|closed. Somente close grava closed.
+Pós-close o pack é redigido: `repo_root` = `<repo>` (+ `repo_root_name` com o
+basename), `spec` e paths de worktree relativos ao repo, sem home/paths absolutos em
+qualquer artefato. `adopt --root` reassocia a raiz real ao retomar.
 Steps: explore, planner, worktrees, implement, immutability, ui-acceptance, review,
 score, clean, project-gates. Cada passo tem status in_progress|done|failed|skipped,
 started_at, finished_at quando aplicável e note opcional. Use `run-meta step`.

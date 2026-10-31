@@ -10,7 +10,7 @@ description: >
   Use para /make-me-happy ou /mmh e implementação de uma mudança definida;
   não para auditoria isolada, consulta sobre Git ou simples uso de worktrees.
 metadata:
-  version: 1.10.0
+  version: 1.11.0
   aliases: mmh
 ---
 
@@ -41,6 +41,10 @@ para os scripts; sem Git, use o fallback inline documentado abaixo. Os caminhos
 - Não repita confirmação que o usuário já deu. Uma mudança autorizada segue até a
   conclusão ou um impedimento concreto. Perguntas mostram a decisão concreta em jogo.
 - Nunca descarte alterações locais, slices ou branches para fazer o fluxo passar.
+- O pack é evidência compartilhada e não expõe a máquina que o produziu: evidências
+  registram comandos como executados da raiz do repo, e o `close` redige paths
+  absolutos (home, raiz do repo) dos artefatos antes de selar; o HTML redige no
+  render, inclusive relatórios parciais de run aberta.
 - Resultados são válidos para os inputs e código que verificaram. Alterar código,
   contrato, plano ou mapa de arquitetura invalida as evidências afetadas; os helpers
   recusam fechamento com evidência antiga. Um score numérico sozinho não autoriza fechar.
@@ -303,6 +307,12 @@ node "$SKILL_ROOT/scripts/score.mjs" --dir "$OUT"
 node "$SKILL_ROOT/scripts/run-meta.mjs" close --dir "$OUT"
 node "$SKILL_ROOT/scripts/build-report.mjs" --dir "$OUT"
 ```
+
+O close redige paths da máquina do pack **antes** de selar: `repo_root` vira `<repo>`
+(com `repo_root_name` para proveniência), spec e caminhos de worktree ficam relativos
+ao repo, e commands/excerpts/relatos perdem home e raiz absoluta. O selo cobre o
+estado redigido; runs históricas continuam válidas e o pack versionado não expõe
+nada pessoal.
 
 Cancele e confirme a parada do backend de relatório antes de versionar o pack,
 seguindo [automatic-report.md](references/automatic-report.md). O fechamento revoga

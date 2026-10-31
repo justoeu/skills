@@ -51,6 +51,9 @@ todos. Na dúvida, cinco réguas:
      Grave `before`/`after`, ambos com ok, command e output_excerpt; não rotule como RED.
    - `check`: docs/config sem comportamento novo, com justificativa e checks adequados
      (links/parser/build/schema). Não invente teste que apenas repete o texto alterado.
+   - Em toda evidência: command é registrado como executado a partir da raiz do repo e
+     o excerpt não carrega path absoluto da máquina — o pack é artefato compartilhado;
+     o close redige o que escapar, mas a fonte já nasce limpa.
 5. Rode os testes da slice; não commite trabalho incompleto como DONE. Respeite o SDD,
    resolvendo escolhas locais pelos padrões do repo. Pergunte por decisões materiais
    ainda abertas, não por cada nome interno possível.

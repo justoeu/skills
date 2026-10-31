@@ -11,6 +11,7 @@ import path from 'node:path';
 import { scorePack, verdictOf, immutabilityTests, taskValidation } from '../score.mjs';
 import { STEPS } from '../steps.mjs';
 import { reportWatchStatus } from '../report-watch-state.mjs';
+import { redactValue } from '../redact.mjs';
 
 export const AXES = ['standards', 'spec', 'correctness'];
 export const HOOKS = ['arch-alignment', 'reinvention', 'security', 'performance', 'overengineering', 'deps-freshness', 'ui-acceptance'];
@@ -112,32 +113,41 @@ export function loadPack(dir, { now = new Date() } = {}) {
   const steps = buildSteps({ meta, tasks, worktrees, immutability, reviews, score, coverage, projectGates, files, tasksDoc, hooksPack });
   const times = runTimes(meta, steps);
 
-  return {
-    dir,
-    repoRoot,
-    files,
-    meta,
-    tasksDoc: tasksDoc || null,
-    tasks,
-    immutability,
-    worktrees,
-    coverage,
-    tests,
-    payloads,
-    reviews,
-    extraReviews,
-    hooksPack,
-    projectGates,
-    score,
-    spec,
-    flow,
-    diagrams,
-    steps,
-    times,
-    warnings,
-    generatedAt: now.toISOString(),
-    reportWatch: reportWatchStatus(dir),
-  };
+  // O relatório é artefato compartilhado: nada do que ele renderiza pode expor
+  // paths da máquina (home do usuário, raiz do repo). Redige o pack normalizado
+  // na fronteira; repoRoot cru permanece só para derivar o nome do app.
+  const metaRepoRoot =
+    typeof meta.repo_root === 'string' && path.isAbsolute(meta.repo_root) ? meta.repo_root : null;
+  const sanitized = redactValue(
+    {
+      dir,
+      files,
+      meta,
+      tasksDoc: tasksDoc || null,
+      tasks,
+      immutability,
+      worktrees,
+      coverage,
+      tests,
+      payloads,
+      reviews,
+      extraReviews,
+      hooksPack,
+      projectGates,
+      score,
+      spec,
+      flow,
+      diagrams,
+      steps,
+      times,
+      warnings,
+      generatedAt: now.toISOString(),
+      reportWatch: reportWatchStatus(dir),
+    },
+    { repoRoot: repoRoot || metaRepoRoot },
+  );
+  sanitized.repoRoot = repoRoot;
+  return sanitized;
 }
 
 function listFiles(dir) {

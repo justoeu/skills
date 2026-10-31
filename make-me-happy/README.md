@@ -1,6 +1,6 @@
 # make-me-happy
 
-**Version 1.10.0** · Alias: `/mmh`
+**Version 1.11.0** · Alias: `/mmh`
 
 [English](#english) · [Português](#português) · [Español](#español)
 
@@ -53,6 +53,11 @@ and the [state/evidence protocol](references/lifecycle.md) for the artifacts.
 - **Results are bound to the reviewed code**: changing code, contracts, plan or the
   architecture map invalidates the affected evidence; HTML is recalculated and the
   closure is sealed. A numeric score alone never authorizes closing.
+- **Privacy by redaction:** the shared pack never exposes the machine that produced
+  it — evidence records commands as run from the repo root, `close` redacts absolute
+  paths (home, repo root) from every artifact **before** sealing (`repo_root`
+  becomes `<repo>`, spec and worktree paths become repo-relative), and the HTML
+  report sanitizes at render time, including partial mid-run reports.
 - `--fresh` starts a new run with a unique ID and preserves the previous one.
 - Tasks derived from the SDD follow a [practical ASD-STE100 adaptation](references/task-writing.md):
   direct actions, consistent terms, observable acceptance criteria — kept in the JSON,
@@ -110,6 +115,11 @@ e o [protocolo de estado/evidência](references/lifecycle.md) para os artefatos.
 - **Resultados vinculados ao código revisado**: mudar código, contrato, plano ou mapa
   de arquitetura invalida as evidências afetadas; o HTML é recalculado e o fechamento
   é selado. Score numérico sozinho nunca autoriza fechar.
+- **Privacidade por redação:** o pack compartilhado nunca expõe a máquina que o
+  produziu — evidências registram comandos como executados da raiz do repo, o
+  `close` redige paths absolutos (home, raiz do repo) de todo artefato **antes** de
+  selar (`repo_root` vira `<repo>`, spec e worktrees ficam relativos ao repo) e o
+  HTML sanitiza no render, inclusive relatórios parciais de run aberta.
 - `--fresh` inicia uma run nova com ID único e preserva a anterior.
 - Tasks após o SDD seguem uma [adaptação prática do ASD-STE100](references/task-writing.md):
   ações diretas, termos consistentes e aceite observável — no JSON, no Markdown
@@ -167,6 +177,12 @@ y el [protocolo de estado/evidencia](references/lifecycle.md) para los artefacto
 - **Resultados vinculados al código revisado**: cambiar código, contratos, plan o
   mapa de arquitectura invalida las evidencias afectadas; el HTML se recalcula y el
   cierre se sella. Un score numérico por sí solo nunca autoriza cerrar.
+- **Privacidad por redacción:** el pack compartido nunca expone la máquina que lo
+  produjo — las evidencias registran comandos como ejecutados desde la raíz del
+  repo, el `close` redacta paths absolutos (home, raíz del repo) de cada artefacto
+  **antes** de sellar (`repo_root` pasa a `<repo>`, spec y worktrees quedan
+  relativos al repo) y el HTML sanitiza al render, incluso reportes parciales de
+  una run abierta.
 - `--fresh` inicia una run nueva con ID único y preserva la anterior.
 - Las tasks posteriores al SDD siguen una [adaptación práctica del ASD-STE100](references/task-writing.md):
   acciones directas, términos consistentes y aceptación observable — en el JSON, en

@@ -290,7 +290,7 @@ export function scorePack(dir, { historical = false } = {}) {
     blockers.push({ step: 'ui-acceptance', reason: 'touched UI needs completed runtime acceptance' });
   if (!points || points !== 10) blockers.push({ step: 'score', reason: `score ${points}/10` });
   if (!coverage.ok) blockers.push({ step: 'score', reason: 'coverage below required floor or invalid' });
-  if (!seal && !wt.skipped && meta.repo_root) {
+  if (!seal && !wt.skipped && meta.repo_root && fs.existsSync(meta.repo_root)) {
     const prefix = wt.prefix || meta.worktree_prefix || 'mmh';
     const refs = spawnSync(
       'git',
